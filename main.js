@@ -25,12 +25,28 @@ function resolveTargetDisplay() {
     return zenbookDisplay;
   }
 
-  const nonPrimary = displays.find((display) => !display.primary);
-  if (nonPrimary) {
-    return nonPrimary;
+  const primaryDisplay = displays.find((display) => display.primary) || displays[0];
+  const secondaryDisplays = displays.filter((display) => display.id !== primaryDisplay.id);
+
+  if (secondaryDisplays.length === 0) {
+    return primaryDisplay;
   }
 
-  return displays[0];
+  const verticalMatches = secondaryDisplays
+    .filter((display) => display.bounds.y > primaryDisplay.bounds.y)
+    .sort((a, b) => b.bounds.y - a.bounds.y);
+  if (verticalMatches.length > 0) {
+    return verticalMatches[0];
+  }
+
+  const horizontalMatches = secondaryDisplays
+    .filter((display) => display.bounds.x !== primaryDisplay.bounds.x)
+    .sort((a, b) => a.bounds.x - b.bounds.x);
+  if (horizontalMatches.length > 0) {
+    return horizontalMatches[0];
+  }
+
+  return secondaryDisplays[0];
 }
 
 function createWindow() {
