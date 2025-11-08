@@ -1,11 +1,15 @@
-(function () {
-  if (typeof window === "undefined" || typeof document === "undefined") {
-    return;
-  }
+if (typeof window !== "undefined") {
+  window.addEventListener("DOMContentLoaded", () => {
+    console.log("✅ script validated");
 
-  const motionQuery = window.matchMedia
-    ? window.matchMedia("(prefers-reduced-motion: reduce)")
-    : { matches: false, addEventListener: () => {}, removeEventListener: () => {} };
+    (function () {
+      if (typeof document === "undefined") {
+        return;
+      }
+
+      const motionQuery = window.matchMedia
+        ? window.matchMedia("(prefers-reduced-motion: reduce)")
+        : { matches: false, addEventListener: () => {}, removeEventListener: () => {} };
 
   const config = {
     maxBubbles: 120,
@@ -228,4 +232,7 @@
   } else {
     init();
   }
-})();
+    })();
+  });
+}
+

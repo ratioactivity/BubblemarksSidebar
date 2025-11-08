@@ -1,6 +1,31 @@
 
 
-const STORAGE_KEY = "bubblemarks.bookmarks.v1";
+if (typeof window !== "undefined") {
+  const safeStorage = {
+    get(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        console.warn("[Bubblemarks] localStorage unavailable, using memory fallback");
+        return window._memoryStorage?.[key] || null;
+      }
+    },
+    set(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        window._memoryStorage = window._memoryStorage || {};
+        window._memoryStorage[key] = value;
+      }
+    },
+  };
+
+  let desktopLoadHandlerRegistered = false;
+
+  function initializeBubblemarks() {
+    console.log("✅ script validated");
+
+    const STORAGE_KEY = "bubblemarks.bookmarks.v1";
 const DEFAULT_SOURCE = "bookmarks.json";
 const FALLBACK_PALETTES = [
   { background: "#ffe9f6", accent: "#ff80c8", shadow: "#ffc3e4" },
@@ -744,12 +769,12 @@ async function hydrateData() {
 }
 
 function loadStoredBookmarks() {
-  if (typeof localStorage === "undefined") {
+  if (typeof window === "undefined") {
     return [];
   }
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = safeStorage.get(STORAGE_KEY);
     if (!raw) {
       return [];
     }
@@ -879,6 +904,7 @@ function sortBookmarksAlphabetically(entries) {
   });
 }
 
+
 function getDefaultCategorySettings() {
   return DEFAULT_CATEGORY_SETTINGS.map((item) => ({ ...item }));
 }
@@ -928,19 +954,19 @@ function mergeCategorySettingsWithDefaults(current) {
 function loadCategorySettings() {
   const defaults = getDefaultCategorySettings();
 
-  if (typeof localStorage === "undefined") {
+  if (typeof window === "undefined") {
     return defaults;
   }
 
   try {
-    const raw = localStorage.getItem(CATEGORY_STORAGE_KEY);
+    const raw = safeStorage.get(CATEGORY_STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(defaults));
+      safeStorage.set(CATEGORY_STORAGE_KEY, JSON.stringify(defaults));
       return defaults;
     }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
-      localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(defaults));
+      safeStorage.set(CATEGORY_STORAGE_KEY, JSON.stringify(defaults));
       return defaults;
     }
 
@@ -957,17 +983,15 @@ function loadCategorySettings() {
     });
 
     if (!deduped.length) {
-      localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(defaults));
+      safeStorage.set(CATEGORY_STORAGE_KEY, JSON.stringify(defaults));
       return defaults;
     }
 
     const merged = mergeCategorySettingsWithDefaults(deduped);
-    if (typeof localStorage !== "undefined") {
-      const stored = JSON.stringify(deduped);
-      const desired = JSON.stringify(merged);
-      if (stored !== desired) {
-        localStorage.setItem(CATEGORY_STORAGE_KEY, desired);
-      }
+    const stored = JSON.stringify(deduped);
+    const desired = JSON.stringify(merged);
+    if (stored !== desired) {
+      safeStorage.set(CATEGORY_STORAGE_KEY, desired);
     }
 
     return merged;
@@ -978,12 +1002,12 @@ function loadCategorySettings() {
 }
 
 function saveCategorySettings() {
-  if (typeof localStorage === "undefined") {
+  if (typeof window === "undefined") {
     return;
   }
 
   try {
-    localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categorySettings));
+    safeStorage.set(CATEGORY_STORAGE_KEY, JSON.stringify(categorySettings));
   } catch (error) {
     console.warn("Unable to save category preferences", error);
   }
@@ -1073,12 +1097,12 @@ function normalizePreferences(value) {
 }
 
 function loadPreferences() {
-  if (typeof localStorage === "undefined") {
+  if (typeof window === "undefined") {
     return getDefaultPreferences();
   }
 
   try {
-    const raw = localStorage.getItem(PREFERENCES_STORAGE_KEY);
+    const raw = safeStorage.get(PREFERENCES_STORAGE_KEY);
     if (!raw) {
       return getDefaultPreferences();
     }
@@ -1091,12 +1115,12 @@ function loadPreferences() {
 }
 
 function savePreferences() {
-  if (typeof localStorage === "undefined") {
+  if (typeof window === "undefined") {
     return;
   }
 
   try {
-    localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferences));
+    safeStorage.set(PREFERENCES_STORAGE_KEY, JSON.stringify(preferences));
   } catch (error) {
     console.warn("Unable to save preferences", error);
   }
@@ -1937,7 +1961,7 @@ function setBookmarks(next, { persist } = { persist: true }) {
   categoryInfo = collectCategoryInfo();
   if (persist) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
+      safeStorage.set(STORAGE_KEY, JSON.stringify(bookmarks));
     } catch (error) {
       console.warn("Unable to save bookmarks", error);
     }
@@ -4158,4 +4182,20 @@ function setupDataTools() {
   });
 })();
 
-console.log("✅ script validated");
+    if (!desktopLoadHandlerRegistered) {
+      window.addEventListener("load", () => {
+        console.log("[Bubblemarks] Desktop app load complete");
+        renderBookmarks(bookmarks || []);
+      });
+      desktopLoadHandlerRegistered = true;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    try {
+      initializeBubblemarks();
+    } catch (err) {
+      console.error("[Bubblemarks] Initialization failed:", err);
+    }
+  });
+}
