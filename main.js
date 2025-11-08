@@ -70,6 +70,7 @@ function createWindow() {
   });
 
   mainWindow.once("ready-to-show", () => {
+    mainWindow.setFullScreen(true);
     mainWindow.show();
     mainWindow.focus();
   });
