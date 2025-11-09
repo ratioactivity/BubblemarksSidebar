@@ -2,17 +2,9 @@ window.addEventListener("DOMContentLoaded", () => {
   const spriteEl = document.getElementById("pet-sprite");
   const buttons = document.querySelectorAll("#pet-buttons button");
 
-  // simple audio helper
-  function playSound(name) {
-    if (!petState.soundEnabled) return;
-    const audio = new Audio(`sounds/${name}.mp3`);
-    audio.volume = 0.45;
-    audio.play().catch(() => {});
-  }
-
-  // state machine
   const petState = {
-    mode: "idle", // "idle", "rest", "sleep", "swim", "eat", "pet"
+    mode: "idle",
+    idlePhase: "resting",
     soundEnabled: true,
     attention: 100,
     level: 1,
@@ -31,61 +23,229 @@ window.addEventListener("DOMContentLoaded", () => {
     eat: "assets/munching.gif",
   };
 
-  function setAnimation(key) {
-    const src = animations[key];
-    if (!src) return;
+  function setPetAnimation(name) {
+    const src = animations[name];
+    if (!src) {
+      console.warn(`[BubblePet] Missing animation for "${name}"`);
+      return;
+    }
+    if (spriteEl.getAttribute("src") === src) {
+      return;
+    }
     spriteEl.src = src;
+    petState.currentAnimation = name;
   }
 
-  // button actions (for now: just switch animations + sounds)
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const action = btn.dataset.action;
-      switch (action) {
-        case "pet":
-          petState.mode = "pet";
-          setAnimation("pet");
-          playSound("pet-sound");
-          break;
-        case "feed":
-          petState.mode = "eat";
-          setAnimation("eat");
-          playSound("munch-squeak");
-          // later: show worms, increase hunger/attention etc
-          break;
-        case "swim":
-          petState.mode = "swim";
-          setAnimation("swim");
-          playSound("swimming-sound");
-          break;
-        case "rest":
-          petState.mode = "rest";
-          setAnimation("rest");
-          playSound("resting-sound");
-          break;
-        case "sleep":
-          petState.mode = "sleep";
-          setAnimation("sleep");
-          break;
-      }
-    });
-  });
+  function playSound(name) {
+    if (!petState.soundEnabled) {
+      return;
+    }
+    const audio = new Audio(`sounds/${name}.mp3`);
+    audio.volume = 0.45;
+    audio.play().catch(() => {});
+  }
 
-  // idle loop: cycle resting / floating / swimming
-  const idleCycle = ["idleRest", "idleFloat", "idleSwim"];
+  const IDLE_SEQUENCE = [
+    { key: "idleRest", phase: "resting", duration: 9000, sound: "resting-sound" },
+    { key: "idleFloat", phase: "floating", duration: 7000, sound: "float-squeak" },
+    { key: "idleSwim", phase: "swimming", duration: 8000, sound: "swimming-sound" },
+  ];
+
+  const MODE_DURATIONS = {
+    pet: 5000,
+    eat: 6000,
+    rest: 12000,
+    sleep: 20000,
+    swim: 15000,
+  };
+
+  let idleTimeout = null;
   let idleIndex = 0;
+  let modeResetTimeout = null;
+  let swimBurstInterval = null;
+  let swimBurstTimeout = null;
+  let attentionInterval = null;
 
-  function runIdle() {
-    if (["idle", "rest"].includes(petState.mode)) {
-      setAnimation(idleCycle[idleIndex]);
-      if (idleCycle[idleIndex] === "idleFloat") {
-        playSound("float-squeak");
-      }
-      idleIndex = (idleIndex + 1) % idleCycle.length;
+  const SWIM_BURST_INTERVAL = 9000;
+  const SWIM_BURST_DURATION = 2500;
+  const ATTENTION_INTERVAL = 10 * 60 * 1000;
+
+  function clearIdleCycle() {
+    if (idleTimeout) {
+      window.clearTimeout(idleTimeout);
+      idleTimeout = null;
     }
   }
 
-  setInterval(runIdle, 8000); // every 8s if idle
+  function advanceIdleCycle() {
+    if (petState.mode !== "idle") {
+      return;
+    }
+    const step = IDLE_SEQUENCE[idleIndex];
+    petState.idlePhase = step.phase;
+    setPetAnimation(step.key);
+    if (step.sound) {
+      playSound(step.sound);
+    }
+    idleTimeout = window.setTimeout(() => {
+      idleIndex = (idleIndex + 1) % IDLE_SEQUENCE.length;
+      advanceIdleCycle();
+    }, step.duration);
+  }
+
+  function startIdleCycle(startIndex = 0) {
+    clearIdleCycle();
+    petState.mode = "idle";
+    idleIndex = startIndex % IDLE_SEQUENCE.length;
+    advanceIdleCycle();
+  }
+
+  function stopSwimBursts() {
+    if (swimBurstInterval) {
+      window.clearInterval(swimBurstInterval);
+      swimBurstInterval = null;
+    }
+    if (swimBurstTimeout) {
+      window.clearTimeout(swimBurstTimeout);
+      swimBurstTimeout = null;
+    }
+  }
+
+  function startSwimBursts() {
+    stopSwimBursts();
+    swimBurstInterval = window.setInterval(() => {
+      if (petState.mode !== "swim") {
+        return;
+      }
+      setPetAnimation("fastSwim");
+      playSound("fastswim-squeak");
+      swimBurstTimeout = window.setTimeout(() => {
+        if (petState.mode === "swim") {
+          setPetAnimation("swim");
+          playSound("swimming-sound");
+        }
+      }, SWIM_BURST_DURATION);
+    }, SWIM_BURST_INTERVAL);
+  }
+
+  function cancelModeReset() {
+    if (modeResetTimeout) {
+      window.clearTimeout(modeResetTimeout);
+      modeResetTimeout = null;
+    }
+  }
+
+  function scheduleModeReset(mode, delay, nextMode = "idle") {
+    cancelModeReset();
+    if (!delay) {
+      startIdleCycle();
+      return;
+    }
+    modeResetTimeout = window.setTimeout(() => {
+      if (petState.mode === mode) {
+        if (nextMode === "idle") {
+          startIdleCycle();
+        } else {
+          enterMode(nextMode);
+        }
+      }
+    }, delay);
+  }
+
+  function enterMode(mode) {
+    cancelModeReset();
+    if (mode === "idle") {
+      stopSwimBursts();
+      startIdleCycle();
+      return;
+    }
+
+    clearIdleCycle();
+    if (mode !== "swim") {
+      stopSwimBursts();
+    }
+
+    petState.mode = mode;
+
+    switch (mode) {
+      case "pet":
+        setPetAnimation("pet");
+        playSound("pet-sound");
+        scheduleModeReset(mode, MODE_DURATIONS.pet);
+        break;
+      case "eat":
+        setPetAnimation("eat");
+        playSound("munch-squeak");
+        scheduleModeReset(mode, MODE_DURATIONS.eat);
+        break;
+      case "rest":
+        setPetAnimation("rest");
+        playSound("resting-sound");
+        scheduleModeReset(mode, MODE_DURATIONS.rest);
+        break;
+      case "sleep":
+        setPetAnimation("sleep");
+        playSound("resting-sound");
+        scheduleModeReset(mode, MODE_DURATIONS.sleep);
+        break;
+      case "swim":
+        setPetAnimation("swim");
+        playSound("swimming-sound");
+        startSwimBursts();
+        scheduleModeReset(mode, MODE_DURATIONS.swim);
+        break;
+      default:
+        startIdleCycle();
+        break;
+    }
+  }
+
+  function handleButtonClick(action) {
+    switch (action) {
+      case "pet":
+        enterMode("pet");
+        break;
+      case "feed":
+        enterMode("eat");
+        break;
+      case "swim":
+        enterMode("swim");
+        break;
+      case "rest":
+        enterMode("rest");
+        break;
+      case "sleep":
+        enterMode("sleep");
+        break;
+      default:
+        enterMode("idle");
+    }
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      handleButtonClick(btn.dataset.action);
+    });
+  });
+
+  function startAttentionTimer() {
+    if (attentionInterval) {
+      window.clearInterval(attentionInterval);
+    }
+    attentionInterval = window.setInterval(() => {
+      if (petState.mode === "sleep") {
+        return;
+      }
+      if (petState.mode === "idle" || petState.mode === "rest") {
+        playSound("attention-squeak");
+      } else {
+        playSound("happy-squeak");
+      }
+    }, ATTENTION_INTERVAL);
+  }
+
+  startIdleCycle();
+  startAttentionTimer();
 
   console.log("✅ script validated");
 });
