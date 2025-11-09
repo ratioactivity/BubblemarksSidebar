@@ -21,28 +21,43 @@
 </head>
 <body>
   <div id="pet-root" role="application" aria-label="Bubble axolotl companion">
-    <img id="pet-frame" src="assets/frame.png" alt="BubblePet frame">
+    <div class="pet-frame">
+      <img src="assets/frame.png" alt="Frame" class="frame-border" />
 
-    <div id="pet-ui">
-      <header id="pet-header">
-        <div id="pet-name">Pico</div>
-        <div id="pet-status" role="status" aria-live="polite">Ready to make a splash!</div>
-      </header>
-
-      <div id="pet-display" aria-label="Axolotl animation">
-        <img id="pet-sprite" src="assets/resting.gif" alt="Axolotl relaxing inside a bubble frame">
-      </div>
-
-      <div id="pet-controls">
-        <div id="pet-buttons" role="group" aria-label="Axolotl interactions">
-          <button type="button" data-action="pet">Pet</button>
-          <button type="button" data-action="feed">Feed</button>
-          <button type="button" data-action="swim">Go Swim</button>
-          <button type="button" data-action="rest">Rest</button>
-          <button type="button" data-action="sleep">Sleep</button>
+      <div class="ui-layer">
+        <div class="pet-header">
+          <h2 class="pet-name">Pico</h2>
+          <div class="friendship">
+            <span>FRIENDSHIP</span><span id="friendship-value">72</span>
+            <button id="rename-button" type="button">Rename</button>
+          </div>
         </div>
-        <button id="pet-settings" type="button" aria-label="Open settings">⚙</button>
+
+        <div class="tank-window">
+          <div class="tank-background">
+            <img id="pet-sprite" src="assets/resting.gif" alt="Pico" />
+          </div>
+          <div id="status" class="status-text" role="status" aria-live="polite">Ready to make a splash!</div>
+        </div>
+
+        <div class="stats" aria-label="Pet wellbeing levels">
+          <div class="stat"><span>hunger</span><div class="bar"><div class="fill" id="bar-hunger"></div></div></div>
+          <div class="stat"><span>sleepiness</span><div class="bar"><div class="fill" id="bar-sleep"></div></div></div>
+          <div class="stat"><span>boredom</span><div class="bar"><div class="fill" id="bar-bored"></div></div></div>
+          <div class="stat"><span>overstim.</span><div class="bar"><div class="fill" id="bar-overstim"></div></div></div>
+          <div class="stat"><span>affection</span><div class="bar"><div class="fill" id="bar-love"></div></div></div>
+        </div>
+
+        <div id="pet-buttons" class="actions" role="group" aria-label="Axolotl interactions">
+          <button class="action-btn" type="button" data-action="pet">Pet</button>
+          <button class="action-btn" type="button" data-action="feed">Feed</button>
+          <button class="action-btn" type="button" data-action="swim">Go Swim</button>
+          <button class="action-btn" type="button" data-action="rest">Rest</button>
+          <button class="action-btn" type="button" data-action="sleep">Sleep</button>
+        </div>
       </div>
+
+      <button class="settings-btn" type="button" aria-label="Open settings">⚙️</button>
     </div>
   </div>
 
