@@ -26,7 +26,8 @@
       </div>
     </div>
   </div>
-  <main class="app-shell">
+  <div class="screenpad-layout">
+    <main class="app-shell">
     <header class="hero">
       <div class="hero__decor hero__decor--left" aria-hidden="true">
         <img src="assets/stars.gif" alt="" />
@@ -139,7 +140,19 @@
     <p id="empty-state" class="empty-state" hidden>
       No bookmarks match that vibe yet. Try a different search or category!
     </p>
-  </main>
+    </main>
+
+    <section id="pet-widget" class="pet-widget" aria-label="Axolotl companion widget">
+      <div class="pet-widget__frame">
+        <iframe
+          src="pet-axolotl/pet.html"
+          title="Axolotl companion"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+        ></iframe>
+      </div>
+    </section>
+  </div>
 
   <template id="bookmark-card-template">
     <a class="card bookmark-card" target="_blank" rel="noopener noreferrer">

@@ -23,11 +23,6 @@ body {
   max-height: 100%;
 }
 
-.app-shell {
-  overflow-y: auto;
-  max-height: 100vh;
-}
-
 .notion-embed html,
 .notion-embed body,
 .notion-embed .app-shell,
@@ -36,6 +31,75 @@ body.notion-embed,
 html.notion-embed .app-shell,
 body.notion-embed .app-shell {
   overflow: hidden;
+}
+
+.app-shell {
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+
+.screenpad-layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: clamp(1.5rem, 3vw, 3.5rem);
+  width: min(100%, 3840px);
+  margin: 0 auto;
+}
+
+.screenpad-layout .app-shell {
+  flex: 1 1 960px;
+}
+
+.pet-widget {
+  flex: 0 1 clamp(320px, 28vw, 560px);
+  width: min(100%, clamp(320px, 28vw, 580px));
+  max-width: 100%;
+  background: var(--surface);
+  backdrop-filter: blur(28px);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: calc(var(--soft-radius) * 1.2);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  min-height: clamp(320px, 60vh, 720px);
+}
+
+.pet-widget__frame {
+  flex: 1 1 auto;
+  display: flex;
+}
+
+.pet-widget__frame iframe,
+.pet-widget__frame .pet-widget__placeholder {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+@media (min-width: 1400px) {
+  .screenpad-layout {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+  }
+
+  .pet-widget {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 1399px) {
+  .screenpad-layout .app-shell,
+  .pet-widget {
+    width: 100%;
+  }
 }
 
 :root {
