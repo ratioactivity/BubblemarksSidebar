@@ -11,6 +11,26 @@ window.addEventListener("DOMContentLoaded", () => {
     name: "Axolotl",
   };
 
+  const SOUND_FILES = [
+    "attention-squeak",
+    "fastswim-squeak",
+    "float-squeak",
+    "happy-squeak",
+    "munch-squeak",
+    "pet-sound",
+    "resting-sound",
+    "swimming-sound",
+  ];
+
+  const soundLibrary = SOUND_FILES.reduce((library, name) => {
+    const audio = new Audio(`sounds/${name}.mp3`);
+    audio.volume = 0.45;
+    audio.preload = "auto";
+    audio.load();
+    library[name] = audio;
+    return library;
+  }, {});
+
   const animations = {
     idleRest: "assets/resting.gif",
     idleFloat: "assets/floating.gif",
@@ -40,8 +60,18 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!petState.soundEnabled) {
       return;
     }
-    const audio = new Audio(`sounds/${name}.mp3`);
-    audio.volume = 0.45;
+    const audio = soundLibrary[name];
+    if (!audio) {
+      console.warn(`[BubblePet] Missing sound for "${name}"`);
+      return;
+    }
+    audio.pause();
+    try {
+      audio.currentTime = 0;
+    } catch (error) {
+      // Some browsers may disallow resetting currentTime before metadata is ready.
+      console.warn(`[BubblePet] Unable to reset sound "${name}":`, error);
+    }
     audio.play().catch(() => {});
   }
 
