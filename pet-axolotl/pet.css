@@ -1,138 +1,587 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: transparent;
+  min-height: 100%;
+  background: radial-gradient(circle at 15% 20%, #f4f5ff 0%, #f0f1ff 28%, rgba(238, 229, 255, 0.9) 52%, rgba(254, 238, 250, 0.92) 100%);
   font-family: "Papernotes", system-ui, sans-serif;
-  color: #4c4c63;
+  color: #5f5a7d;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(32px, 6vh, 48px) clamp(16px, 6vw, 48px);
 }
 
 #pet-root {
+  width: min(600px, 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pet-container {
   position: relative;
-  width: 480px;
-  height: 320px;
-  margin: 20px auto;
+  width: 100%;
+  padding: clamp(30px, 6vw, 44px);
+  border-radius: 30px;
+  overflow: visible;
+  background:
+    linear-gradient(180deg, rgba(248, 244, 255, 0.85) 0%, rgba(235, 228, 255, 0.6) 48%, rgba(222, 218, 255, 0.5) 100%);
+  box-shadow: 0 32px 68px rgba(120, 102, 174, 0.28);
+}
+
+.pet-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: url("assets/background.png") center/cover no-repeat;
+  opacity: 0.85;
+  filter: blur(10px) saturate(115%);
+  z-index: -2;
+}
+
+.pet-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
+    inset 0 28px 60px rgba(255, 255, 255, 0.25),
+    inset 0 -32px 70px rgba(124, 105, 180, 0.2);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.pet-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1756 / 2400;
+  display: grid;
+  place-items: stretch;
+  isolation: isolate;
+  transition: transform 1.8s ease-in-out;
 }
 
 #pet-frame {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-#pet-ui {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 22px 48px rgba(118, 101, 171, 0.38));
+  pointer-events: none;
+  z-index: 3;
+}
+
+.inner-tank {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tank-content {
+  position: absolute;
+  inset: clamp(8%, 7vw, 9%) clamp(8%, 7vw, 9%) clamp(9%, 8vw, 10%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 18px 22px;
+  gap: clamp(18px, 3vh, 28px);
+  padding: clamp(20px, 3vw, 30px);
+  text-align: center;
+  border-radius: clamp(30px, 8vw, 44px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(215, 229, 255, 0.34) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    inset 0 28px 58px rgba(255, 255, 255, 0.62),
+    inset 0 -30px 60px rgba(142, 182, 255, 0.26),
+    0 16px 32px rgba(115, 104, 170, 0.18);
+  backdrop-filter: blur(5px);
+  overflow: hidden;
+  z-index: 2;
+}
+
+.tank-content::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 25% 15%, rgba(255, 255, 255, 0.85), transparent 62%),
+    radial-gradient(circle at 80% 12%, rgba(255, 255, 255, 0.4), transparent 55%);
+  opacity: 0.9;
   pointer-events: none;
+  z-index: 0;
+}
+
+.tank-content::after {
+  content: "";
+  position: absolute;
+  inset: -12% -18% -18%;
+  border-radius: 45px;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.35) 0%, transparent 70%), linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(176, 192, 255, 0.2) 55%, rgba(126, 113, 196, 0.25) 100%);
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+  animation: rippleLight 16s ease-in-out infinite alternate;
+  background-size: 120% 160%;
+}
+
+.tank-ambient {
+  position: absolute;
+  inset: -20% -25%;
+  background: radial-gradient(circle at 35% 15%, rgba(255, 255, 255, 0.4) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 55%);
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  filter: blur(6px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 #pet-header {
-  width: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 12px;
+  z-index: 1;
+}
+
+.tank-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.pet-meta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.72), rgba(214, 220, 255, 0.52));
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.55);
+}
+
+.pet-meta-label {
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(102, 96, 144, 0.72);
+}
+
+.pet-meta-value {
+  font-size: 19px;
+  color: #806ad8;
+}
+
+.pet-nameplate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: inset 0 0 22px rgba(255, 255, 255, 0.7);
 }
 
 #pet-name {
-  font-family: "Bigbesty", cursive;
-  font-size: 32px;
-  color: #ff8bc9;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
-  letter-spacing: 1px;
+  margin: 0;
+  font-family: "Bigbesty", "Papernotes", cursive;
+  font-size: clamp(34px, 7vw, 46px);
+  letter-spacing: 1.5px;
+  color: #f08dc5;
+  text-shadow: 0 10px 24px rgba(235, 166, 220, 0.55);
+}
+
+.pet-rename {
+  border: 1px dashed rgba(138, 126, 187, 0.7);
+  border-radius: 999px;
+  padding: 6px 18px;
+  background: rgba(255, 255, 255, 0.42);
+  color: #6b5aa3;
+  font-family: "Papernotes", system-ui, sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 10px 18px rgba(154, 144, 205, 0.28);
+}
+
+.pet-rename:hover {
+  background: rgba(255, 255, 255, 0.66);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(154, 144, 205, 0.36);
+}
+
+.pet-rename:active {
+  transform: scale(0.95);
 }
 
 #pet-status {
-  padding: 6px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 26px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: inset 0 0 10px rgba(255, 222, 255, 0.7), 0 4px 10px rgba(94, 56, 104, 0.2);
-  font-size: 15px;
-  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 16px 34px rgba(141, 130, 190, 0.26);
+  font-size: 16px;
+  color: #706a92;
+}
+
+.tank-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 4vh, 32px);
+  width: 100%;
+  z-index: 1;
 }
 
 #pet-display {
-  width: 75%;
-  height: 55%;
+  position: relative;
+  width: 100%;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: auto;
-  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.6), rgba(202, 230, 255, 0));
-  border-radius: 24px;
-  padding: 12px;
+}
+
+.pet-tank {
+  position: relative;
+  width: 100%;
+  height: clamp(220px, 38vh, 320px);
+  border-radius: clamp(28px, 7vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.75) 0%, rgba(218, 232, 255, 0.35) 55%, rgba(185, 210, 255, 0.15) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
+    inset 0 24px 55px rgba(255, 255, 255, 0.45),
+    inset 0 -26px 55px rgba(140, 178, 255, 0.28),
+    0 20px 48px rgba(120, 108, 182, 0.22);
+  overflow: hidden;
+}
+
+.tank-shimmer {
+  position: absolute;
+  inset: -40% -60%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.38) 0%, transparent 60%);
+  animation: shimmer 8s linear infinite;
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translate(-10%, -10%) rotate(0deg);
+  }
+  50% {
+    transform: translate(10%, 5%) rotate(10deg);
+  }
+  100% {
+    transform: translate(-10%, -10%) rotate(0deg);
+  }
 }
 
 #pet-sprite {
-  max-width: 100%;
-  max-height: 100%;
+  position: relative;
+  max-width: min(58%, 320px);
+  max-height: 40%;
+  width: auto;
+  height: auto;
   image-rendering: pixelated;
+  z-index: 1;
+}
+
+.pet-stats-panel {
+  position: relative;
+  width: min(520px, 92%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: clamp(18px, 3vw, 24px) clamp(20px, 4vw, 28px) clamp(22px, 4vw, 30px);
+  z-index: 1;
+}
+
+.pet-stats-panel::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  filter: blur(0.5px);
+  backdrop-filter: blur(8px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.pet-stats-glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(198, 207, 255, 0.12) 100%);
+  box-shadow: inset 0 -10px 40px rgba(136, 144, 220, 0.28);
+  backdrop-filter: blur(12px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.pet-stats {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  z-index: 1;
+}
+
+.pet-stat {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 18px;
+}
+
+.pet-stat-label {
+  font-family: "Papernotes", system-ui, sans-serif;
+  font-size: 15px;
+  text-transform: lowercase;
+  letter-spacing: 0.6px;
+  color: rgba(88, 83, 125, 0.85);
+  text-align: left;
+}
+
+.pet-bar {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(111, 121, 173, 0.18);
+}
+
+.pet-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pet-bar-fill {
+  position: absolute;
+  inset: 0;
+  width: var(--progress, 50%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 188, 228, 0.95) 0%, rgba(173, 203, 255, 0.95) 50%, rgba(162, 236, 255, 0.9) 100%);
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.65);
+  transition: width 0.45s ease;
+  animation: barPulse 6s ease-in-out infinite;
+}
+
+@keyframes barPulse {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+  }
+  100% {
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0.35));
+  }
 }
 
 #pet-controls {
+  position: relative;
   width: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
+  z-index: 1;
 }
 
 #pet-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "pet feed swim"
+    "rest . sleep";
+  column-gap: 16px;
+  row-gap: 12px;
+  justify-items: stretch;
   pointer-events: auto;
 }
 
 #pet-buttons button {
   border: none;
   border-radius: 999px;
-  padding: 6px 16px;
-  font-size: 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 214, 254, 0.9));
-  color: #5a4c73;
-  box-shadow: 0 4px 8px rgba(86, 60, 100, 0.15);
+  padding: 12px 22px;
+  background: linear-gradient(160deg, rgba(255, 248, 255, 0.96), rgba(210, 224, 255, 0.95));
+  color: #5b5395;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: "Papernotes", system-ui, sans-serif;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -4px 12px rgba(167, 154, 222, 0.3),
+    0 16px 26px rgba(151, 137, 206, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  position: relative;
+}
+
+#pet-buttons button::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
+  pointer-events: none;
 }
 
 #pet-buttons button:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(180deg, rgba(255, 241, 255, 0.95), rgba(255, 197, 255, 0.95));
-  box-shadow: 0 6px 14px rgba(86, 60, 100, 0.25);
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -4px 12px rgba(167, 154, 222, 0.35),
+    0 20px 34px rgba(151, 137, 206, 0.32);
 }
 
 #pet-buttons button:active {
-  transform: translateY(1px);
-  box-shadow: 0 3px 6px rgba(86, 60, 100, 0.18);
+  transform: translateY(1px) scale(0.96);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -2px 10px rgba(167, 154, 222, 0.28),
+    0 12px 18px rgba(151, 137, 206, 0.26);
+}
+
+#pet-buttons button:nth-child(1) {
+  grid-area: pet;
+}
+
+#pet-buttons button:nth-child(2) {
+  grid-area: feed;
+}
+
+#pet-buttons button:nth-child(3) {
+  grid-area: swim;
+}
+
+#pet-buttons button:nth-child(4) {
+  grid-area: rest;
+}
+
+#pet-buttons button:nth-child(5) {
+  grid-area: sleep;
+}
+
+#pet-buttons button:nth-child(4),
+#pet-buttons button:nth-child(5) {
+  justify-self: center;
+  min-width: 70%;
+}
+
+#pet-buttons button:focus-visible {
+  outline: 2px solid rgba(129, 114, 203, 0.65);
+  outline-offset: 2px;
 }
 
 #pet-settings {
-  width: 34px;
-  height: 34px;
+  position: absolute;
+  right: clamp(18px, 7vw, 32px);
+  bottom: clamp(16px, 6vh, 28px);
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 4px 8px rgba(86, 60, 100, 0.15);
-  cursor: pointer;
-  pointer-events: auto;
-  font-size: 16px;
+  background: linear-gradient(200deg, rgba(255, 255, 255, 0.82), rgba(188, 207, 255, 0.92));
+  box-shadow: 0 18px 30px rgba(140, 126, 189, 0.32), inset 0 0 18px rgba(255, 255, 255, 0.8);
+  color: #6a5aa5;
+  font-size: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.6s ease, box-shadow 0.3s ease;
+  z-index: 3;
 }
 
 #pet-settings:hover {
-  transform: rotate(12deg);
-  box-shadow: 0 6px 12px rgba(86, 60, 100, 0.22);
+  transform: rotate(180deg) scale(1.05);
+  box-shadow: 0 22px 38px rgba(140, 126, 189, 0.38), inset 0 0 22px rgba(255, 255, 255, 0.88);
 }
 
 #pet-settings:active {
-  transform: scale(0.96);
+  transform: scale(0.92);
+}
+
+.pet-container:hover .pet-stage {
+  transform: scale(1.01);
+}
+
+@media (max-width: 560px) {
+  body {
+    padding: clamp(24px, 8vh, 32px) clamp(12px, 6vw, 24px);
+  }
+
+  .pet-container {
+    padding: clamp(22px, 6vw, 30px);
+  }
+
+  .tank-content {
+    inset: clamp(7%, 9vw, 10%) clamp(7%, 9vw, 10%) clamp(10%, 10vw, 12%);
+    padding: clamp(18px, 6vw, 24px);
+    gap: clamp(16px, 5vw, 22px);
+  }
+
+  .pet-stats-panel {
+    width: 100%;
+    padding: clamp(16px, 6vw, 22px);
+  }
+
+  #pet-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "pet feed"
+      "swim rest"
+      "sleep sleep";
+  }
+
+  #pet-buttons button:nth-child(4) {
+    justify-self: stretch;
+    min-width: 100%;
+  }
+
+  #pet-buttons button:nth-child(5) {
+    justify-self: stretch;
+    min-width: 100%;
+  }
+}
+
+@keyframes rippleLight {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
 }
