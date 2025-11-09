@@ -1,74 +1,79 @@
-/* FRAME IS THE VIEWPORT */
 .pet-frame {
   position: relative;
   width: 100%;
-  height: 100%;
-  max-width: 600px;
+  height: 100vh; /* full viewport height */
+  max-width: 700px;
   margin: 0 auto;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* FRAME IMAGE FILLS ENTIRE AREA */
+/* FRAME FILLS WHOLE VIEWPORT */
 .frame-border {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 100%;
-  height: 100%;
-  object-fit: fill;
+  height: auto;
+  max-height: 100vh;
+  object-fit: contain;
   z-index: 1;
   pointer-events: none;
 }
 
-/* UI LAYER SITS ABOVE FRAME */
+/* UI LAYER CONSTRAINED INSIDE FRAME */
 .ui-layer {
   position: relative;
   z-index: 2;
+  width: 85%;
+  height: 85%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  height: 100%;
-  padding: 20px;
+  text-align: center;
   font-family: "Papernotes", sans-serif;
 }
 
-/* PET HEADER */
+/* HEADER AREA */
 .pet-header {
+  margin-top: 1rem;
   text-align: center;
 }
 
 .pet-name {
   font-family: "Bigbesty";
-  font-size: 2.5em;
-  color: #ea7db6;
-  margin-bottom: 5px;
+  font-size: 2.2em;
+  color: #e178b5;
 }
 
 .friendship {
-  font-size: 0.9em;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  font-size: 0.9em;
+  color: #5b446f;
 }
 
 #rename-button {
-  background: rgba(255,255,255,0.4);
-  border: 2px dashed #bfa4e6;
+  background: rgba(255,255,255,0.5);
+  border: 2px dashed #bca6e2;
   border-radius: 10px;
-  padding: 4px 10px;
-  color: #5b456d;
+  padding: 3px 8px;
   cursor: pointer;
 }
 
-/* AQUARIUM WINDOW */
+/* TANK WINDOW */
 .tank-window {
-  position: relative;
-  width: 85%;
+  width: 80%;
   height: 250px;
   border-radius: 20px;
   overflow: hidden;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -80,8 +85,8 @@
   height: 100%;
   background: url("assets/background.png") center/cover no-repeat;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
 #pet-sprite {
@@ -91,22 +96,21 @@
 }
 
 .status-text {
-  position: absolute;
-  bottom: 10px;
-  font-size: 0.9em;
+  margin-top: 10px;
+  font-size: 1em;
   background: rgba(255,255,255,0.6);
   border-radius: 10px;
-  padding: 5px 10px;
-  color: #503d62;
+  padding: 4px 10px;
+  color: #4e3b63;
 }
 
-/* STATS */
+/* STATS SECTION */
 .stats {
-  width: 85%;
+  width: 80%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 5px;
 }
 
 .stat {
@@ -118,7 +122,7 @@
 .stat span {
   width: 90px;
   text-align: left;
-  color: #6e547e;
+  color: #6e577f;
 }
 
 .bar {
@@ -132,46 +136,49 @@
 
 .fill {
   height: 100%;
-  width: 70%;
-  background: linear-gradient(90deg, #ffbde2, #cbb6ff);
+  width: 60%;
+  background: linear-gradient(90deg, #f7bff7, #c2a8ff);
   border-radius: 6px;
+  transition: width 0.5s ease;
 }
 
-/* BUTTONS */
+/* ACTION BUTTONS */
 .actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
-  margin-top: 10px;
+  margin-bottom: 20px;
 }
 
 .action-btn {
-  font-family: "Papernotes";
-  background: linear-gradient(180deg, #f8d9ff, #e3c7ff);
+  background: linear-gradient(180deg, #f9dbff, #e7c3ff);
   border: none;
   border-radius: 20px;
   padding: 10px 18px;
-  color: #513e69;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-  transition: all 0.2s ease;
+  font-family: "Papernotes";
+  color: #503b65;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
 .action-btn:hover {
   transform: scale(1.05);
 }
 
-/* GEAR ICON */
+/* SETTINGS ICON */
 .settings-btn {
   position: absolute;
   bottom: 20px;
   right: 20px;
   width: 45px;
   height: 45px;
-  background: radial-gradient(circle, #ffd6f0 20%, #ffc3e0 80%);
   border-radius: 50%;
   border: none;
-  font-size: 1.2em;
-  color: #a25b9f;
-  box-shadow: 0 0 10px rgba(255,180,230,0.8);
+  background: radial-gradient(circle, #ffdff7 20%, #ffc3e3 80%);
+  box-shadow: 0 0 10px rgba(255,200,240,0.8);
+  font-size: 1.3em;
+  color: #9c5ca0;
+  cursor: pointer;
 }
