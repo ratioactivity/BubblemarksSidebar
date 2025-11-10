@@ -3,25 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BubblePet Aquarium Base</title>
+  <title>BubblePet Aquarium</title>
   <link rel="stylesheet" href="pet.css" />
 </head>
 <body>
-  <div class="aquarium-container">
-    <!-- Background window for axolotl -->
-    <div class="tank-window">
-      <img src="./assets/background.png" alt="tank background" class="tank-bg" />
+  <div class="pet-container">
+
+    <!-- Header -->
+    <div class="pet-header">
+      <div class="pet-level">Lv. 72</div>
+      <div class="pet-name">Pico</div>
+      <button class="rename-btn">Rename</button>
     </div>
 
-    <!-- Decorative overlays -->
-    <img src="./assets/frame.png" class="frame-overlay" alt="accent frame" />
-    <img src="./assets/stars-top-left.png" class="stars stars-top-left" alt="color stars top left" />
-    <img src="./assets/stars-btm-right.png" class="stars stars-btm-right" alt="color stars bottom right" />
-    <img src="./assets/whitestars-top-right.png" class="stars stars-white-top" alt="white stars top right" />
-    <img src="./assets/whitestars-btm-left.png" class="stars stars-white-bottom" alt="white stars bottom left" />
+    <!-- Aquarium Window -->
+    <div class="aquarium-window">
+      <img src="./assets/background.png" alt="tank background" class="aquarium-bg" />
+      <div class="axolotl"></div>
+    </div>
 
-    <!-- BM logo -->
-    <img src="./assets/bmlogo.png" class="bm-logo" alt="BM logo" />
+    <!-- Description Box -->
+    <div class="pet-description">
+      Ready to make a splash!
+    </div>
+
+    <!-- Status Bars -->
+    <div class="status-bars">
+      <div class="bar"><span>Hunger</span><div class="fill"></div></div>
+      <div class="bar"><span>Sleepiness</span><div class="fill"></div></div>
+      <div class="bar"><span>Boredom</span><div class="fill"></div></div>
+      <div class="bar"><span>Overstim</span><div class="fill"></div></div>
+      <div class="bar"><span>Affection</span><div class="fill"></div></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button>Feed</button>
+      <button>Pet</button>
+      <button>Swim</button>
+      <button>Rest</button>
+      <button>Sleep</button>
+    </div>
+
+    <!-- BM Logo -->
+    <div class="bm-logo">
+      <img src="./assets/bmlogo.png" alt="BM logo" />
+    </div>
+
+    <!-- Star Decorations -->
+    <img src="./assets/stars-top-left.png" class="stars top-left" alt="color stars top left" />
+    <img src="./assets/whitestars-top-right.png" class="stars top-right" alt="white stars top right" />
+    <img src="./assets/whitestars-btm-left.png" class="stars btm-left" alt="white stars bottom left" />
+    <img src="./assets/stars-btm-right.png" class="stars btm-right" alt="color stars bottom right" />
+
   </div>
 </body>
 </html>
