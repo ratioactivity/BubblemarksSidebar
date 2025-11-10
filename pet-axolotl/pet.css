@@ -186,28 +186,29 @@ body {
 
 /* --- STARS --- */
 .stars {
-  position: absolute;
-  width: 80px;
+  position: fixed;
+  width: 90px;
   opacity: 0.95;
   pointer-events: none;
+  z-index: 9999;
 }
 
 .stars.top-left {
-  top: -10px;
-  left: -5px;
+  top: 5px;
+  left: 5px;
 }
 
 .stars.top-right {
-  top: -15px;
-  right: -5px;
+  top: 5px;
+  right: 5px;
 }
 
 .stars.btm-left {
-  bottom: -10px;
-  left: -5px;
+  bottom: 5px;
+  left: 5px;
 }
 
 .stars.btm-right {
-  bottom: -5px;
-  right: -5px;
+  bottom: 5px;
+  right: 5px;
 }
