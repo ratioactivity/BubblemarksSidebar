@@ -1,79 +1,97 @@
+/* --- FONTS --- */
 @font-face {
-  font-family: 'Bigbesty';
-  src: url('fonts/Bigbesty.ttf');
+  font-family: "Bigbesty";
+  src: url("fonts/Bigbesty.ttf");
 }
 
 @font-face {
-  font-family: 'Papernotes';
-  src: url('fonts/Papernotes.ttf');
+  font-family: "Papernotes";
+  src: url("fonts/Papernotes.ttf");
 }
 
-.pet-container {
+/* --- LAYOUT CONTAINER --- */
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: transparent;
+  overflow: hidden;
+}
+
+.pet-widget {
   position: relative;
-  width: 95%;
-  max-width: 480px;
-  margin: 0 auto;
-  border-radius: 30px;
-  background: linear-gradient(180deg, #fdf9ff 0%, #f4efff 100%);
-  box-shadow: 0 4px 20px rgba(180, 150, 255, 0.25);
+  width: 360px;
+  height: 640px; /* Compact widget size */
+  border-radius: 35px;
+  background: linear-gradient(180deg, #fbf8ff 0%, #f5f1ff 100%);
+  box-shadow: 0 4px 25px rgba(180, 150, 255, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
   overflow: hidden;
-  padding-bottom: 3rem;
+  padding: 0;
 }
 
-/* HEADER */
+/* --- HEADER --- */
 .pet-header {
-  width: 85%;
-  margin-top: 1rem;
+  width: 90%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: 'Papernotes', sans-serif;
-  color: #7a5cb2;
-  font-size: 1.2rem;
+  margin-top: 12px;
+  font-family: "Papernotes", sans-serif;
 }
 
 .pet-level {
-  background: rgba(215, 190, 255, 0.6);
+  background: rgba(210, 190, 255, 0.75);
   border-radius: 20px;
-  padding: 0.2rem 0.7rem;
-  font-family: 'DogicaPixel', sans-serif;
-  font-size: 0.8rem;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+  font-family: "DogicaPixel", sans-serif;
+  color: #6a4ca4;
+  margin-left: 10px;
+  z-index: 10;
 }
 
 .pet-name {
-  font-family: 'Bigbesty', sans-serif;
+  font-family: "Bigbesty", sans-serif;
   font-size: 1.8rem;
-  color: #a06be8;
+  color: #8a5de8;
   letter-spacing: 1px;
+  margin-left: -30px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
 }
 
 .rename-btn {
-  background: rgba(240, 220, 255, 0.7);
-  border: 1px dashed #bfa0ff;
-  border-radius: 12px;
-  padding: 0.3rem 0.8rem;
-  font-family: 'DogicaPixel', sans-serif;
-  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px dashed #bfa0ff;
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-family: "DogicaPixel", sans-serif;
+  font-size: 0.8rem;
   color: #7e5eb5;
   cursor: pointer;
   transition: all 0.2s;
+  margin-right: 10px;
+  z-index: 10;
 }
+
 .rename-btn:hover {
   background: rgba(250, 240, 255, 0.9);
 }
 
-/* AQUARIUM */
+/* --- AQUARIUM WINDOW --- */
 .aquarium-window {
   position: relative;
   width: 85%;
-  aspect-ratio: 1.2/1;
-  margin-top: 1rem;
+  aspect-ratio: 1.3/1;
   border-radius: 25px;
   overflow: hidden;
-  box-shadow: 0 0 15px rgba(180,140,255,0.25);
+  margin-top: 10px;
+  box-shadow: 0 0 15px rgba(180, 140, 255, 0.2);
 }
 
 .aquarium-bg {
@@ -82,93 +100,114 @@
   object-fit: cover;
 }
 
-/* DESCRIPTION */
+/* --- DESCRIPTION BOX --- */
 .pet-description {
   width: 80%;
   text-align: center;
-  margin-top: 1rem;
-  font-family: 'Papernotes', sans-serif;
-  color: #6a4c9c;
-  font-size: 1rem;
-  background: rgba(255,255,255,0.6);
-  border-radius: 10px;
-  padding: 0.4rem 0.6rem;
+  margin-top: 10px;
+  font-family: "Papernotes", sans-serif;
+  color: #654c99;
+  font-size: 1.05rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  padding: 6px 10px;
 }
 
-/* STATUS BARS */
+/* --- STATUS BARS --- */
 .status-bars {
   width: 80%;
-  margin-top: 1rem;
+  margin-top: 12px;
 }
 
 .bar {
   position: relative;
-  height: 12px;
-  background: rgba(255,255,255,0.6);
-  border-radius: 6px;
-  margin: 0.6rem 0;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  margin: 16px 0;
   overflow: hidden;
-}
-
-.bar span {
-  position: absolute;
-  left: 0;
-  top: -1.2rem;
-  font-size: 0.7rem;
-  font-family: 'DogicaPixel', sans-serif;
-  color: #7e66a4;
 }
 
 .bar .fill {
   width: 70%;
   height: 100%;
   background: linear-gradient(90deg, #b983ff, #ff98e6);
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
-/* BUTTONS */
+.label {
+  position: absolute;
+  left: -95px;
+  top: -2px;
+  font-size: 0.8rem;
+  color: #7a60a8;
+  font-family: "DogicaPixel", sans-serif;
+  text-transform: capitalize;
+}
+
+/* --- ACTION BUTTONS --- */
 .action-buttons {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.8rem;
-  margin-top: 1.5rem;
+  gap: 10px;
+  width: 90%;
+  margin-top: 20px;
 }
 
 .action-buttons button {
-  background: linear-gradient(180deg, #e7d6ff 0%, #f4e4ff 100%);
+  width: 100px;
+  height: 55px;
+  border-radius: 18px;
   border: none;
-  border-radius: 15px;
-  padding: 0.5rem 1.2rem;
-  font-family: 'Papernotes', sans-serif;
-  color: #6e4f9b;
+  background: linear-gradient(180deg, #ecdfff 0%, #f8ecff 100%);
+  box-shadow: 0 4px 10px rgba(180, 140, 255, 0.25);
+  color: #6544a2;
   font-size: 1rem;
-  box-shadow: 0 3px 8px rgba(170,120,255,0.2);
+  font-family: "Papernotes", sans-serif;
+  letter-spacing: 0.5px;
   transition: all 0.2s ease;
 }
 
 .action-buttons button:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(180deg, #f4e8ff, #ffffff);
+  transform: translateY(-3px);
+  background: linear-gradient(180deg, #f7e8ff 0%, #ffffff 100%);
 }
 
-/* BM LOGO */
+/* --- BM LOGO --- */
 .bm-logo {
-  margin-top: 1.8rem;
+  margin-top: 15px;
 }
+
 .bm-logo img {
   width: 65px;
   opacity: 0.9;
 }
 
-/* STARS */
+/* --- STARS --- */
 .stars {
   position: absolute;
-  width: 90px;
-  opacity: 0.9;
+  width: 80px;
+  opacity: 0.95;
   pointer-events: none;
 }
-.stars.top-left { top: 0; left: 0; }
-.stars.top-right { top: 0; right: 0; }
-.stars.btm-left { bottom: 0; left: 0; }
-.stars.btm-right { bottom: 0; right: 0; }
+
+.stars.top-left {
+  top: -10px;
+  left: -5px;
+}
+
+.stars.top-right {
+  top: -15px;
+  right: -5px;
+}
+
+.stars.btm-left {
+  bottom: -10px;
+  left: -5px;
+}
+
+.stars.btm-right {
+  bottom: -5px;
+  right: -5px;
+}
