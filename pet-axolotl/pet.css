@@ -50,7 +50,7 @@ body {
   border-radius: 20px;
   padding: 4px 10px;
   font-size: 0.9rem;
-  font-family: "DogicaPixel", sans-serif;
+  font-family: "Papernotes", sans-serif;
   color: #6a4ca4;
   margin-left: 10px;
   z-index: 10;
@@ -70,7 +70,7 @@ body {
   border: 2px dashed #bfa0ff;
   border-radius: 16px;
   padding: 4px 12px;
-  font-family: "DogicaPixel", sans-serif;
+  font-family: "Papernotes", sans-serif;
   font-size: 0.8rem;
   color: #7e5eb5;
   cursor: pointer;
