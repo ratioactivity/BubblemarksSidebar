@@ -21,87 +21,91 @@
     <link rel="stylesheet" href="pet.css" />
   </head>
   <body>
-    <div class="pet-container">
-      <div class="top-info">
-        <div class="level">Lv. 72</div>
-        <div class="pet-name">Pico</div>
-      </div>
+    <div class="aquarium-container">
+      <div class="pet-container">
+        <div class="top-info">
+          <div class="level">Lv. 72</div>
+          <div class="pet-name">Pico</div>
+        </div>
 
-      <div class="tank-window">
-        <img src="assets/background.png" class="tank-bg" alt="background" />
+        <div class="tank-window">
+          <img src="assets/background.png" class="tank-bg" alt="background" />
+          <img
+            id="pet-sprite"
+            src="assets/resting.gif"
+            alt="Axolotl sprite"
+            class="axolotl"
+          />
+        </div>
+
+        <div class="stats-container">
+          <div class="message-bar" id="message-bar" aria-live="polite">
+            Pico is craving affection.
+          </div>
+
+          <div class="status-bars">
+            <div class="stat-bar" id="hunger-bar">
+              <div class="stat-label">Hunger</div>
+              <div class="fill"></div>
+              <div class="stat-value" aria-live="polite">5 / 10</div>
+            </div>
+            <div class="stat-bar" id="sleepiness-bar">
+              <div class="stat-label">Sleepiness</div>
+              <div class="fill"></div>
+              <div class="stat-value" aria-live="polite">3 / 10</div>
+            </div>
+            <div class="stat-bar" id="boredom-bar">
+              <div class="stat-label">Boredom</div>
+              <div class="fill"></div>
+              <div class="stat-value" aria-live="polite">4 / 10</div>
+            </div>
+            <div class="stat-bar" id="overstim-bar">
+              <div class="stat-label">Overstimulation</div>
+              <div class="fill"></div>
+              <div class="stat-value" aria-live="polite">2 / 10</div>
+            </div>
+            <div class="stat-bar" id="affection-bar">
+              <div class="stat-label">Affection</div>
+              <div class="fill"></div>
+              <div class="stat-value" aria-live="polite">8 / 10</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="pet-buttons">
+          <button type="button" data-action="pet">Pet</button>
+          <button type="button" data-action="feed">Feed</button>
+          <button type="button" data-action="swim">Swim</button>
+          <button type="button" data-action="rest">Rest</button>
+          <button type="button" data-action="sleep">Sleep</button>
+          <button type="button" data-action="roam">Roam</button>
+        </div>
+
+        <div class="bm-logo">
+          <img src="assets/bmlogo.png" alt="BM logo" />
+        </div>
+
         <img
-          id="pet-sprite"
-          src="assets/resting.gif"
-          alt="Axolotl sprite"
-          class="axolotl"
+          src="assets/stars-top-left.png"
+          class="stars stars-top-left"
+          alt=""
+        />
+        <img
+          src="assets/whitestars-top-right.png"
+          class="stars stars-white-top"
+          alt=""
+        />
+        <img
+          src="assets/whitestars-btm-left.png"
+          class="stars stars-white-bottom"
+          alt=""
+        />
+        <img
+          src="assets/stars-btm-right.png"
+          class="stars stars-btm-right"
+          alt=""
         />
       </div>
-
-      <div class="message-bar" id="message-bar" aria-live="polite">
-        Pico is craving affection.
-      </div>
-
-      <div class="status-bars">
-        <div class="stat-bar" id="hunger-bar">
-          <div class="stat-label">Hunger</div>
-          <div class="fill"></div>
-          <div class="stat-value" aria-live="polite">5 / 10</div>
-        </div>
-        <div class="stat-bar" id="sleepiness-bar">
-          <div class="stat-label">Sleepiness</div>
-          <div class="fill"></div>
-          <div class="stat-value" aria-live="polite">3 / 10</div>
-        </div>
-        <div class="stat-bar" id="boredom-bar">
-          <div class="stat-label">Boredom</div>
-          <div class="fill"></div>
-          <div class="stat-value" aria-live="polite">4 / 10</div>
-        </div>
-        <div class="stat-bar" id="overstim-bar">
-          <div class="stat-label">Overstimulation</div>
-          <div class="fill"></div>
-          <div class="stat-value" aria-live="polite">2 / 10</div>
-        </div>
-        <div class="stat-bar" id="affection-bar">
-          <div class="stat-label">Affection</div>
-          <div class="fill"></div>
-          <div class="stat-value" aria-live="polite">8 / 10</div>
-        </div>
-      </div>
-
-      <div id="pet-buttons">
-        <button type="button" data-action="pet">Pet</button>
-        <button type="button" data-action="feed">Feed</button>
-        <button type="button" data-action="swim">Swim</button>
-        <button type="button" data-action="rest">Rest</button>
-        <button type="button" data-action="sleep">Sleep</button>
-        <button type="button" data-action="roam">Roam</button>
-      </div>
-
-      <div class="bm-logo">
-        <img src="assets/bmlogo.png" alt="BM logo" />
-      </div>
-
-      <img
-        src="assets/stars-top-left.png"
-        class="stars stars-top-left"
-        alt=""
-      />
-      <img
-        src="assets/whitestars-top-right.png"
-        class="stars stars-white-top"
-        alt=""
-      />
-      <img
-        src="assets/whitestars-btm-left.png"
-        class="stars stars-white-bottom"
-        alt=""
-      />
-      <img
-        src="assets/stars-btm-right.png"
-        class="stars stars-btm-right"
-        alt=""
-      />
     </div>
   </body>
 </html>
