@@ -71,7 +71,7 @@ img {
 .top-info {
   width: 80%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
   gap: 0.6rem;
   color: #915ea6;
@@ -108,7 +108,7 @@ img {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.tank-bg {
+.aquarium-bg {
   width: 100%;
   height: 100%;
   object-fit: cover;
