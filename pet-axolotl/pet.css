@@ -1,88 +1,174 @@
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: linear-gradient(180deg, #f9f7ff 0%, #fff9fe 100%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+@font-face {
+  font-family: 'Bigbesty';
+  src: url('fonts/Bigbesty.ttf');
 }
 
-.aquarium-container {
+@font-face {
+  font-family: 'Papernotes';
+  src: url('fonts/Papernotes.ttf');
+}
+
+.pet-container {
   position: relative;
   width: 95%;
-  max-width: 450px;
-  aspect-ratio: 3 / 4.5;
+  max-width: 480px;
+  margin: 0 auto;
+  border-radius: 30px;
+  background: linear-gradient(180deg, #fdf9ff 0%, #f4efff 100%);
+  box-shadow: 0 4px 20px rgba(180, 150, 255, 0.25);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-}
-
-.tank-window {
-  position: absolute;
-  width: 80%;
-  height: 65%;
-  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 0 20px rgba(220, 200, 255, 0.3);
-  z-index: 1;
+  padding-bottom: 3rem;
 }
 
-.tank-bg {
+/* HEADER */
+.pet-header {
+  width: 85%;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Papernotes', sans-serif;
+  color: #7a5cb2;
+  font-size: 1.2rem;
+}
+
+.pet-level {
+  background: rgba(215, 190, 255, 0.6);
+  border-radius: 20px;
+  padding: 0.2rem 0.7rem;
+  font-family: 'DogicaPixel', sans-serif;
+  font-size: 0.8rem;
+}
+
+.pet-name {
+  font-family: 'Bigbesty', sans-serif;
+  font-size: 1.8rem;
+  color: #a06be8;
+  letter-spacing: 1px;
+}
+
+.rename-btn {
+  background: rgba(240, 220, 255, 0.7);
+  border: 1px dashed #bfa0ff;
+  border-radius: 12px;
+  padding: 0.3rem 0.8rem;
+  font-family: 'DogicaPixel', sans-serif;
+  font-size: 0.75rem;
+  color: #7e5eb5;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.rename-btn:hover {
+  background: rgba(250, 240, 255, 0.9);
+}
+
+/* AQUARIUM */
+.aquarium-window {
+  position: relative;
+  width: 85%;
+  aspect-ratio: 1.2/1;
+  margin-top: 1rem;
+  border-radius: 25px;
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(180,140,255,0.25);
+}
+
+.aquarium-bg {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.frame-overlay {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  z-index: 2;
-  pointer-events: none;
+/* DESCRIPTION */
+.pet-description {
+  width: 80%;
+  text-align: center;
+  margin-top: 1rem;
+  font-family: 'Papernotes', sans-serif;
+  color: #6a4c9c;
+  font-size: 1rem;
+  background: rgba(255,255,255,0.6);
+  border-radius: 10px;
+  padding: 0.4rem 0.6rem;
 }
 
+/* STATUS BARS */
+.status-bars {
+  width: 80%;
+  margin-top: 1rem;
+}
+
+.bar {
+  position: relative;
+  height: 12px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 6px;
+  margin: 0.6rem 0;
+  overflow: hidden;
+}
+
+.bar span {
+  position: absolute;
+  left: 0;
+  top: -1.2rem;
+  font-size: 0.7rem;
+  font-family: 'DogicaPixel', sans-serif;
+  color: #7e66a4;
+}
+
+.bar .fill {
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(90deg, #b983ff, #ff98e6);
+  border-radius: 6px;
+}
+
+/* BUTTONS */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+}
+
+.action-buttons button {
+  background: linear-gradient(180deg, #e7d6ff 0%, #f4e4ff 100%);
+  border: none;
+  border-radius: 15px;
+  padding: 0.5rem 1.2rem;
+  font-family: 'Papernotes', sans-serif;
+  color: #6e4f9b;
+  font-size: 1rem;
+  box-shadow: 0 3px 8px rgba(170,120,255,0.2);
+  transition: all 0.2s ease;
+}
+
+.action-buttons button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #f4e8ff, #ffffff);
+}
+
+/* BM LOGO */
+.bm-logo {
+  margin-top: 1.8rem;
+}
+.bm-logo img {
+  width: 65px;
+  opacity: 0.9;
+}
+
+/* STARS */
 .stars {
   position: absolute;
-  width: 30%;
-  height: auto;
+  width: 90px;
+  opacity: 0.9;
   pointer-events: none;
-  z-index: 3;
 }
-
-.stars-top-left {
-  top: -3%;
-  left: -3%;
-}
-
-.stars-btm-right {
-  bottom: -2%;
-  right: -2%;
-}
-
-.stars-white-top {
-  top: 3%;
-  right: -2%;
-  width: 22%;
-  opacity: 0.9;
-}
-
-.stars-white-bottom {
-  bottom: 3%;
-  left: -2%;
-  width: 22%;
-  opacity: 0.9;
-}
-
-.bm-logo {
-  position: absolute;
-  bottom: 5%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  z-index: 4;
-  opacity: 0.95;
-}
+.stars.top-left { top: 0; left: 0; }
+.stars.top-right { top: 0; right: 0; }
+.stars.btm-left { bottom: 0; left: 0; }
+.stars.btm-right { bottom: 0; right: 0; }
