@@ -1,85 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BubblePet Widget</title>
-  <link rel="stylesheet" href="pet.css" />
-</head>
-<body>
-  <div class="pet-widget">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pet Axolotl</title>
+    <link rel="stylesheet" href="pet.css" />
+  </head>
+  <body>
+    <div class="pet-container">
+      <div class="top-info">
+        <div class="level">Lv. 72</div>
+        <div class="pet-name">Pico</div>
+      </div>
 
-    <!-- Header -->
-    <div class="pet-header">
-      <div class="pet-level">Lv. 72</div>
-      <div class="pet-name">Pico</div>
-      <button class="rename-btn">Rename</button>
+      <div class="aquarium-window">
+        <img src="assets/background.png" class="aquarium-bg" alt="background" />
+        <img
+          id="pet-sprite"
+          src="assets/resting.gif"
+          alt="Axolotl sprite"
+          class="axolotl"
+        />
+      </div>
+
+      <div class="status-bars">
+        <div class="bar" id="hunger-bar">
+          <span>Hunger</span>
+          <div class="fill"></div>
+          <div class="value" aria-live="polite">5 / 10</div>
+        </div>
+        <div class="bar" id="sleepiness-bar">
+          <span>Sleepiness</span>
+          <div class="fill"></div>
+          <div class="value" aria-live="polite">3 / 10</div>
+        </div>
+        <div class="bar" id="boredom-bar">
+          <span>Boredom</span>
+          <div class="fill"></div>
+          <div class="value" aria-live="polite">4 / 10</div>
+        </div>
+        <div class="bar" id="overstim-bar">
+          <span>Overstim</span>
+          <div class="fill"></div>
+          <div class="value" aria-live="polite">2 / 10</div>
+        </div>
+        <div class="bar" id="affection-bar">
+          <span>Affection</span>
+          <div class="fill"></div>
+          <div class="value" aria-live="polite">8 / 10</div>
+        </div>
+      </div>
+
+      <div class="actions" id="pet-buttons">
+        <button type="button" data-action="pet">Pet</button>
+        <button type="button" data-action="feed">Feed</button>
+        <button type="button" data-action="swim">Swim</button>
+        <button type="button" data-action="rest">Rest</button>
+        <button type="button" data-action="sleep">Sleep</button>
+      </div>
+
+      <div class="bm-logo">
+        <img src="assets/bmlogo.png" alt="BM logo" />
+      </div>
+
+      <img src="assets/stars-top-left.png" class="stars top-left" alt="" />
+      <img src="assets/whitestars-top-right.png" class="stars top-right" alt="" />
+      <img src="assets/whitestars-btm-left.png" class="stars btm-left" alt="" />
+      <img src="assets/stars-btm-right.png" class="stars btm-right" alt="" />
     </div>
-
-    <!-- Aquarium Window -->
-    <div class="aquarium-window">
-      <img src="./assets/background.png" alt="tank background" class="aquarium-bg" />
-      <div class="axolotl"></div>
-    </div>
-
-    <!-- Description Box -->
-    <div class="pet-description">
-      Ready to make a splash!
-    </div>
-
-    <!-- Status Bars -->
-    <div class="stats">
-  <div class="bar" id="hunger-bar">
-    <span class="label">Hunger</span>
-    <div class="fill"></div>
-    <span class="value">5 / 10</span>
-  </div>
-
-  <div class="bar" id="sleepiness-bar">
-    <span class="label">Sleepiness</span>
-    <div class="fill"></div>
-    <span class="value">3 / 10</span>
-  </div>
-
-  <div class="bar" id="boredom-bar">
-    <span class="label">Boredom</span>
-    <div class="fill"></div>
-    <span class="value">4 / 10</span>
-  </div>
-
-  <div class="bar" id="overstim-bar">
-    <span class="label">Overstimulation</span>
-    <div class="fill"></div>
-    <span class="value">2 / 10</span>
-  </div>
-
-  <div class="bar" id="affection-bar">
-    <span class="label">Affection</span>
-    <div class="fill"></div>
-    <span class="value">8 / 10</span>
-  </div>
-</div>
-
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-      <button>Feed</button>
-      <button>Pet</button>
-      <button>Swim</button>
-      <button>Rest</button>
-      <button>Sleep</button>
-    </div>
-
-    <!-- BM Logo -->
-    <div class="bm-logo">
-      <img src="./assets/bmlogo.png" alt="BM logo" />
-    </div>
-
-    <!-- Star Decorations -->
-    <img src="./assets/stars-top-left.png" class="stars top-left" alt="">
-    <img src="./assets/whitestars-top-right.png" class="stars top-right" alt="">
-    <img src="./assets/whitestars-btm-left.png" class="stars btm-left" alt="">
-    <img src="./assets/stars-btm-right.png" class="stars btm-right" alt="">
-
-  </div>
-</body>
+  </body>
 </html>

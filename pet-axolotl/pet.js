@@ -27,35 +27,16 @@ window.addEventListener("DOMContentLoaded", () => {
       name: "Axolotl",
     };
 
-    
-window.addEventListener("DOMContentLoaded", () => {
-  window.initPetWidget = function initPetWidget(rootElement) {
-    if (!rootElement) {
-      console.error("[BubblePet] initPetWidget requires a rootElement");
-      return;
-    }
-
-    const spriteEl = rootElement.querySelector("#pet-sprite");
-    const buttons = rootElement.querySelectorAll("#pet-buttons button");
-
-    if (!spriteEl) {
-      console.error("[BubblePet] Missing #pet-sprite element in widget root");
-      return;
-    }
-
-    if (!buttons.length) {
-      console.error("[BubblePet] Missing #pet-buttons buttons in widget root");
-      return;
-    }
-
-    const petState = {
-      mode: "idle",
-      idlePhase: "resting",
-      soundEnabled: true,
-      attention: 100,
-      level: 1,
-      name: "Axolotl",
+    const stats = {
+      hunger: 5,
+      sleepiness: 3,
+      boredom: 4,
+      overstim: 2,
+      affection: 8,
     };
+
+    const STAT_LIMIT = 10;
+    const SLEEP_HOURS = { start: 4, end: 12 }; // CST
 
     const SOUND_FILES = [
       "attention-squeak",
@@ -100,6 +81,35 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       spriteEl.src = src;
       petState.currentAnimation = name;
+    }
+
+    function updateBars() {
+      for (const key in stats) {
+        const bar = document.getElementById(`${key}-bar`);
+        if (!bar) continue;
+        const fill = bar.querySelector(".fill");
+        const valueText = bar.querySelector(".value");
+        const percent = (stats[key] / STAT_LIMIT) * 100;
+        if (fill) {
+          fill.style.width = percent + "%";
+        }
+        if (valueText) {
+          valueText.textContent = `${stats[key]} / 10`;
+        }
+      }
+    }
+
+    function modifyStat(stat, amount) {
+      if (!(stat in stats)) return;
+      stats[stat] = Math.min(STAT_LIMIT, Math.max(0, stats[stat] + amount));
+      updateBars();
+    }
+
+    function isSleepTime() {
+      const now = new Date();
+      const utcHour = now.getUTCHours();
+      const cstHour = (utcHour - 6 + 24) % 24;
+      return cstHour >= SLEEP_HOURS.start && cstHour < SLEEP_HOURS.end;
     }
 
     function playSound(name) {
@@ -280,22 +290,33 @@ window.addEventListener("DOMContentLoaded", () => {
       switch (action) {
         case "pet":
           enterMode("pet");
+          modifyStat("affection", +2);
+          modifyStat("boredom", -5);
           break;
         case "feed":
           enterMode("eat");
+          modifyStat("hunger", -5);
           break;
         case "swim":
           enterMode("swim");
+          modifyStat("overstim", +1);
+          modifyStat("boredom", -5);
+          modifyStat("sleepiness", +5);
           break;
         case "rest":
           enterMode("rest");
+          modifyStat("overstim", -5);
+          modifyStat("boredom", +1);
           break;
         case "sleep":
           enterMode("sleep");
+          modifyStat("sleepiness", -5);
           break;
         default:
           enterMode("idle");
       }
+
+      updateBars();
     }
 
     buttons.forEach((btn) => {
@@ -320,7 +341,17 @@ window.addEventListener("DOMContentLoaded", () => {
       }, ATTENTION_INTERVAL);
     }
 
+    function hourlyUpdate() {
+      if (isSleepTime()) return;
+      modifyStat("hunger", +1);
+      modifyStat("boredom", +1);
+      modifyStat("affection", -1);
+    }
+
+    setInterval(hourlyUpdate, 3600000); // every hour
+
     startIdleCycle();
+    updateBars();
     startAttentionTimer();
 
     console.log("✅ script validated");
