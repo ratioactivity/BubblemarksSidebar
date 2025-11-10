@@ -1,141 +1,49 @@
-.pet-frame {
-  position: relative;
+html, body {
   width: 100%;
-  height: 100vh; /* full viewport height */
-  max-width: 700px;
-  margin: 0 auto;
+  height: 100%;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
+  background: linear-gradient(180deg, #f6f2ff 0%, #fefcff 100%);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* FRAME FILLS WHOLE VIEWPORT */
-.frame-border {
+.frame-container {
+  position: relative;
+  width: 90%;
+  max-width: 420px;
+  aspect-ratio: 3 / 4.5;
+}
+
+.frame {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover; /* fill entire area */
+  object-fit: contain;
   z-index: 1;
+}
+
+.stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
-/* UI */
-.ui-layer {
-  position: absolute;
+.stars-top {
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 40px 0 80px 0; /* give top/bottom breathing room */
-  box-sizing: border-box;
-}
-
-/* HEADER */
-.pet-header {
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-/* TANK AREA */
-.tank-window {
-  width: 75%;
-  aspect-ratio: 4 / 3;  /* maintain nice square proportion */
-  border-radius: 20px;
-  overflow: hidden;
-  background: url("assets/background.png") center/cover no-repeat;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 15px;
-}
-
-#pet-sprite {
-  width: 110px;
+  width: 105%;
   height: auto;
-  image-rendering: pixelated;
+  z-index: 2;
 }
 
-/* STATUS */
-.status-text {
-  margin-top: 6px;
-  font-size: 0.95em;
-  background: rgba(255,255,255,0.65);
-  border-radius: 8px;
-  padding: 5px 12px;
-  color: #4e3b63;
-}
-
-/* STATS */
-.stats {
-  width: 75%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.stat span {
-  color: #5c456e;
-  font-size: 0.9em;
-}
-
-.bar {
-  height: 8px;
-  background: rgba(255,255,255,0.5);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.fill {
-  height: 100%;
-  width: 60%;
-  background: linear-gradient(90deg, #ffbce8, #c8b5ff);
-}
-
-/* ACTION BUTTONS */
-.actions {
-  position: absolute;
-  bottom: 45px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  z-index: 3;
-}
-
-.action-btn {
-  font-family: "Papernotes";
-  background: linear-gradient(180deg, #f6d7ff, #e4c9ff);
-  border: none;
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 0.9em;
-  color: #513d65;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.action-btn:hover {
-  transform: scale(1.05);
-}
-
-/* SETTINGS ICON */
-.settings-btn {
-  position: absolute;
-  bottom: 15px;
-  right: 20px;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  border: none;
-  background: radial-gradient(circle, #ffe6f8 20%, #ffd2f0 80%);
-  box-shadow: 0 0 10px rgba(255,200,240,0.8);
-  font-size: 1.3em;
-  color: #a65ba0;
-  cursor: pointer;
+.stars-bottom {
+  bottom: 0;
+  right: 0;
+  width: 105%;
+  height: auto;
+  z-index: 2;
 }
