@@ -1,88 +1,316 @@
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: linear-gradient(180deg, #f9f7ff 0%, #fff9fe 100%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+:root {
+  color-scheme: only light;
 }
 
-.aquarium-container {
-  position: relative;
-  width: 95%;
-  max-width: 450px;
-  aspect-ratio: 3 / 4.5;
+@font-face {
+  font-family: "Papernotes";
+  src: url("./fonts/Papernotes.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Bigbesty";
+  src: url("./fonts/Bigbesty.ttf") format("truetype");
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body,
+button,
+.stat-label,
+.stat-value {
+  font-family: "Papernotes", sans-serif;
+}
+
+h1,
+h2,
+.title,
+.pet-name {
+  font-family: "Bigbesty", sans-serif;
+}
+
+body {
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 24px;
+  background: linear-gradient(180deg, #f7f1ff 0%, #fff8fb 100%);
+  color: #5c4b75;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.pet-container {
+  position: relative;
+  width: 90%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1.4rem 1.6rem 5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 32px;
+  background: linear-gradient(#f9f6ff, #f2edfd);
+  box-shadow: 0 16px 35px rgba(200, 180, 255, 0.35);
+  overflow: hidden;
+}
+
+.top-info {
+  width: 80%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+  color: #915ea6;
+  font-size: 1rem;
+  margin-top: 0.2rem;
+  text-align: center;
+}
+
+.top-info .level,
+.top-info .pet-name {
+  padding: 0.35rem 1rem;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(205, 180, 245, 0.4);
+}
+
+.top-info .level {
+  font-size: 0.95rem;
+}
+
+.top-info .pet-name {
+  font-size: 1.4rem;
+  color: #7c4fa8;
 }
 
 .tank-window {
-  position: absolute;
-  width: 80%;
-  height: 65%;
-  border-radius: 20px;
+  position: relative;
+  width: 90%;
+  height: 180px;
+  border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 0 20px rgba(220, 200, 255, 0.3);
-  z-index: 1;
+  margin: 0.9rem auto 0;
+  box-shadow: 0 15px 28px rgba(200, 150, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .tank-bg {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: inherit;
 }
 
-.frame-overlay {
+#pet-sprite {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  z-index: 2;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: auto;
+  image-rendering: pixelated;
+  z-index: 1;
   pointer-events: none;
+}
+
+.status-bars {
+  width: 90%;
+  margin: 1.6rem auto 0;
+}
+
+.stat-bar {
+  position: relative;
+  height: 18px;
+  margin: 28px 0;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  overflow: visible;
+  box-shadow: inset 0 2px 4px rgba(145, 110, 200, 0.18);
+}
+
+.stat-bar .fill {
+  height: 100%;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #9ad8ff, #fbbad1);
+  transition: width 0.4s ease, box-shadow 0.4s ease;
+  width: 0;
+}
+
+.stat-bar .fill[style*="80%"],
+.stat-bar .fill[style*="90%"],
+.stat-bar .fill[style*="100%"] {
+  box-shadow: 0 0 12px rgba(255, 190, 220, 0.8);
+}
+
+.stat-label {
+  position: absolute;
+  top: -28px;
+  left: 0;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.95rem;
+  font-family: "Papernotes", sans-serif;
+  color: #3d5aa2;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 999px;
+  box-shadow: 0 3px 8px rgba(82, 112, 179, 0.18);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95);
+  z-index: 2;
+}
+
+.stat-value {
+  position: absolute;
+  top: -28px;
+  right: 0;
+  padding: 0.12rem 0.5rem;
+  font-size: 0.88rem;
+  color: #5f55a8;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  box-shadow: 0 3px 8px rgba(95, 85, 168, 0.16);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.92);
+  z-index: 2;
+}
+
+#pet-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 90%;
+  margin: 30px auto 0;
+}
+
+#pet-buttons button {
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(160, 220, 255, 0.4),
+    rgba(255, 190, 210, 0.35)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  font-family: "Papernotes", sans-serif;
+  color: #4a4789;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(160, 160, 255, 0.25);
+  transition: all 0.25s ease;
+}
+
+#pet-buttons button:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(180, 240, 255, 0.6),
+    rgba(255, 210, 230, 0.6)
+  );
+  box-shadow: 0 6px 14px rgba(150, 190, 255, 0.4);
+  transform: scale(1.04);
+}
+
+#pet-buttons button:focus-visible {
+  outline: 2px solid rgba(180, 120, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.message-bar {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem 1.2rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(210, 190, 255, 0.45),
+    0 10px 18px rgba(200, 170, 255, 0.25);
+  font-size: 0.85rem;
+  color: #6a588c;
+  text-align: center;
+}
+
+.bm-logo {
+  margin-top: auto;
+  padding-top: 1.8rem;
+}
+
+.bm-logo img {
+  width: 72px;
+  opacity: 0.9;
 }
 
 .stars {
   position: absolute;
-  width: 30%;
-  height: auto;
+  z-index: 999;
+  opacity: 1;
   pointer-events: none;
-  z-index: 3;
+  object-fit: contain;
 }
 
 .stars-top-left {
-  top: -3%;
-  left: -3%;
+  top: -40px;
+  left: -40px;
+  width: 120px;
 }
 
 .stars-btm-right {
-  bottom: -2%;
-  right: -2%;
+  bottom: -40px;
+  right: -40px;
+  width: 120px;
 }
 
 .stars-white-top {
-  top: 3%;
-  right: -2%;
-  width: 22%;
-  opacity: 0.9;
+  top: -25px;
+  right: -25px;
+  width: 100px;
 }
 
 .stars-white-bottom {
-  bottom: 3%;
-  left: -2%;
-  width: 22%;
-  opacity: 0.9;
+  bottom: -25px;
+  left: -25px;
+  width: 100px;
 }
 
-.bm-logo {
-  position: absolute;
-  bottom: 5%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  z-index: 4;
-  opacity: 0.95;
+@media (max-width: 520px) {
+  body {
+    padding: 16px;
+  }
+
+  .pet-container {
+    border-radius: 26px;
+    padding: 1.2rem 1.1rem 4.2rem;
+  }
+
+  .top-info {
+    font-size: 0.9rem;
+    gap: 0.8rem;
+  }
+
+  .stars {
+    width: 70px;
+  }
+}
+
+@media (max-width: 360px) {
+  .top-info {
+    font-size: 0.75rem;
+  }
+
+  .stat-bar {
+    margin: 20px 0;
+  }
+
+  .stat-label,
+  .stat-value {
+    font-size: 0.7rem;
+  }
 }
