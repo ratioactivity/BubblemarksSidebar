@@ -127,43 +127,44 @@ img {
   pointer-events: none;
 }
 
-.status-bars {
+/* STAT BARS */
+.stats-container {
   width: 90%;
-  margin: 1.6rem auto 0;
+  margin: 0 auto;
+  margin-top: 20px;
 }
 
 .stat-bar {
   position: relative;
-  height: 18px;
-  margin: 28px 0;
-  background: rgba(255, 255, 255, 0.4);
+  height: 16px;
+  margin: 34px 0;
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 12px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(145, 110, 200, 0.18);
 }
 
 .stat-bar .fill {
   height: 100%;
   border-radius: 12px;
-  background: linear-gradient(90deg, #a98ff3, #f6b3e3);
+  background: linear-gradient(90deg, #b192f6, #f5aee8);
   transition: width 0.4s ease;
-  width: 0;
 }
 
 .stat-label {
   position: absolute;
-  top: -22px;
-  left: 6px;
+  top: -24px;
+  left: 4px;
+  font-family: 'Papernotes';
+  color: #6e4fa9;
   font-size: 0.95rem;
-  color: #6d4da5;
 }
 
 .stat-value {
   position: absolute;
-  top: -22px;
-  right: 6px;
+  top: -24px;
+  right: 4px;
+  font-family: 'Papernotes';
+  color: #8d6ccf;
   font-size: 0.9rem;
-  color: #8b6fcc;
 }
 
 #pet-buttons {
@@ -219,28 +220,69 @@ img {
   opacity: 0.9;
 }
 
+/* STAT BARS */
+.stats-container {
+  width: 90%;
+  margin: 0 auto;
+  margin-top: 20px;
+}
+
+.stat-bar {
+  position: relative;
+  height: 16px;
+  margin: 34px 0;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+}
+
+.stat-bar .fill {
+  height: 100%;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #b192f6, #f5aee8);
+  transition: width 0.4s ease;
+}
+
+.stat-label {
+  position: absolute;
+  top: -24px;
+  left: 4px;
+  font-family: 'Papernotes';
+  color: #6e4fa9;
+  font-size: 0.95rem;
+}
+
+.stat-value {
+  position: absolute;
+  top: -24px;
+  right: 4px;
+  font-family: 'Papernotes';
+  color: #8d6ccf;
+  font-size: 0.9rem;
+}
+
+/* STARS - move to the outermost layer */
 .stars {
   position: absolute;
-  z-index: 999;
+  z-index: 999; /* ensures stars appear over everything */
   opacity: 1;
   pointer-events: none;
-  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.7));
 }
 
 .stars-top-left {
   top: -40px;
   left: -40px;
-  width: 120px;
+  width: 130px;
 }
 
 .stars-btm-right {
   bottom: -40px;
   right: -40px;
-  width: 120px;
+  width: 130px;
 }
 
 .stars-white-top {
-  top: -25px;
+  top: -20px;
   right: -25px;
   width: 100px;
 }
