@@ -39,7 +39,7 @@
   background: rgba(215, 190, 255, 0.6);
   border-radius: 20px;
   padding: 0.2rem 0.7rem;
-  font-family: 'DogicaPixel', sans-serif;
+  font-family: 'Papernotes', sans-serif;
   font-size: 0.8rem;
 }
 
@@ -55,7 +55,7 @@
   border: 1px dashed #bfa0ff;
   border-radius: 12px;
   padding: 0.3rem 0.8rem;
-  font-family: 'DogicaPixel', sans-serif;
+  font-family: 'Papernotes', sans-serif;
   font-size: 0.75rem;
   color: #7e5eb5;
   cursor: pointer;
@@ -115,7 +115,7 @@
   left: 0;
   top: -1.2rem;
   font-size: 0.7rem;
-  font-family: 'DogicaPixel', sans-serif;
+  font-family: 'Papernotes', sans-serif;
   color: #7e66a4;
 }
 
