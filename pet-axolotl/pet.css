@@ -50,12 +50,13 @@ body {
 .aquarium-container {
   width: 100%;
   max-width: 880px;
-  min-height: 640px;
+  min-height: 100vh; /* fill full viewport height */
   padding: 0;
   margin: 0 auto;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  align-items: center; /* center horizontally only */
+  justify-content: flex-start; /* align to top */
   position: relative;
   overflow: visible !important;
 }
@@ -63,6 +64,7 @@ body {
 .pet-card {
   width: 100%;
   max-width: 720px;
+  flex-grow: 1;
   background: radial-gradient(circle at 40% 30%, #ffffff 0%, #fdfbff 80%);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.7),
@@ -70,13 +72,15 @@ body {
     0 20px 48px rgba(164, 176, 255, 0.2);
   border-radius: 32px;
   padding: 32px;
+  margin-top: 0;
+  margin-bottom: 0;
   color: #514b69;
   font-family: "Papernotes", sans-serif;
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: flex-start; /* stop vertical centering */
   overflow: visible;
 }
 
