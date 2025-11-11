@@ -145,8 +145,8 @@ img {
 }
 
 .pet-name {
-  font-size: 1.35rem;
-  letter-spacing: 0.3em;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
   color: #f7f5ff;
 }
 
@@ -333,7 +333,7 @@ img {
   background: linear-gradient(180deg, #ffb5d6 0%, #a1d7ff 100%);
   color: #f7f5ff;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1rem;
   letter-spacing: 0.2em;
   box-shadow: 0 3px 8px rgba(200, 180, 255, 0.25);
   cursor: pointer;
