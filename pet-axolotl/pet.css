@@ -61,9 +61,15 @@ body {
 }
 
 .pet-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 20px 28px;
+  height: fit-content;
+  max-height: 100%;
   overflow: visible !important;
   position: relative;
-  padding-top: 20px;
 }
 
 img {
