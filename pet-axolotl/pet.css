@@ -103,12 +103,16 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(90deg, #fbd5ec 0%, #d0ebff 100%);
+  background: linear-gradient(180deg, #fbd5ec 0%, #d0ebff 100%);
   border-radius: 18px;
-  padding: 10px 20px;
+  padding: 12px 28px;
   box-shadow: 0 4px 10px rgba(200, 180, 255, 0.25);
   position: relative;
-  font-family: 'Papernotes';
+  font-family: "Papernotes", sans-serif;
+  backdrop-filter: blur(8px);
+  color: #ffe8fa;
+  width: 100%;                /* makes it span full width */
+  box-sizing: border-box;     /* includes padding in width calc */
 }
 
 /* Left side: Level */
