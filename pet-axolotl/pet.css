@@ -145,15 +145,15 @@ img {
 }
 
 .pet-name {
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   letter-spacing: 0.1em;
   color: #f7f5ff;
 }
 
 .pet-level {
-  font-size: 0.9rem;
+  font-size: 2rem;
   background: rgba(255, 255, 255, 0.8);
-  border-radius: 10px;
+  border-radius: 20px;
   padding: 2px 12px;
   color: #2a1f5a;
   font-weight: 600;
