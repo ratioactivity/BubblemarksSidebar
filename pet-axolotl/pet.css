@@ -48,9 +48,9 @@ body {
 }
 
 .aquarium-container {
+  max-width: 720px;
+  height: 720px;
   width: 100%;
-  max-width: 620px;
-  height: 620px;
   padding-top: 20px;
   padding-bottom: 0;
   display: flex;
