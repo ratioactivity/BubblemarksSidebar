@@ -1,27 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BubblePet Aquarium Base</title>
-  <link rel="stylesheet" href="pet.css" />
-</head>
-<body>
-  <div class="aquarium-container">
-    <!-- Background window for axolotl -->
-    <div class="tank-window">
-      <img src="./assets/background.png" alt="tank background" class="tank-bg" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pet Axolotl</title>
+    <link
+      rel="preload"
+      href="./fonts/Papernotes.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="./fonts/Bigbesty.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link rel="stylesheet" href="pet.css" />
+  </head>
+  <body>
+    <div class="aquarium-container">
+      <div class="pet-container">
+        <div class="top-info">
+          <div class="level">Lv. 72</div>
+          <div class="pet-name">Pico</div>
+        </div>
+
+        <div class="tank-window">
+          <img src="assets/background.png" class="tank-bg" alt="background" />
+          <img
+            id="pet-sprite"
+            src="assets/resting.gif"
+            alt="Axolotl sprite"
+            class="axolotl"
+          />
+        </div>
+
+        <div class="stats-container">
+          <div class="message-bar" id="message-bar" aria-live="polite">
+            Pico is craving affection.
+          </div>
+
+          <div class="status-bars">
+            <div class="stat-row">
+              <div class="stat-label">Hunger</div>
+              <div class="stat-bar" id="hunger-bar">
+                <div class="fill"></div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-label">Sleepiness</div>
+              <div class="stat-bar" id="sleepiness-bar">
+                <div class="fill"></div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-label">Boredom</div>
+              <div class="stat-bar" id="boredom-bar">
+                <div class="fill"></div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-label">Overstimulation</div>
+              <div class="stat-bar" id="overstim-bar">
+                <div class="fill"></div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-label">Affection</div>
+              <div class="stat-bar" id="affection-bar">
+                <div class="fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="pet-buttons">
+          <button type="button" data-action="pet">Pet</button>
+          <button type="button" data-action="feed">Feed</button>
+          <button type="button" data-action="swim">Swim</button>
+          <button type="button" data-action="rest">Rest</button>
+          <button type="button" data-action="sleep">Sleep</button>
+          <button type="button" data-action="roam">Roam</button>
+        </div>
+
+        <div class="bm-logo">
+          <img src="assets/bmlogo.png" alt="BM logo" />
+        </div>
+
+        <img
+          src="assets/stars-top-left.png"
+          class="stars stars-top-left"
+          alt=""
+        />
+        <img
+          src="assets/whitestars-top-right.png"
+          class="stars stars-white-top"
+          alt=""
+        />
+        <img
+          src="assets/whitestars-btm-left.png"
+          class="stars stars-white-bottom"
+          alt=""
+        />
+        <img
+          src="assets/stars-btm-right.png"
+          class="stars stars-btm-right"
+          alt=""
+        />
+      </div>
     </div>
-
-    <!-- Decorative overlays -->
-    <img src="./assets/frame.png" class="frame-overlay" alt="accent frame" />
-    <img src="./assets/stars-top-left.png" class="stars stars-top-left" alt="color stars top left" />
-    <img src="./assets/stars-btm-right.png" class="stars stars-btm-right" alt="color stars bottom right" />
-    <img src="./assets/whitestars-top-right.png" class="stars stars-white-top" alt="white stars top right" />
-    <img src="./assets/whitestars-btm-left.png" class="stars stars-white-bottom" alt="white stars bottom left" />
-
-    <!-- BM logo -->
-    <img src="./assets/bmlogo.png" class="bm-logo" alt="BM logo" />
-  </div>
-</body>
+  </body>
 </html>
