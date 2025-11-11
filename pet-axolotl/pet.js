@@ -7,6 +7,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const spriteEl = rootElement.querySelector("#pet-sprite");
     const buttons = rootElement.querySelectorAll("#pet-buttons button");
+    const messageBar = rootElement.querySelector("#message-bar");
 
     if (!spriteEl) {
       console.error("[BubblePet] Missing #pet-sprite element in widget root");
@@ -26,6 +27,17 @@ window.addEventListener("DOMContentLoaded", () => {
       level: 1,
       name: "Axolotl",
     };
+
+    const stats = {
+      hunger: 5,
+      sleepiness: 3,
+      boredom: 4,
+      overstim: 2,
+      affection: 8,
+    };
+
+    const STAT_LIMIT = 10;
+    const SLEEP_HOURS = { start: 4, end: 12 }; // CST
 
     const SOUND_FILES = [
       "attention-squeak",
@@ -70,6 +82,32 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       spriteEl.src = src;
       petState.currentAnimation = name;
+    }
+
+    function updateBars() {
+      for (const key in stats) {
+        const bar = rootElement.querySelector(`#${key}-bar`);
+        if (!bar) continue;
+        const fill = bar.querySelector(".fill");
+        const value = stats[key];
+        const percent = Math.min((value / STAT_LIMIT) * 100, 100);
+        if (fill) {
+          fill.style.width = `${percent}%`;
+        }
+      }
+    }
+
+    function modifyStat(stat, amount) {
+      if (!(stat in stats)) return;
+      stats[stat] = Math.min(STAT_LIMIT, Math.max(0, stats[stat] + amount));
+      updateBars();
+    }
+
+    function isSleepTime() {
+      const now = new Date();
+      const utcHour = now.getUTCHours();
+      const cstHour = (utcHour - 6 + 24) % 24;
+      return cstHour >= SLEEP_HOURS.start && cstHour < SLEEP_HOURS.end;
     }
 
     function playSound(name) {
@@ -246,26 +284,59 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    const actionMessages = {
+      pet: "Pico is soaking up the affection!",
+      feed: "Pico happily munches on a treat.",
+      swim: "Pico is splashing around the tank!",
+      rest: "Pico is taking a calm breather.",
+      sleep: "Pico is drifting off to dreamland...",
+      roam: "Pico is exploring every nook of the tank!",
+    };
+
+    function setMessage(message) {
+      if (!messageBar || !message) {
+        return;
+      }
+      messageBar.textContent = message;
+    }
+
     function handleButtonClick(action) {
       switch (action) {
         case "pet":
           enterMode("pet");
+          modifyStat("affection", +2);
+          modifyStat("boredom", -5);
           break;
         case "feed":
           enterMode("eat");
+          modifyStat("hunger", -5);
           break;
         case "swim":
           enterMode("swim");
+          modifyStat("overstim", +1);
+          modifyStat("boredom", -5);
+          modifyStat("sleepiness", +5);
           break;
         case "rest":
           enterMode("rest");
+          modifyStat("overstim", -5);
+          modifyStat("boredom", +1);
           break;
         case "sleep":
           enterMode("sleep");
+          modifyStat("sleepiness", -5);
+          break;
+        case "roam":
+          enterMode("swim");
+          modifyStat("boredom", -5);
+          modifyStat("affection", +1);
           break;
         default:
           enterMode("idle");
       }
+
+      updateBars();
+      setMessage(actionMessages[action] || "Pico is feeling calm and cozy.");
     }
 
     buttons.forEach((btn) => {
@@ -290,7 +361,18 @@ window.addEventListener("DOMContentLoaded", () => {
       }, ATTENTION_INTERVAL);
     }
 
+    function hourlyUpdate() {
+      if (isSleepTime()) return;
+      modifyStat("hunger", +1);
+      modifyStat("boredom", +1);
+      modifyStat("affection", -1);
+      setMessage("Pico is craving a little attention.");
+    }
+
+    setInterval(hourlyUpdate, 3600000); // every hour
+
     startIdleCycle();
+    updateBars();
     startAttentionTimer();
 
     console.log("✅ script validated");
