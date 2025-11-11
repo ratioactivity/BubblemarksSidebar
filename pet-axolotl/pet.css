@@ -345,30 +345,35 @@ body {
 .pet-actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 10px;
-  width: 90%;
-  margin-left: auto;
-  margin-right: auto;
+  gap: 18px;
+  width: 100%;
+  max-width: 640px;
+  margin-top: auto;
+  margin-bottom: 0;
+  padding-top: 28px;
+  justify-items: center;
+  align-items: center;
 }
 
 .pet-actions button {
   font-family: "Bigbesty", sans-serif;
   border: none;
-  border-radius: 18px;
-  padding: 10px 0;
+  border-radius: 22px;
+  padding: 16px 0;
+  width: 100%;
   background: linear-gradient(180deg, #ffb5d6 0%, #a1d7ff 100%);
-  color: #f7f5ff;
-  font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: 0.2em;
-  box-shadow: 0 3px 8px rgba(200, 180, 255, 0.25);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: 0.15em;
+  box-shadow: 0 4px 10px rgba(190, 160, 255, 0.25);
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .pet-actions button:hover {
-  transform: scale(1.04);
+  transform: scale(1.05);
+  box-shadow: 0 6px 14px rgba(190, 160, 255, 0.35);
 }
 
 .pet-actions button:focus-visible {
