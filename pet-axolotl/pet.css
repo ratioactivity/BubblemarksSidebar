@@ -138,30 +138,30 @@ body {
 
 /* Top-left cluster */
 .stars-top-left {
-  top: -15px;
-  left: -12px;
-  width: 100px;
+  top: 20px;
+  left: 20px;
+  width: 96px;
 }
 
 /* Bottom-right cluster */
 .stars-btm-right {
-  bottom: -12px;
-  right: -12px;
-  width: 100px;
+  bottom: 24px;
+  right: 20px;
+  width: 96px;
 }
 
 /* White sparkle top-right */
 .stars-white-top {
-  top: -10px;
-  right: -10px;
-  width: 85px;
+  top: 20px;
+  right: 20px;
+  width: 90px;
 }
 
 /* White sparkle bottom-left */
 .stars-white-bottom {
-  bottom: -10px;
-  left: -10px;
-  width: 85px;
+  bottom: 24px;
+  left: 20px;
+  width: 90px;
 }
 
 /* HEADER LAYOUT */
