@@ -151,6 +151,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       persistState();
       updateBars();
+      scheduleAmbientCue();
     }
 
     function applyStatChange(stat, delta, options = {}) {
@@ -158,11 +159,17 @@ window.addEventListener("DOMContentLoaded", () => {
       if (!(stat in petState.stats)) {
         return false;
       }
-      const nextValue = clampStat(petState.stats[stat] + delta);
-      if (nextValue === petState.stats[stat]) {
+      const currentValue = petState.stats[stat];
+      const nextValue = clampStat(currentValue + delta);
+      if (nextValue === currentValue) {
         return false;
       }
       petState.stats[stat] = nextValue;
+      if (stat === "affection") {
+        const immediateCue =
+          nextValue <= AFFECTION_THRESHOLDS.low || nextValue >= AFFECTION_THRESHOLDS.high;
+        scheduleAmbientCue({ immediate: immediateCue });
+      }
       if (silent) {
         renderStatBar(stat);
         return true;
@@ -268,25 +275,113 @@ window.addEventListener("DOMContentLoaded", () => {
       return schedulerId;
     }
 
-    const SOUND_FILES = [
-      "attention-squeak",
-      "fastswim-squeak",
-      "float-squeak",
-      "happy-squeak",
-      "munch-squeak",
-      "pet-sound",
-      "resting-sound",
-      "swimming-sound",
+    function createFallbackAudioManager() {
+      const entries = new Map();
+      const api = {
+        preload(definitions = []) {
+          definitions.forEach((definition) => {
+            if (!definition || typeof definition !== "object") {
+              return;
+            }
+            const { name, src, volume = 1, allowMultiple = false, loop = false } = definition;
+            if (!name || !src) {
+              return;
+            }
+            if (!entries.has(name)) {
+              const instance = new Audio(src);
+              instance.preload = "auto";
+              instance.volume = volume;
+              instance.loop = loop;
+              try {
+                instance.load();
+              } catch (error) {
+                console.warn(`[BubblePet] Unable to preload fallback sound "${name}":`, error);
+              }
+              entries.set(name, { src, volume, allowMultiple, instance, loop });
+              return;
+            }
+            const existing = entries.get(name);
+            existing.src = src;
+            existing.volume = volume;
+            existing.allowMultiple = allowMultiple;
+            existing.loop = loop;
+            if (existing.instance) {
+              existing.instance.src = src;
+              existing.instance.volume = volume;
+              existing.instance.loop = loop;
+              try {
+                existing.instance.load();
+              } catch (error) {
+                console.warn(`[BubblePet] Unable to refresh fallback sound "${name}":`, error);
+              }
+            }
+          });
+        },
+        play(name, options = {}) {
+          const entry = entries.get(name);
+          if (!entry) {
+            return false;
+          }
+          const allowOverlap = options.allowOverlap ?? entry.allowMultiple ?? false;
+          const volume =
+            typeof options.volume === "number" && options.volume >= 0 ? options.volume : entry.volume;
+          const playbackRate = typeof options.playbackRate === "number" ? options.playbackRate : 1;
+          let target = entry.instance;
+          if (allowOverlap) {
+            target = new Audio(entry.src);
+          } else if (target) {
+            target.pause();
+          }
+          target.volume = volume;
+          target.playbackRate = playbackRate;
+          target.loop = options.loop ?? entry.loop ?? false;
+          try {
+            target.currentTime = 0;
+          } catch (error) {
+            console.warn(`[BubblePet] Unable to reset fallback sound "${name}":`, error);
+          }
+          target.play().catch(() => {});
+          return true;
+        },
+        stop(name) {
+          const entry = entries.get(name);
+          if (!entry || !entry.instance) {
+            return false;
+          }
+          entry.instance.pause();
+          try {
+            entry.instance.currentTime = 0;
+          } catch (error) {
+            console.warn(`[BubblePet] Unable to stop fallback sound "${name}":`, error);
+          }
+          return true;
+        },
+        stopAll() {
+          entries.forEach((_, key) => {
+            api.stop(key);
+          });
+        },
+        has: (name) => entries.has(name),
+      };
+      return api;
+    }
+
+    const audioManager =
+      window.BubblemarksAudio?.createManager({ defaultVolume: 0.45 }) ||
+      createFallbackAudioManager();
+
+    const SOUND_DEFINITIONS = [
+      { name: "attention-squeak", src: "sounds/attention-squeak.mp3", volume: 0.35 },
+      { name: "fastswim-squeak", src: "sounds/fastswim-squeak.mp3", volume: 0.5 },
+      { name: "float-squeak", src: "sounds/float-squeak.mp3", volume: 0.4 },
+      { name: "happy-squeak", src: "sounds/happy-squeak.mp3", volume: 0.45 },
+      { name: "munch-squeak", src: "sounds/munch-squeak.mp3", volume: 0.55 },
+      { name: "pet-sound", src: "sounds/pet-sound.mp3", volume: 0.5 },
+      { name: "resting-sound", src: "sounds/resting-sound.mp3", volume: 0.35 },
+      { name: "swimming-sound", src: "sounds/swimming-sound.mp3", volume: 0.45 },
     ];
 
-    const soundLibrary = SOUND_FILES.reduce((library, name) => {
-      const audio = new Audio(`sounds/${name}.mp3`);
-      audio.volume = 0.45;
-      audio.preload = "auto";
-      audio.load();
-      library[name] = audio;
-      return library;
-    }, {});
+    audioManager.preload(SOUND_DEFINITIONS);
 
     const MODE_DURATIONS = {
       pet: 5000,
@@ -339,10 +434,12 @@ window.addEventListener("DOMContentLoaded", () => {
       rest: {
         base: "restBase",
         sound: "resting-sound",
+        soundOptions: { volume: 0.32 },
       },
       idleRest: {
         base: "restBase",
         sound: "resting-sound",
+        soundOptions: { volume: 0.3 },
         duration: 9000,
         next: "idleFloat",
         phase: "resting",
@@ -355,6 +452,7 @@ window.addEventListener("DOMContentLoaded", () => {
       idleFloat: {
         base: "floatBase",
         sound: "float-squeak",
+        soundOptions: { volume: 0.38 },
         duration: 7000,
         next: "idleSwim",
         phase: "floating",
@@ -367,6 +465,7 @@ window.addEventListener("DOMContentLoaded", () => {
       sleep: {
         base: "sleepBase",
         sound: "resting-sound",
+        soundOptions: { volume: 0.28 },
       },
       swimBase: {
         asset: "assets/swimming.gif",
@@ -376,6 +475,7 @@ window.addEventListener("DOMContentLoaded", () => {
       idleSwim: {
         base: "swimBase",
         sound: "swimming-sound",
+        soundOptions: { volume: 0.42 },
         duration: 8000,
         next: "idleRest",
         phase: "swimming",
@@ -383,6 +483,7 @@ window.addEventListener("DOMContentLoaded", () => {
       swim: {
         base: "swimBase",
         sound: "swimming-sound",
+        soundOptions: { volume: 0.42 },
       },
       fastSwim: {
         asset: "assets/fast-swim.gif",
@@ -391,12 +492,14 @@ window.addEventListener("DOMContentLoaded", () => {
         duration: 2500,
         next: "swim",
         sound: "fastswim-squeak",
+        soundOptions: { volume: 0.55 },
       },
       petting: {
         asset: "assets/pet.gif",
         layer: "overlay",
         duration: MODE_DURATIONS.pet,
         sound: "pet-sound",
+        soundOptions: { volume: 0.5 },
         hideOnComplete: true,
       },
       munching: {
@@ -404,6 +507,7 @@ window.addEventListener("DOMContentLoaded", () => {
         layer: "overlay",
         duration: MODE_DURATIONS.eat,
         sound: "munch-squeak",
+        soundOptions: { volume: 0.55 },
         hideOnComplete: true,
       },
     };
@@ -498,7 +602,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       if (resolved.sound) {
-        playSound(resolved.sound);
+        playSound(resolved.sound, resolved.soundOptions || {});
       }
 
       if (layerTimers[layer]) {
@@ -554,23 +658,24 @@ window.addEventListener("DOMContentLoaded", () => {
       return cstHour >= SLEEP_HOURS.start && cstHour < SLEEP_HOURS.end;
     }
 
-    function playSound(name) {
-      if (!petState.soundEnabled) {
+    function playSound(request, options = {}) {
+      if (!petState.soundEnabled || !audioManager) {
         return;
       }
-      const audio = soundLibrary[name];
-      if (!audio) {
-        console.warn(`[BubblePet] Missing sound for "${name}"`);
+      let soundName = request;
+      let playbackOptions = options;
+      if (request && typeof request === "object") {
+        const { name, ...rest } = request;
+        soundName = name;
+        playbackOptions = Object.assign({}, rest, options);
+      }
+      if (!soundName) {
         return;
       }
-      audio.pause();
-      try {
-        audio.currentTime = 0;
-      } catch (error) {
-        // Some browsers may disallow resetting currentTime before metadata is ready.
-        console.warn(`[BubblePet] Unable to reset sound "${name}":`, error);
+      const played = audioManager.play(soundName, playbackOptions);
+      if (!played) {
+        console.warn(`[BubblePet] Missing sound for "${soundName}"`);
       }
-      audio.play().catch(() => {});
     }
 
     function idleStartKeyForState(baseState) {
@@ -586,10 +691,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
     let modeResetTimeout = null;
     let swimBurstInterval = null;
-    let attentionInterval = null;
+    let ambientCueTimeout = null;
 
     const SWIM_BURST_INTERVAL = 9000;
-    const ATTENTION_INTERVAL = 10 * 60 * 1000;
+    const AFFECTION_THRESHOLDS = {
+      low: 45,
+      high: 85,
+    };
+    const AMBIENT_INTERVALS = {
+      low: 4 * 60 * 1000,
+      medium: 7 * 60 * 1000,
+      high: 12 * 60 * 1000,
+    };
 
     function clearIdleCycle() {
       clearAnimationLayer("base");
@@ -620,6 +733,65 @@ window.addEventListener("DOMContentLoaded", () => {
         }
         playAnimation("fastSwim");
       }, SWIM_BURST_INTERVAL);
+    }
+
+    function clearAmbientCueTimer() {
+      if (ambientCueTimeout) {
+        window.clearTimeout(ambientCueTimeout);
+        ambientCueTimeout = null;
+      }
+    }
+
+    function evaluateAmbientCue() {
+      const affection = petState.stats.affection ?? 0;
+      if (affection <= AFFECTION_THRESHOLDS.low) {
+        return {
+          cue: {
+            sound: { name: "attention-squeak", allowOverlap: false, volume: 0.38 },
+            message: "Pico is craving a little attention.",
+          },
+          delay: AMBIENT_INTERVALS.low,
+        };
+      }
+      if (affection >= AFFECTION_THRESHOLDS.high) {
+        return {
+          cue: {
+            sound: { name: "happy-squeak", allowOverlap: false, volume: 0.48 },
+            message: "Pico lets out a cheerful chirp!",
+          },
+          delay: AMBIENT_INTERVALS.high,
+        };
+      }
+      return {
+        cue: null,
+        delay: AMBIENT_INTERVALS.medium,
+      };
+    }
+
+    function emitAmbientCue(cue) {
+      if (!cue || petState.mode === "sleep") {
+        return;
+      }
+      playSound(cue.sound);
+      if (cue.message) {
+        setMessage(cue.message);
+      }
+    }
+
+    function scheduleAmbientCue(options = {}) {
+      const { immediate = false } = options;
+      clearAmbientCueTimer();
+      const evaluation = evaluateAmbientCue();
+      if (immediate) {
+        emitAmbientCue(evaluation.cue);
+      }
+      const delay = Math.max(evaluation.delay, 1000);
+      ambientCueTimeout = window.setTimeout(() => {
+        ambientCueTimeout = null;
+        const nextEvaluation = evaluateAmbientCue();
+        emitAmbientCue(nextEvaluation.cue);
+        scheduleAmbientCue();
+      }, delay);
     }
 
     function cancelModeReset() {
@@ -654,6 +826,7 @@ window.addEventListener("DOMContentLoaded", () => {
         stopSwimBursts();
         const idleKey = typeof config.animation === "string" ? config.animation : undefined;
         startIdleCycle(idleKey);
+        scheduleAmbientCue();
         return;
       }
 
@@ -664,6 +837,7 @@ window.addEventListener("DOMContentLoaded", () => {
         petState.currentAction = config.actionName || mode;
         persistState();
         playAnimation(config.animation || mode, { layer: "overlay" });
+        scheduleAmbientCue();
         if (config.duration) {
           scheduleModeReset(mode, config.duration, resumeMode, {
             previousMode: mode,
@@ -691,6 +865,7 @@ window.addEventListener("DOMContentLoaded", () => {
       if (config.duration) {
         scheduleModeReset(mode, config.duration, config.nextMode || "idle");
       }
+      scheduleAmbientCue();
     }
 
     const actionMessages = {
@@ -938,26 +1113,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
     setActionButtonsDisabled(false);
 
-    function startAttentionTimer() {
-      if (attentionInterval) {
-        window.clearInterval(attentionInterval);
-      }
-      attentionInterval = window.setInterval(() => {
-        if (petState.mode === "sleep") {
-          return;
-        }
-        if (petState.mode === "idle" || petState.mode === "rest") {
-          playSound("attention-squeak");
-        } else {
-          playSound("happy-squeak");
-        }
-      }, ATTENTION_INTERVAL);
-    }
-
     processBackfill();
     calculateHappiness();
     startIdleCycle();
-    startAttentionTimer();
+    scheduleAmbientCue({ immediate: true });
     startScheduler();
 
     window.__bubblepetState = petState;
