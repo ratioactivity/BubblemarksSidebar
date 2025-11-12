@@ -128,16 +128,17 @@ body {
   background-size: 115% auto;
 }
 
-/* --- STAR POSITIONING --- */
+/* --- STAR DECORATIONS --- */
 .stars {
   position: absolute;
-  z-index: 999;
+  z-index: 50;
   opacity: 1;
   pointer-events: none;
   object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(160, 140, 200, 0.35));
 }
 
-/* Top-left cluster */
+/* Top-left cluster — move up significantly */
 .stars-top-left {
   top: 16px;
   left: 16px;
@@ -158,7 +159,7 @@ body {
   width: 90px;
 }
 
-/* White sparkle bottom-left */
+/* Bottom-left white cluster */
 .stars-white-bottom {
   bottom: 24px;
   left: 16px;
@@ -289,15 +290,16 @@ body {
 }
 
 /* Tank background image – fit without cropping */
-.aquarium-bg{
+.aquarium-bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;      /* key change: no cropping */
+  object-fit: cover;      /* fill the frame instead of contain */
   image-rendering: pixelated;
   border-radius: inherit;
   transform: none !important;
+  z-index: 0;
 }
 
 #pet-sprite {
@@ -451,6 +453,68 @@ body {
   font-size: 0.9rem;
   color: #6a588c;
   text-align: center;
+}
+
+/* ---------- STAR DECORATIONS (single source of truth) ---------- */
+:root{
+  /* tweak positions here without hunting selectors */
+  --star-tl-top: -10px;      /* move top-left UP a lot */
+  --star-tl-left: -12px;
+
+  --star-tr-top: -12px;      /* white top-right back in view */
+  --star-tr-right: -10px;
+
+  --star-bl-bottom: -10px;   /* white bottom-left */
+  --star-bl-left: -10px;
+
+  --star-br-bottom: 26px;    /* bottom-right moved UP a hair */
+  --star-br-right: 18px;
+}
+
+.pet-container > .stars{
+  position: absolute;
+  z-index: 9999;               /* bully through all stacking contexts */
+  pointer-events: none;
+  object-fit: contain;
+  opacity: 1;
+  display: block;              /* if Codex hid them, this forces visible */
+  filter: drop-shadow(0 2px 6px rgba(120,100,160,.28));
+}
+
+/* Top-left cluster (raise a lot) */
+.pet-container > .stars-top-left{
+  top: var(--star-tl-top);
+  left: var(--star-tl-left);
+  width: 112px;
+}
+
+/* Top-right white twinkles */
+.pet-container > .stars-white-top{
+  top: var(--star-tr-top);
+  right: var(--star-tr-right);
+  width: 96px;
+}
+
+/* Bottom-left white twinkles */
+.pet-container > .stars-white-bottom{
+  bottom: var(--star-bl-bottom);
+  left: var(--star-bl-left);
+  width: 96px;
+}
+
+/* Bottom-right colored cluster (nudge up slightly) */
+.pet-container > .stars-btm-right{
+  bottom: var(--star-br-bottom);
+  right: var(--star-br-right);
+  width: 114px;
+}
+
+/* Optional: small-screen tighten without moving them into a media-override hell */
+@media (max-width: 520px){
+  .pet-container > .stars-top-left{ width: 94px; }
+  .pet-container > .stars-white-top{ width: 86px; }
+  .pet-container > .stars-white-bottom{ width: 86px; }
+  .pet-container > .stars-btm-right{ width: 98px; }
 }
 
 @media (max-width: 520px) {
