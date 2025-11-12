@@ -382,15 +382,6 @@ window.addEventListener("DOMContentLoaded", () => {
       { name: "swimming-sound", src: "sounds/swimming-sound.mp3", volume: 0.45 },
     ];
 
-    const soundLibrary = SOUND_FILES.reduce((library, name) => {
-      const audio = new Audio(`sounds/${name}.mp3`);
-      audio.volume = 0.45;
-      audio.preload = "auto";
-      audio.load();
-      library[name] = audio;
-      return library;
-    }, {});
-
     const MODE_DURATIONS = {
       pet: 5000,
       eat: 6000,
