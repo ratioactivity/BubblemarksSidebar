@@ -315,6 +315,11 @@ body {
   image-rendering: pixelated;
   z-index: 2;
   pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+#pet-sprite.pet-base-hidden {
+  opacity: 0;
 }
 
 .pet-overlay {
