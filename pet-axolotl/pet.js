@@ -382,15 +382,6 @@ window.addEventListener("DOMContentLoaded", () => {
       { name: "swimming-sound", src: "sounds/swimming-sound.mp3", volume: 0.45 },
     ];
 
-    const soundLibrary = SOUND_FILES.reduce((library, name) => {
-      const audio = new Audio(`sounds/${name}.mp3`);
-      audio.volume = 0.45;
-      audio.preload = "auto";
-      audio.load();
-      library[name] = audio;
-      return library;
-    }, {});
-
     const MODE_DURATIONS = {
       pet: 5000,
       eat: 6000,
@@ -620,10 +611,17 @@ window.addEventListener("DOMContentLoaded", () => {
         swim: ["floatToSwim", "swimming"],
       },
       sleep: {
-        rest: ["resting"],
-        float: ["resting", "restToFloat", "floating"],
+        rest: ["sleeping", "resting"],
+        float: ["sleeping", "resting", "restToFloat", "floating"],
         sleep: ["sleeping"],
-        swim: ["resting", "restToFloat", "floating", "floatToSwim", "swimming"],
+        swim: [
+          "sleeping",
+          "resting",
+          "restToFloat",
+          "floating",
+          "floatToSwim",
+          "swimming",
+        ],
       },
       swim: {
         rest: ["swimToFloat", "floating", "floatToSleep", "sleeping", "resting"],
@@ -659,10 +657,42 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     const IDLE_SEQUENCES = {
-      rest: ["resting", "restToFloat", "floating", "floatToSleep", "sleeping"],
-      float: ["floating", "floatToSleep", "sleeping", "resting", "restToFloat"],
-      sleep: ["sleeping", "resting", "restToFloat", "floating", "floatToSleep"],
-      swim: ["swimToFloat", "floating", "floatToSleep", "sleeping", "resting"],
+      rest: [
+        "resting",
+        "restToFloat",
+        "floating",
+        "floatToSleep",
+        "sleeping",
+        "resting",
+      ],
+      float: [
+        "floating",
+        "floatToSleep",
+        "sleeping",
+        "resting",
+        "restToFloat",
+        "floating",
+      ],
+      sleep: [
+        "sleeping",
+        "resting",
+        "restToFloat",
+        "floating",
+        "floatToSleep",
+        "sleeping",
+      ],
+      swim: [
+        "swimming",
+        "swimToFloat",
+        "floating",
+        "floatToSleep",
+        "sleeping",
+        "resting",
+        "restToFloat",
+        "floating",
+        "floatToSwim",
+        "swimming",
+      ],
     };
 
     function idleSequenceForState(state) {
