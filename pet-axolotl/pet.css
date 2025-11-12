@@ -125,6 +125,7 @@ body {
     rgba(221, 237, 255, 0.3)
   );
   border: none;
+  background-size: 115% auto;
 }
 
 /* --- STAR POSITIONING --- */
@@ -138,30 +139,30 @@ body {
 
 /* Top-left cluster */
 .stars-top-left {
-  top: -15px;
-  left: -12px;
-  width: 100px;
+  top: 8px;
+  left: 20px;
+  width: 96px;
 }
 
 /* Bottom-right cluster */
 .stars-btm-right {
-  bottom: -12px;
-  right: -12px;
-  width: 100px;
+  bottom: 24px;
+  right: 20px;
+  width: 96px;
 }
 
 /* White sparkle top-right */
 .stars-white-top {
-  top: -10px;
-  right: -10px;
-  width: 85px;
+  top: 8px;
+  right: 20px;
+  width: 90px;
 }
 
 /* White sparkle bottom-left */
 .stars-white-bottom {
-  bottom: -10px;
-  left: -10px;
-  width: 85px;
+  bottom: 24px;
+  left: 20px;
+  width: 90px;
 }
 
 /* HEADER LAYOUT */
@@ -304,7 +305,7 @@ body {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 220px;
+  width: 176px;
   height: auto;
   image-rendering: pixelated;
   z-index: 2;
