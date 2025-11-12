@@ -314,6 +314,10 @@ body {
   pointer-events: none;
 }
 
+#pet-sprite.pet-base-hidden {
+  opacity: 0;
+}
+
 .pet-overlay {
   position: absolute;
   bottom: 20px;
