@@ -425,9 +425,22 @@ body {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+.pet-actions button:disabled,
+.pet-actions button.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(190, 160, 255, 0.2);
+}
+
 .pet-actions button:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 14px rgba(190, 160, 255, 0.35);
+}
+
+.pet-actions button.is-disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(190, 160, 255, 0.2);
 }
 
 .pet-actions button:focus-visible {
