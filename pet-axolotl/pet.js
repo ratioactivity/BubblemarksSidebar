@@ -507,6 +507,74 @@ window.addEventListener("DOMContentLoaded", () => {
       roam: "Pico is exploring every nook of the tank!",
     };
 
+    const DEFAULT_ACTION_COOLDOWN = 4000;
+    const ACTION_LOCK_WINDOW = 1500;
+    const ACTION_RULES = {
+      pet: {
+        mode: "pet",
+        deltas: {
+          affection: +2,
+          boredom: -5,
+        },
+        cooldown: 7000,
+        blockedModes: new Set(["sleep"]),
+        busyMessage: "Pico is still finishing the last cuddle.",
+      },
+      feed: {
+        mode: "eat",
+        deltas: {
+          hunger: -5,
+        },
+        cooldown: 8000,
+        blockedModes: new Set(["sleep"]),
+        busyMessage: "Pico is too sleepy to snack right now.",
+      },
+      swim: {
+        mode: "swim",
+        deltas: {
+          overstim: +1,
+          boredom: -5,
+          sleepiness: +5,
+        },
+        cooldown: 9000,
+        blockedModes: new Set(["sleep", "rest"]),
+        busyMessage: "Pico needs to wake up before swimming again.",
+      },
+      rest: {
+        mode: "rest",
+        deltas: {
+          overstim: -5,
+          boredom: +1,
+        },
+        cooldown: 6000,
+        blockedModes: new Set(["sleep"]),
+        busyMessage: "Pico is already dozing off.",
+      },
+      sleep: {
+        mode: "sleep",
+        deltas: {
+          sleepiness: -5,
+        },
+        cooldown: 12000,
+        requireSleepTime: true,
+        busyMessage: "Pico isn't sleepy just yet.",
+      },
+      roam: {
+        mode: "swim",
+        deltas: {
+          boredom: -5,
+          affection: +1,
+        },
+        cooldown: 9000,
+        blockedModes: new Set(["sleep"]),
+        busyMessage: "Pico needs a moment before exploring again.",
+      },
+    };
+
+    const actionCooldowns = new Map();
+    let actionLockUntil = 0;
+    let actionUnlockTimeout = null;
+
     function setMessage(message) {
       if (!messageBar || !message) {
         return;
@@ -514,41 +582,118 @@ window.addEventListener("DOMContentLoaded", () => {
       messageBar.textContent = message;
     }
 
-    function handleButtonClick(action) {
+    function applyActionDeltas(deltas = {}) {
       let statsChanged = false;
-      switch (action) {
-        case "pet":
-          enterMode("pet");
-          statsChanged = updateAffection(+2) || statsChanged;
-          statsChanged = updateBoredom(-5) || statsChanged;
-          break;
-        case "feed":
-          enterMode("eat");
-          statsChanged = updateHunger(-5) || statsChanged;
-          break;
-        case "swim":
-          enterMode("swim");
-          statsChanged = updateOverstim(+1) || statsChanged;
-          statsChanged = updateBoredom(-5) || statsChanged;
-          statsChanged = updateSleepiness(+5) || statsChanged;
-          break;
-        case "rest":
-          enterMode("rest");
-          statsChanged = updateOverstim(-5) || statsChanged;
-          statsChanged = updateBoredom(+1) || statsChanged;
-          break;
-        case "sleep":
-          enterMode("sleep");
-          statsChanged = updateSleepiness(-5) || statsChanged;
-          break;
-        case "roam":
-          enterMode("swim");
-          statsChanged = updateBoredom(-5) || statsChanged;
-          statsChanged = updateAffection(+1) || statsChanged;
-          break;
-        default:
-          enterMode("idle");
+      Object.entries(deltas).forEach(([stat, delta]) => {
+        switch (stat) {
+          case "hunger":
+            statsChanged = updateHunger(delta) || statsChanged;
+            break;
+          case "sleepiness":
+            statsChanged = updateSleepiness(delta) || statsChanged;
+            break;
+          case "boredom":
+            statsChanged = updateBoredom(delta) || statsChanged;
+            break;
+          case "overstim":
+            statsChanged = updateOverstim(delta) || statsChanged;
+            break;
+          case "affection":
+            statsChanged = updateAffection(delta) || statsChanged;
+            break;
+          default:
+            break;
+        }
+      });
+      return statsChanged;
+    }
+
+    function setActionButtonsDisabled(disabled) {
+      buttons.forEach((btn) => {
+        btn.disabled = disabled;
+        btn.classList.toggle("is-disabled", disabled);
+      });
+    }
+
+    function beginActionLock(duration = ACTION_LOCK_WINDOW) {
+      if (actionUnlockTimeout) {
+        window.clearTimeout(actionUnlockTimeout);
+        actionUnlockTimeout = null;
       }
+      setActionButtonsDisabled(true);
+      actionLockUntil = Date.now() + duration;
+      actionUnlockTimeout = window.setTimeout(() => {
+        actionUnlockTimeout = null;
+        actionLockUntil = 0;
+        setActionButtonsDisabled(false);
+      }, duration);
+    }
+
+    function isActionOnCooldown(actionName, now) {
+      const readyAt = actionCooldowns.get(actionName) || 0;
+      return readyAt > now;
+    }
+
+    function markActionCooldown(actionName, durationMs) {
+      const now = Date.now();
+      actionCooldowns.set(actionName, now + durationMs);
+    }
+
+    function handleButtonClick(action, sourceButton) {
+      if (!action) {
+        return;
+      }
+
+      const config = ACTION_RULES[action];
+      if (!config) {
+        setMessage("Pico tilts their head, unsure what to do.");
+        return;
+      }
+
+      const now = Date.now();
+      if (actionLockUntil && now < actionLockUntil && petState.mode !== "idle") {
+        setMessage("Pico is busy finishing their current activity.");
+        return;
+      }
+
+      if (isActionOnCooldown(action, now)) {
+        setMessage(
+          config.cooldownMessage ||
+            "Pico needs a moment before trying that again."
+        );
+        return;
+      }
+
+      if (config.blockedModes && config.blockedModes.has(petState.mode)) {
+        setMessage(
+          config.busyMessage || "Pico can't do that while busy with something else."
+        );
+        return;
+      }
+
+      if (config.requireSleepTime && !isSleepTime()) {
+        setMessage(config.busyMessage || "Pico isn't sleepy enough yet.");
+        return;
+      }
+
+      if (sourceButton) {
+        sourceButton.blur();
+      }
+
+      markActionCooldown(
+        action,
+        typeof config.cooldown === "number" ? config.cooldown : DEFAULT_ACTION_COOLDOWN
+      );
+
+      beginActionLock(config.lockWindow || ACTION_LOCK_WINDOW);
+
+      if (config.mode) {
+        enterMode(config.mode);
+      } else {
+        enterMode("idle");
+      }
+
+      const statsChanged = applyActionDeltas(config.deltas);
 
       petState.currentAction = action || "idle";
       persistState();
@@ -559,10 +704,13 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        handleButtonClick(btn.dataset.action);
+      btn.addEventListener("click", (event) => {
+        event.preventDefault();
+        handleButtonClick(btn.dataset.action, btn);
       });
     });
+
+    setActionButtonsDisabled(false);
 
     function startAttentionTimer() {
       if (attentionInterval) {
