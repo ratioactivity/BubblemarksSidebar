@@ -128,39 +128,44 @@ body {
   background-size: 115% auto;
 }
 
-/* --- STAR POSITIONING --- */
+/* --- STAR DECORATIONS --- */
 .stars {
   position: absolute;
-  z-index: 999;
+  z-index: 50;
   opacity: 1;
   pointer-events: none;
   object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(160, 140, 200, 0.35));
 }
 
-/* Top-left cluster */
+/* Top-left cluster — move up significantly */
 .stars-top-left {
-  top: 330px;
-  left: 24px;
-}
-
-/* Bottom-right cluster */
-.stars-btm-right {
-  bottom: 24px;
-  right: 20px;
-  width: 96px;
-}
-
-/* White sparkle top-right */
-.stars-white-top {
-  top: 330px;
-  right: 24px;
-}
-
-/* White sparkle bottom-left */
-.stars-white-bottom {
-  bottom: 24px;
+  top: 60px;       /* raised from ~330px */
   left: 20px;
-  width: 90px;
+  width: 110px;
+}
+
+/* Top-right white cluster — ensure visible again */
+.stars-white-top {
+  top: 65px;
+  right: 25px;
+  width: 95px;
+  opacity: 1;
+  display: block;
+}
+
+/* Bottom-left white cluster */
+.stars-white-bottom {
+  bottom: 18px;
+  left: 22px;
+  width: 95px;
+}
+
+/* Bottom-right colored cluster — move up slightly */
+.stars-btm-right {
+  bottom: 28px;    /* was too low */
+  right: 20px;
+  width: 110px;
 }
 
 /* HEADER LAYOUT */
