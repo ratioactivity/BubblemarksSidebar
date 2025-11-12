@@ -25,6 +25,98 @@ if (typeof window !== "undefined") {
   function initializeBubblemarks() {
     console.log("✅ script validated");
 
+    function createFallbackAudioManager() {
+      const cache = new Map();
+      return {
+        preload(definitions = []) {
+          definitions.forEach((definition) => {
+            if (!definition || typeof definition !== "object") {
+              return;
+            }
+            const { name, src, volume = 1 } = definition;
+            if (!name || !src) {
+              return;
+            }
+            cache.set(name, { src, volume });
+          });
+        },
+        play(name, options = {}) {
+          const entry = cache.get(name);
+          if (!entry) {
+            return false;
+          }
+          const audio = new Audio(entry.src);
+          const desiredVolume =
+            typeof options.volume === "number" && options.volume >= 0
+              ? options.volume
+              : entry.volume;
+          audio.volume = desiredVolume;
+          if (options.playbackRate) {
+            audio.playbackRate = options.playbackRate;
+          }
+          try {
+            audio.currentTime = 0;
+          } catch (error) {
+            console.warn(`[Bubblemarks] Unable to reset fallback sound "${name}":`, error);
+          }
+          audio.play().catch(() => {});
+          return true;
+        },
+      };
+    }
+
+    const keyboardAudioManager =
+      window.BubblemarksAudio?.createManager({ defaultVolume: 0.3 }) ||
+      createFallbackAudioManager();
+
+    const KEYBOARD_SOUND_DEFINITIONS = [];
+    const KEYBOARD_LETTERS = [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "P",
+      "Q",
+      "R",
+      "S",
+      "T",
+      "U",
+      "V",
+      "W",
+      "X",
+      "Y",
+      "Z",
+    ];
+
+    KEYBOARD_LETTERS.forEach((letter) => {
+      KEYBOARD_SOUND_DEFINITIONS.push({
+        name: `key-${letter}`,
+        src: `sounds/${letter}.mp3`,
+        volume: 0.3,
+        allowMultiple: true,
+      });
+    });
+
+    KEYBOARD_SOUND_DEFINITIONS.push({
+      name: "key-other",
+      src: "sounds/allothers.mp3",
+      volume: 0.3,
+      allowMultiple: true,
+    });
+
+    keyboardAudioManager.preload(KEYBOARD_SOUND_DEFINITIONS);
+
     const STORAGE_KEY = "bubblemarks.bookmarks.v1";
 const DEFAULT_SOURCE = "bookmarks.json";
 const FALLBACK_PALETTES = [
@@ -2121,13 +2213,12 @@ function setupKeyboard() {
   container.innerHTML = "";
 
   function playKeySound(keyLabel) {
-    const upper = keyLabel.toUpperCase();
-    const file =
-      /^[A-Z]$/.test(upper) ? `sounds/${upper}.mp3` : "sounds/allothers.mp3";
-    const audio = new Audio(file);
-    audio.volume = 0.3; // soft, subtle click
-    audio.currentTime = 0;
-    audio.play().catch(() => {}); // prevent errors if user hasn’t interacted yet
+    if (!keyboardAudioManager) {
+      return;
+    }
+    const upper = String(keyLabel || "").toUpperCase();
+    const soundKey = /^[A-Z]$/.test(upper) ? `key-${upper}` : "key-other";
+    keyboardAudioManager.play(soundKey, { allowOverlap: true });
   }
 
   buttons.forEach((key) => {
