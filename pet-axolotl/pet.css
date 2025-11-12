@@ -145,64 +145,71 @@ body {
   width: 100px;
 }
 
-/* Adjusted header size and alignment */
+/* HEADER LAYOUT */
 .pet-header {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* level | name | gear */
   align-items: center;
-  justify-content: space-between; /* Spread across full width */
-  width: calc(100% + 2.8rem);
-  margin: 0 -1.4rem;
-  padding: 16px 28px;
-  border-radius: 22px;
+
+  /* a bit narrower than the card so it doesn’t feel huge */
+  width: 88%;
+  margin: 0 auto 16px;
+
+  padding: 10px 22px;
+  border-radius: 18px;
+
   background: linear-gradient(180deg, #fbd5ec 0%, #d0ebff 100%);
   box-shadow: 0 4px 12px rgba(240, 200, 255, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(12px);
+
   color: #4b4275;
   font-family: "Papernotes", sans-serif;
   box-sizing: border-box;
   z-index: 3;
 }
 
-/* Level — left side */
+/* Left — level pill */
 .pet-level {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #4b4275;
   background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  padding: 4px 10px;
+  border-radius: 999px;
+  padding: 4px 12px;
   text-shadow: 0 1px 2px rgba(80, 60, 110, 0.25);
-  flex-shrink: 0;
+  justify-self: flex-start;
 }
 
-/* Name — centered */
+/* Center — name */
 .pet-name {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  justify-self: center;
+  text-align: center;
   font-family: "Bigbesty", sans-serif;
-  font-size: 3rem;
-  color: #fff;
+  font-size: 2.4rem;          /* bigger + white */
+  color: #ffffff;
   font-weight: 900;
   letter-spacing: 1px;
-  text-shadow: 0 3px 6px rgba(70, 40, 110, 0.4);
+  text-shadow:
+    0 0 3px rgba(255, 255, 255, 0.7),
+    0 3px 6px rgba(70, 40, 110, 0.45);
+  white-space: nowrap;        /* keep it in one line */
 }
 
-/* Gear — right side */
+/* Right — gear button */
 .pet-settings {
+  justify-self: flex-end;
   background: rgba(255, 255, 255, 0.85);
   border: none;
   border-radius: 50%;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.25s ease, transform 0.25s ease;
   cursor: pointer;
-  flex-shrink: 0;
+  transition: background 0.25s ease, transform 0.25s ease;
 }
 
 .pet-settings:hover {
