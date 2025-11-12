@@ -140,29 +140,29 @@ body {
 
 /* Top-left cluster — move up significantly */
 .stars-top-left {
-  top: 20px;
-  left: 20px;
+  top: 16px;
+  left: 16px;
   width: 96px;
 }
 
 /* Bottom-right cluster */
 .stars-btm-right {
-  bottom: 20px;
-  right: 12px;
+  bottom: 24px;
+  right: 8px;
   width: 96px;
 }
 
 /* White sparkle top-right */
 .stars-white-top {
-  top: 20px;
-  right: 20px;
+  top: 16px;
+  right: 16px;
   width: 90px;
 }
 
 /* Bottom-left white cluster */
 .stars-white-bottom {
-  bottom: 20px;
-  left: 20px;
+  bottom: 24px;
+  left: 16px;
   width: 90px;
 }
 
@@ -540,6 +540,44 @@ body {
       align-items: center;
       justify-content: space-between;
     }
+
+/* Decorative stars */
+.stars{
+  position:absolute;
+  z-index:20;
+  pointer-events:none;
+  opacity:1;
+  filter: drop-shadow(0 2px 6px rgba(120,100,160,.25));
+  object-fit:contain;
+}
+
+/* top-left cluster near the message banner */
+.stars-top-left{
+  top:16px;
+  left:16px;
+  width:96px;
+}
+
+/* white twinkles at the right end of the message banner */
+.stars-white-top{
+  top:16px;
+  right:16px;
+  width:90px;
+}
+
+/* bottom-left flourish by the “Rest” button row */
+.stars-white-bottom{
+  bottom:24px;
+  left:16px;
+  width:90px;
+}
+
+/* bottom-right flourish by the “Roam” button row */
+.stars-btm-right{
+  bottom:24px;
+  right:8px;
+  width:96px;
+}
 
 @media (max-width: 360px) {
   .stat-bar {
