@@ -43,14 +43,14 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 24px;
+  padding-block: clamp(2vh, 3vh, 4vh);
+  padding-inline: clamp(1.5rem, 4vw, 3rem);
   background: linear-gradient(180deg, #f7f1ff 0%, #fff8fb 100%);
   color: #b3728e;
 }
 
 .aquarium-container {
-  width: 100%;
-  max-width: 880px;
+  width: min(90vw, 720px);
   min-height: 100vh; /* fill full viewport height */
   padding: 0;
   margin: 0 auto;
@@ -63,8 +63,7 @@ body {
 }
 
 .pet-card {
-  width: 100%;
-  max-width: 720px;
+  width: min(90vw, 720px);
   flex-grow: 1;
   background: radial-gradient(circle at 40% 30%, #ffffff 0%, #fdfbff 80%);
   box-shadow:
@@ -72,7 +71,7 @@ body {
     0 8px 24px rgba(180, 180, 255, 0.1),
     0 20px 48px rgba(164, 176, 255, 0.2);
   border-radius: 32px;
-  padding: 32px;
+  padding: 3vh 2rem;
   margin-top: 0;
   margin-bottom: 0;
   color: #514b69;
@@ -83,15 +82,15 @@ body {
   align-items: center;
   justify-content: flex-start; /* stop vertical centering */
   overflow: visible;
+  height: auto;
 }
 
 .pet-container {
   position: relative;
-  width: 100%;
-  max-width: 700px;
-  min-height: 720px; /* ensures full fill */
+  width: min(90vw, 720px);
+  min-height: min(80vh, 720px); /* ensures full fill */
   margin: 0 auto;
-  padding: 1.4rem 1.6rem 2.4rem;
+  padding: 2.2vh clamp(1.4rem, 3vw, 2rem) 3.6vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -106,6 +105,7 @@ body {
     inset 0 0 0 1px rgba(255, 255, 255, 0.75),
     0 18px 40px rgba(170, 182, 255, 0.22);
   overflow: visible;
+  height: auto;
 }
 
 /* Fix aquarium window size ratio */
@@ -113,6 +113,7 @@ body {
   position: relative;
   width: 94%;
   aspect-ratio: 16 / 9;
+  height: auto;
   border-radius: 22px;
   overflow: hidden;
   margin: 0.6rem auto 0;
@@ -175,9 +176,9 @@ body {
 
   /* a bit narrower than the card so it doesn’t feel huge */
   width: 88%;
-  margin: 0 auto 16px;
+  margin: 0 auto 2vh;
 
-  padding: 10px 22px;
+  padding: 1vh 22px;
   border-radius: 18px;
 
   background: linear-gradient(180deg, #fbd5ec 0%, #d0ebff 100%);
@@ -198,7 +199,7 @@ body {
   color: #4b4275;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 999px;
-  padding: 4px 12px;
+  padding: 0.4vh 12px;
   text-shadow: 0 1px 2px rgba(80, 60, 110, 0.25);
   justify-self: flex-start;
 }
@@ -208,7 +209,7 @@ body {
   flex: 1 1 auto;
   text-align: center;
   font-family: "Bigbesty", sans-serif;
-  font-size: clamp(2.2rem, 3.2vw + 1.2rem, 3.6rem);
+  font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 1;
   color: #fff;
   font-weight: 900;
@@ -252,7 +253,8 @@ body {
 .tank-window {
   position: relative;
   width: 90%;
-  height: 180px;
+  aspect-ratio: 16 / 9;
+  height: auto;
   border-radius: 22px;
   overflow: hidden;
   margin: 0.5rem auto 0;
@@ -307,7 +309,7 @@ body {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 176px;
+  width: clamp(140px, 25vw, 220px);
   height: auto;
   image-rendering: pixelated;
   z-index: 2;
@@ -335,7 +337,7 @@ body {
 
 .stats-container {
   width: 100%;
-  margin-top: 18px;
+  margin-top: 2.4vh;
   transform: scale(0.95);
   transform-origin: center top;
   display: flex;
@@ -382,7 +384,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   font-family: "Papernotes", sans-serif;
-  font-size: 0.85rem;
+  font-size: clamp(0.7rem, 1vw, 0.9rem);
   color: #3a2f66;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -417,12 +419,12 @@ body {
 
 .pet-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 18px;
   width: 100%;
   max-width: 640px;
-  margin-top: 18px; /* was larger before */
-  padding-bottom: 10px;
+  margin-top: 2.4vh; /* was larger before */
+  padding-bottom: 0.9vh;
   justify-items: center;
   align-items: center;
 }
@@ -431,12 +433,12 @@ body {
   font-family: "Bigbesty", sans-serif;
   border: none;
   border-radius: 22px;
-  padding: 16px 0;
+  padding: 1.5vh 0;
   width: 100%;
   background: linear-gradient(180deg, #ffb5d6 0%, #a1d7ff 100%);
   color: #fff;
   font-weight: 700;
-  font-size: 1.3rem;
+  font-size: clamp(1rem, 2vw, 1.4rem);
   letter-spacing: 0.15em;
   box-shadow: 0 4px 10px rgba(190, 160, 255, 0.25);
   cursor: pointer;
@@ -475,15 +477,38 @@ body {
 
 .message-bar {
   width: 100%;
-  margin: 8px 0;
-  padding: 6px 12px;
+  margin: 1.2vh 0;
+  padding: 0.6vh 12px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: inset 0 0 0 1px rgba(210, 190, 255, 0.35),
     0 6px 12px rgba(200, 170, 255, 0.2);
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 1.4vw, 1.1rem);
   color: #6a588c;
   text-align: center;
+}
+
+@media (max-width: 600px) {
+  .pet-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .pet-actions button {
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+  }
+
+  .tank-window {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+@media (max-width: 400px) {
+  .pet-actions {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
 }
 
 /* ---------- STAR DECORATIONS (single source of truth) ---------- */
@@ -550,7 +575,8 @@ body {
 
 @media (max-width: 520px) {
   body {
-    padding: 16px;
+    padding-block: clamp(1.6vh, 2.2vh, 2.8vh);
+    padding-inline: clamp(1rem, 6vw, 2.4rem);
   }
 
   .pet-container {
