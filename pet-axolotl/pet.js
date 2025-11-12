@@ -6,12 +6,22 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     const spriteEl = rootElement.querySelector("#pet-sprite");
+    let overlayEl = rootElement.querySelector("#pet-overlay");
     const buttons = rootElement.querySelectorAll(".pet-actions button");
     const messageBar = rootElement.querySelector("#message-bar");
 
     if (!spriteEl) {
       console.error("[BubblePet] Missing #pet-sprite element in widget root");
       return;
+    }
+
+    if (!overlayEl) {
+      overlayEl = document.createElement("img");
+      overlayEl.id = "pet-overlay";
+      overlayEl.alt = "";
+      overlayEl.setAttribute("aria-hidden", "true");
+      overlayEl.classList.add("pet-overlay");
+      spriteEl.insertAdjacentElement("afterend", overlayEl);
     }
 
     if (!buttons.length) {
@@ -49,6 +59,10 @@ window.addEventListener("DOMContentLoaded", () => {
           acc[key] = clampStat(Number(parsed.stats[key]));
           return acc;
         }, {});
+        parsed.baseState =
+          typeof parsed.baseState === "string" && parsed.baseState.trim().length
+            ? parsed.baseState
+            : "rest";
         return parsed;
       } catch (error) {
         console.warn("[BubblePet] Failed to load state:", error);
@@ -61,6 +75,7 @@ window.addEventListener("DOMContentLoaded", () => {
         mode: "idle",
         currentAction: "idle",
         idlePhase: "resting",
+        baseState: "rest",
         soundEnabled: true,
         attention: 100,
         level: 1,
@@ -74,6 +89,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const petState = Object.assign(createDefaultState(), loadState() || {});
     petState.stats = Object.assign({}, DEFAULT_STATS, petState.stats || {});
+    if (typeof petState.baseState !== "string" || !petState.baseState.trim()) {
+      petState.baseState = "rest";
+    }
     const SLEEP_HOURS = { start: 4, end: 12 }; // CST
 
     function persistState() {
@@ -82,6 +100,7 @@ window.addEventListener("DOMContentLoaded", () => {
           mode: petState.mode,
           currentAction: petState.currentAction,
           idlePhase: petState.idlePhase,
+          baseState: petState.baseState,
           soundEnabled: petState.soundEnabled,
           attention: petState.attention,
           level: petState.level,
@@ -269,29 +288,244 @@ window.addEventListener("DOMContentLoaded", () => {
       return library;
     }, {});
 
-    const animations = {
-      idleRest: "assets/resting.gif",
-      idleFloat: "assets/floating.gif",
-      idleSwim: "assets/swimming.gif",
-      rest: "assets/resting.gif",
-      sleep: "assets/sleeping.gif",
-      swim: "assets/swimming.gif",
-      fastSwim: "assets/fast-swim.gif",
-      pet: "assets/pet.gif",
-      eat: "assets/munching.gif",
+    const MODE_DURATIONS = {
+      pet: 5000,
+      eat: 6000,
+      rest: 12000,
+      sleep: 20000,
+      swim: 15000,
     };
 
-    function setPetAnimation(name) {
-      const src = animations[name];
-      if (!src) {
-        console.warn(`[BubblePet] Missing animation for "${name}"`);
+    const BASE_TRANSITION_GRAPH = {
+      rest: new Set(["float", "idle"]),
+      float: new Set(["rest", "sleep", "idle"]),
+      sleep: new Set(["float", "swim"]),
+      swim: new Set(["sleep", "float", "idle"]),
+      idle: new Set(["rest", "float", "swim", "sleep"]),
+    };
+
+    function isBaseTransitionAllowed(targetState) {
+      if (!targetState || targetState === "idle") {
+        return true;
+      }
+      const current = petState.baseState || "rest";
+      if (current === targetState) {
+        return true;
+      }
+      const allowed = BASE_TRANSITION_GRAPH[current];
+      return Boolean(allowed && allowed.has(targetState));
+    }
+
+    function formatBaseState(state) {
+      switch (state) {
+        case "float":
+          return "floating";
+        case "sleep":
+          return "sleeping";
+        case "swim":
+          return "swimming";
+        case "rest":
+        default:
+          return "resting";
+      }
+    }
+
+    const animationLibrary = {
+      restBase: {
+        asset: "assets/resting.gif",
+        layer: "base",
+        baseState: "rest",
+      },
+      rest: {
+        base: "restBase",
+        sound: "resting-sound",
+      },
+      idleRest: {
+        base: "restBase",
+        sound: "resting-sound",
+        duration: 9000,
+        next: "idleFloat",
+        phase: "resting",
+      },
+      floatBase: {
+        asset: "assets/floating.gif",
+        layer: "base",
+        baseState: "float",
+      },
+      idleFloat: {
+        base: "floatBase",
+        sound: "float-squeak",
+        duration: 7000,
+        next: "idleSwim",
+        phase: "floating",
+      },
+      sleepBase: {
+        asset: "assets/sleeping.gif",
+        layer: "base",
+        baseState: "sleep",
+      },
+      sleep: {
+        base: "sleepBase",
+        sound: "resting-sound",
+      },
+      swimBase: {
+        asset: "assets/swimming.gif",
+        layer: "base",
+        baseState: "swim",
+      },
+      idleSwim: {
+        base: "swimBase",
+        sound: "swimming-sound",
+        duration: 8000,
+        next: "idleRest",
+        phase: "swimming",
+      },
+      swim: {
+        base: "swimBase",
+        sound: "swimming-sound",
+      },
+      fastSwim: {
+        asset: "assets/fast-swim.gif",
+        layer: "base",
+        baseState: "swim",
+        duration: 2500,
+        next: "swim",
+        sound: "fastswim-squeak",
+      },
+      petting: {
+        asset: "assets/pet.gif",
+        layer: "overlay",
+        duration: MODE_DURATIONS.pet,
+        sound: "pet-sound",
+        hideOnComplete: true,
+      },
+      munching: {
+        asset: "assets/munching.gif",
+        layer: "overlay",
+        duration: MODE_DURATIONS.eat,
+        sound: "munch-squeak",
+        hideOnComplete: true,
+      },
+    };
+
+    const MODE_CONFIG = {
+      idle: { type: "idle" },
+      rest: {
+        type: "base",
+        animation: "rest",
+        duration: MODE_DURATIONS.rest,
+        baseState: "rest",
+      },
+      sleep: {
+        type: "base",
+        animation: "sleep",
+        duration: MODE_DURATIONS.sleep,
+        baseState: "sleep",
+      },
+      swim: {
+        type: "base",
+        animation: "swim",
+        duration: MODE_DURATIONS.swim,
+        baseState: "swim",
+      },
+      pet: { type: "overlay", animation: "petting", duration: MODE_DURATIONS.pet },
+      eat: { type: "overlay", animation: "munching", duration: MODE_DURATIONS.eat },
+    };
+
+    const layerTimers = {
+      base: null,
+      overlay: null,
+    };
+
+    function resolveAnimation(type, visited = new Set()) {
+      if (!type || visited.has(type)) {
+        return null;
+      }
+      const config = animationLibrary[type];
+      if (!config) {
+        return null;
+      }
+      if (!config.base) {
+        return Object.assign({ key: type }, config);
+      }
+      visited.add(type);
+      const parent = resolveAnimation(config.base, visited);
+      visited.delete(type);
+      if (!parent) {
+        return null;
+      }
+      return Object.assign({}, parent, config, { key: type });
+    }
+
+    function clearAnimationLayer(layer) {
+      if (layerTimers[layer]) {
+        window.clearTimeout(layerTimers[layer]);
+        layerTimers[layer] = null;
+      }
+      if (layer === "overlay" && overlayEl) {
+        overlayEl.classList.remove("is-visible");
+        overlayEl.removeAttribute("src");
+      }
+    }
+
+    function playAnimation(type, options = {}) {
+      const resolved = resolveAnimation(type);
+      if (!resolved) {
+        console.warn(`[BubblePet] Missing animation for "${type}"`);
         return;
       }
-      if (spriteEl.getAttribute("src") === src) {
+
+      const layer = options.layer || resolved.layer || "base";
+      const targetEl = layer === "overlay" ? overlayEl : spriteEl;
+      if (!targetEl || !resolved.asset) {
         return;
       }
-      spriteEl.src = src;
-      petState.currentAnimation = name;
+
+      if (targetEl.getAttribute("src") !== resolved.asset) {
+        targetEl.src = resolved.asset;
+      }
+
+      if (layer === "overlay") {
+        overlayEl.classList.add("is-visible");
+      } else {
+        petState.currentAnimation = resolved.key || type;
+        if (resolved.baseState) {
+          petState.baseState = resolved.baseState;
+        }
+        if (resolved.phase) {
+          petState.idlePhase = resolved.phase;
+        }
+      }
+
+      if (resolved.sound) {
+        playSound(resolved.sound);
+      }
+
+      if (layerTimers[layer]) {
+        window.clearTimeout(layerTimers[layer]);
+        layerTimers[layer] = null;
+      }
+
+      const duration = options.duration ?? resolved.duration;
+      const nextKey = options.next ?? resolved.next;
+
+      if (duration && nextKey) {
+        layerTimers[layer] = window.setTimeout(() => {
+          layerTimers[layer] = null;
+          playAnimation(nextKey, { layer });
+        }, duration);
+      } else if (layer === "overlay") {
+        if (duration) {
+          layerTimers[layer] = window.setTimeout(() => {
+            layerTimers[layer] = null;
+            clearAnimationLayer("overlay");
+          }, duration);
+        }
+      } else if (duration && !nextKey) {
+        layerTimers[layer] = window.setTimeout(() => {
+          layerTimers[layer] = null;
+        }, duration);
+      }
     }
 
     function renderStatBar(stat) {
@@ -339,71 +573,42 @@ window.addEventListener("DOMContentLoaded", () => {
       audio.play().catch(() => {});
     }
 
-    const IDLE_SEQUENCE = [
-      { key: "idleRest", phase: "resting", duration: 9000, sound: "resting-sound" },
-      { key: "idleFloat", phase: "floating", duration: 7000, sound: "float-squeak" },
-      { key: "idleSwim", phase: "swimming", duration: 8000, sound: "swimming-sound" },
-    ];
+    function idleStartKeyForState(baseState) {
+      switch (baseState) {
+        case "float":
+          return "idleFloat";
+        case "swim":
+          return "idleSwim";
+        default:
+          return "idleRest";
+      }
+    }
 
-    const MODE_DURATIONS = {
-      pet: 5000,
-      eat: 6000,
-      rest: 12000,
-      sleep: 20000,
-      swim: 15000,
-    };
-
-    let idleTimeout = null;
-    let idleIndex = 0;
     let modeResetTimeout = null;
     let swimBurstInterval = null;
-    let swimBurstTimeout = null;
     let attentionInterval = null;
 
     const SWIM_BURST_INTERVAL = 9000;
-    const SWIM_BURST_DURATION = 2500;
     const ATTENTION_INTERVAL = 10 * 60 * 1000;
 
     function clearIdleCycle() {
-      if (idleTimeout) {
-        window.clearTimeout(idleTimeout);
-        idleTimeout = null;
-      }
+      clearAnimationLayer("base");
     }
 
-    function advanceIdleCycle() {
-      if (petState.mode !== "idle") {
-        return;
-      }
-      const step = IDLE_SEQUENCE[idleIndex];
-      petState.idlePhase = step.phase;
-      setPetAnimation(step.key);
-      if (step.sound) {
-        playSound(step.sound);
-      }
-      idleTimeout = window.setTimeout(() => {
-        idleIndex = (idleIndex + 1) % IDLE_SEQUENCE.length;
-        advanceIdleCycle();
-      }, step.duration);
-    }
-
-    function startIdleCycle(startIndex = 0) {
+    function startIdleCycle(startKey) {
       clearIdleCycle();
+      clearAnimationLayer("overlay");
       petState.mode = "idle";
       petState.currentAction = "idle";
       persistState();
-      idleIndex = startIndex % IDLE_SEQUENCE.length;
-      advanceIdleCycle();
+      const idleKey = startKey || idleStartKeyForState(petState.baseState);
+      playAnimation(idleKey);
     }
 
     function stopSwimBursts() {
       if (swimBurstInterval) {
         window.clearInterval(swimBurstInterval);
         swimBurstInterval = null;
-      }
-      if (swimBurstTimeout) {
-        window.clearTimeout(swimBurstTimeout);
-        swimBurstTimeout = null;
       }
     }
 
@@ -413,14 +618,7 @@ window.addEventListener("DOMContentLoaded", () => {
         if (petState.mode !== "swim") {
           return;
         }
-        setPetAnimation("fastSwim");
-        playSound("fastswim-squeak");
-        swimBurstTimeout = window.setTimeout(() => {
-          if (petState.mode === "swim") {
-            setPetAnimation("swim");
-            playSound("swimming-sound");
-          }
-        }, SWIM_BURST_DURATION);
+        playAnimation("fastSwim");
       }, SWIM_BURST_INTERVAL);
     }
 
@@ -431,28 +629,46 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    function scheduleModeReset(mode, delay, nextMode = "idle") {
+    function scheduleModeReset(mode, delay, nextMode = "idle", nextOptions = {}) {
       cancelModeReset();
       if (!delay) {
-        startIdleCycle();
+        enterMode(nextMode, nextOptions);
         return;
       }
       modeResetTimeout = window.setTimeout(() => {
         if (petState.mode === mode) {
-          if (nextMode === "idle") {
-            startIdleCycle();
-          } else {
-            enterMode(nextMode);
-          }
+          enterMode(nextMode, nextOptions);
         }
       }, delay);
     }
 
-    function enterMode(mode) {
+    function enterMode(mode, overrides = {}) {
       cancelModeReset();
-      if (mode === "idle") {
+
+      const previousMode = overrides.previousMode || petState.mode;
+      const baseConfig = MODE_CONFIG[mode] || {};
+      const config = Object.assign({}, baseConfig, overrides);
+      const modeType = config.type || "idle";
+
+      if (modeType === "idle") {
         stopSwimBursts();
-        startIdleCycle();
+        const idleKey = typeof config.animation === "string" ? config.animation : undefined;
+        startIdleCycle(idleKey);
+        return;
+      }
+
+      if (modeType === "overlay") {
+        const resumeMode =
+          typeof config.resumeMode === "string" ? config.resumeMode : previousMode || "idle";
+        petState.mode = mode;
+        petState.currentAction = config.actionName || mode;
+        persistState();
+        playAnimation(config.animation || mode, { layer: "overlay" });
+        if (config.duration) {
+          scheduleModeReset(mode, config.duration, resumeMode, {
+            previousMode: mode,
+          });
+        }
         return;
       }
 
@@ -460,41 +676,20 @@ window.addEventListener("DOMContentLoaded", () => {
       if (mode !== "swim") {
         stopSwimBursts();
       }
+      clearAnimationLayer("overlay");
 
       petState.mode = mode;
-      petState.currentAction = mode;
+      petState.currentAction = config.actionName || mode;
       persistState();
 
-      switch (mode) {
-        case "pet":
-          setPetAnimation("pet");
-          playSound("pet-sound");
-          scheduleModeReset(mode, MODE_DURATIONS.pet);
-          break;
-        case "eat":
-          setPetAnimation("eat");
-          playSound("munch-squeak");
-          scheduleModeReset(mode, MODE_DURATIONS.eat);
-          break;
-        case "rest":
-          setPetAnimation("rest");
-          playSound("resting-sound");
-          scheduleModeReset(mode, MODE_DURATIONS.rest);
-          break;
-        case "sleep":
-          setPetAnimation("sleep");
-          playSound("resting-sound");
-          scheduleModeReset(mode, MODE_DURATIONS.sleep);
-          break;
-        case "swim":
-          setPetAnimation("swim");
-          playSound("swimming-sound");
-          startSwimBursts();
-          scheduleModeReset(mode, MODE_DURATIONS.swim);
-          break;
-        default:
-          startIdleCycle();
-          break;
+      playAnimation(config.animation || mode);
+
+      if (mode === "swim") {
+        startSwimBursts();
+      }
+
+      if (config.duration) {
+        scheduleModeReset(mode, config.duration, config.nextMode || "idle");
       }
     }
 
@@ -539,6 +734,9 @@ window.addEventListener("DOMContentLoaded", () => {
         cooldown: 9000,
         blockedModes: new Set(["sleep", "rest"]),
         busyMessage: "Pico needs to wake up before swimming again.",
+        targetBaseState: "swim",
+        invalidTransitionMessage:
+          "Pico wants to float for a moment before diving into a swim.",
       },
       rest: {
         mode: "rest",
@@ -549,6 +747,9 @@ window.addEventListener("DOMContentLoaded", () => {
         cooldown: 6000,
         blockedModes: new Set(["sleep"]),
         busyMessage: "Pico is already dozing off.",
+        targetBaseState: "rest",
+        invalidTransitionMessage:
+          "Pico needs to drift down from floating before settling to rest.",
       },
       sleep: {
         mode: "sleep",
@@ -558,6 +759,9 @@ window.addEventListener("DOMContentLoaded", () => {
         cooldown: 12000,
         requireSleepTime: true,
         busyMessage: "Pico isn't sleepy just yet.",
+        targetBaseState: "sleep",
+        invalidTransitionMessage:
+          "Pico wants to relax through a float before snoozing.",
       },
       roam: {
         mode: "swim",
@@ -568,6 +772,9 @@ window.addEventListener("DOMContentLoaded", () => {
         cooldown: 9000,
         blockedModes: new Set(["sleep"]),
         busyMessage: "Pico needs a moment before exploring again.",
+        targetBaseState: "swim",
+        invalidTransitionMessage:
+          "Pico needs to glide into a float before roaming the tank.",
       },
     };
 
@@ -676,6 +883,16 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      if (config.targetBaseState && !isBaseTransitionAllowed(config.targetBaseState)) {
+        const currentState = formatBaseState(petState.baseState);
+        const desiredState = formatBaseState(config.targetBaseState);
+        setMessage(
+          config.invalidTransitionMessage ||
+            `Pico needs to move from ${currentState} before switching to ${desiredState}.`
+        );
+        return;
+      }
+
       if (sourceButton) {
         sourceButton.blur();
       }
@@ -688,7 +905,16 @@ window.addEventListener("DOMContentLoaded", () => {
       beginActionLock(config.lockWindow || ACTION_LOCK_WINDOW);
 
       if (config.mode) {
-        enterMode(config.mode);
+        const enterOptions = {
+          actionName: action,
+        };
+        if (config.targetBaseState) {
+          enterOptions.baseState = config.targetBaseState;
+        }
+        if (config.resumeMode) {
+          enterOptions.resumeMode = config.resumeMode;
+        }
+        enterMode(config.mode, enterOptions);
       } else {
         enterMode("idle");
       }

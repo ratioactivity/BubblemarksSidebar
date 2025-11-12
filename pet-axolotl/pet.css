@@ -314,6 +314,24 @@ body {
   pointer-events: none;
 }
 
+.pet-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 176px;
+  height: auto;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.pet-overlay.is-visible {
+  opacity: 1;
+}
+
 
 .stats-container {
   width: 100%;
