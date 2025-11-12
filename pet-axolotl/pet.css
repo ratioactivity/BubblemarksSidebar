@@ -262,6 +262,7 @@ body {
     0 18px 32px rgba(180, 170, 255, 0.2);
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(221, 237, 255, 0.3));
   border: none;
+  --pet-sprite-width: clamp(140px, 25vw, 220px);
 }
 
 .tank-window::before {
@@ -309,11 +310,16 @@ body {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: clamp(140px, 25vw, 220px);
+  width: var(--pet-sprite-width);
   height: auto;
   image-rendering: pixelated;
   z-index: 2;
   pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+#pet-sprite.pet-base-hidden {
+  opacity: 0;
 }
 
 .pet-overlay {
@@ -321,7 +327,7 @@ body {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 176px;
+  width: var(--pet-sprite-width);
   height: auto;
   image-rendering: pixelated;
   pointer-events: none;

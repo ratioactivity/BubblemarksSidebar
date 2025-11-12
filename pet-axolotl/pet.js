@@ -382,15 +382,6 @@ window.addEventListener("DOMContentLoaded", () => {
       { name: "swimming-sound", src: "sounds/swimming-sound.mp3", volume: 0.45 },
     ];
 
-    const soundLibrary = SOUND_FILES.reduce((library, name) => {
-      const audio = new Audio(`sounds/${name}.mp3`);
-      audio.volume = 0.45;
-      audio.preload = "auto";
-      audio.load();
-      library[name] = audio;
-      return library;
-    }, {});
-
     const MODE_DURATIONS = {
       pet: 5000,
       eat: 6000,
@@ -440,6 +431,7 @@ window.addEventListener("DOMContentLoaded", () => {
         duration: 9000,
         sound: "resting-sound",
         phase: "resting",
+        loop: true,
       },
       restToFloat: {
         asset: "assets/rest-to-float.gif",
@@ -453,6 +445,7 @@ window.addEventListener("DOMContentLoaded", () => {
         duration: 8500,
         sound: "float-squeak",
         phase: "floating",
+        loop: true,
       },
       floatToSleep: {
         asset: "assets/float-to-sleep.gif",
@@ -466,6 +459,7 @@ window.addEventListener("DOMContentLoaded", () => {
         duration: 12000,
         sound: "resting-sound",
         phase: "sleeping",
+        loop: true,
       },
       floatToSwim: {
         asset: "assets/float-to-swim.gif",
@@ -479,6 +473,7 @@ window.addEventListener("DOMContentLoaded", () => {
         duration: 9000,
         sound: "swimming-sound",
         phase: "swimming",
+        loop: true,
       },
       swimToFloat: {
         asset: "assets/swim-to-float.gif",
@@ -550,6 +545,7 @@ window.addEventListener("DOMContentLoaded", () => {
         options.durationOverrides && typeof options.durationOverrides === "object"
           ? options.durationOverrides
           : null;
+      const followFinal = options.followFinal !== false;
 
       let index = 0;
       const lastIndex = sequence.length - 1;
@@ -565,9 +561,10 @@ window.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        playAnimation(key, { layer, follow: false });
+        const isFinal = index === lastIndex;
+        playAnimation(key, { layer, follow: isFinal ? followFinal : false });
 
-        if (index === lastIndex) {
+        if (isFinal) {
           if (onFinalStart) {
             onFinalStart(key);
           }
@@ -620,10 +617,17 @@ window.addEventListener("DOMContentLoaded", () => {
         swim: ["floatToSwim", "swimming"],
       },
       sleep: {
-        rest: ["resting"],
-        float: ["resting", "restToFloat", "floating"],
+        rest: ["sleeping", "resting"],
+        float: ["sleeping", "resting", "restToFloat", "floating"],
         sleep: ["sleeping"],
-        swim: ["resting", "restToFloat", "floating", "floatToSwim", "swimming"],
+        swim: [
+          "sleeping",
+          "resting",
+          "restToFloat",
+          "floating",
+          "floatToSwim",
+          "swimming",
+        ],
       },
       swim: {
         rest: ["swimToFloat", "floating", "floatToSleep", "sleeping", "resting"],
@@ -655,14 +659,47 @@ window.addEventListener("DOMContentLoaded", () => {
         onFinalStart: options.onFinalStart,
         durationOverrides:
           options.durationOverrides || (options.fastTrack ? FAST_TRACK_DURATIONS : null),
+        followFinal: options.followFinal,
       });
     }
 
     const IDLE_SEQUENCES = {
-      rest: ["resting", "restToFloat", "floating", "floatToSleep", "sleeping"],
-      float: ["floating", "floatToSleep", "sleeping", "resting", "restToFloat"],
-      sleep: ["sleeping", "resting", "restToFloat", "floating", "floatToSleep"],
-      swim: ["swimToFloat", "floating", "floatToSleep", "sleeping", "resting"],
+      rest: [
+        "resting",
+        "restToFloat",
+        "floating",
+        "floatToSleep",
+        "sleeping",
+        "resting",
+      ],
+      float: [
+        "floating",
+        "floatToSleep",
+        "sleeping",
+        "resting",
+        "restToFloat",
+        "floating",
+      ],
+      sleep: [
+        "sleeping",
+        "resting",
+        "restToFloat",
+        "floating",
+        "floatToSleep",
+        "sleeping",
+      ],
+      swim: [
+        "swimming",
+        "swimToFloat",
+        "floating",
+        "floatToSleep",
+        "sleeping",
+        "resting",
+        "restToFloat",
+        "floating",
+        "floatToSwim",
+        "swimming",
+      ],
     };
 
     function idleSequenceForState(state) {
@@ -697,6 +734,9 @@ window.addEventListener("DOMContentLoaded", () => {
       if (layer === "overlay" && overlayEl) {
         overlayEl.classList.remove("is-visible");
         overlayEl.removeAttribute("src");
+        if (spriteEl) {
+          spriteEl.classList.remove(BASE_LAYER_HIDDEN_CLASS);
+        }
       }
     }
 
@@ -709,16 +749,24 @@ window.addEventListener("DOMContentLoaded", () => {
 
       const layer = options.layer || resolved.layer || "base";
       const targetEl = layer === "overlay" ? overlayEl : spriteEl;
+      const forceReload = options.forceReload === true;
       if (!targetEl || !resolved.asset) {
         return;
       }
 
-      if (targetEl.getAttribute("src") !== resolved.asset) {
+      if (forceReload && targetEl.getAttribute("src")) {
+        targetEl.removeAttribute("src");
+      }
+
+      if (forceReload || targetEl.getAttribute("src") !== resolved.asset) {
         targetEl.src = resolved.asset;
       }
 
       if (layer === "overlay") {
         overlayEl.classList.add("is-visible");
+        if (spriteEl) {
+          spriteEl.classList.add(BASE_LAYER_HIDDEN_CLASS);
+        }
       } else {
         petState.currentAnimation = resolved.key || type;
         if (resolved.baseState) {
@@ -747,6 +795,11 @@ window.addEventListener("DOMContentLoaded", () => {
         layerTimers[layer] = window.setTimeout(() => {
           layerTimers[layer] = null;
           playAnimation(nextKey, { layer });
+        }, duration);
+      } else if (followSequence && duration && resolved.loop) {
+        layerTimers[layer] = window.setTimeout(() => {
+          layerTimers[layer] = null;
+          playAnimation(resolved.key || type, { layer, forceReload: true });
         }, duration);
       } else if (layer === "overlay") {
         if (duration) {
@@ -854,6 +907,7 @@ window.addEventListener("DOMContentLoaded", () => {
             }
           }, wait);
         },
+        followFinal: false,
       });
     }
 
@@ -867,7 +921,11 @@ window.addEventListener("DOMContentLoaded", () => {
     function startSwimBursts() {
       stopSwimBursts();
       swimBurstInterval = window.setInterval(() => {
-        if (petState.mode !== "swim" || petState.baseState !== "swim") {
+        if (
+          petState.mode !== "swim" ||
+          petState.baseState !== "swim" ||
+          petState.currentAnimation !== "swimming"
+        ) {
           return;
         }
         playAnimation("fastSwim");
