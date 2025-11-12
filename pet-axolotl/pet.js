@@ -30,6 +30,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     const STORAGE_KEY = "bubblepet.state.v1";
+    const BASE_LAYER_HIDDEN_CLASS = "pet-base-hidden";
     const STAT_LIMIT = 100;
     const DEFAULT_STATS = {
       hunger: 25,
@@ -501,6 +502,7 @@ window.addEventListener("DOMContentLoaded", () => {
         sound: "pet-sound",
         soundOptions: { volume: 0.5 },
         hideOnComplete: true,
+        hideBase: true,
       },
       munching: {
         asset: "assets/munching.gif",
@@ -509,6 +511,7 @@ window.addEventListener("DOMContentLoaded", () => {
         sound: "munch-squeak",
         soundOptions: { volume: 0.55 },
         hideOnComplete: true,
+        hideBase: true,
       },
     };
 
@@ -569,6 +572,9 @@ window.addEventListener("DOMContentLoaded", () => {
       if (layer === "overlay" && overlayEl) {
         overlayEl.classList.remove("is-visible");
         overlayEl.removeAttribute("src");
+        if (spriteEl) {
+          spriteEl.classList.remove(BASE_LAYER_HIDDEN_CLASS);
+        }
       }
     }
 
@@ -589,9 +595,17 @@ window.addEventListener("DOMContentLoaded", () => {
         targetEl.src = resolved.asset;
       }
 
+      const hideBaseLayer = options.hideBase ?? resolved.hideBase ?? false;
+
       if (layer === "overlay") {
+        if (hideBaseLayer && spriteEl) {
+          spriteEl.classList.add(BASE_LAYER_HIDDEN_CLASS);
+        }
         overlayEl.classList.add("is-visible");
       } else {
+        if (spriteEl) {
+          spriteEl.classList.remove(BASE_LAYER_HIDDEN_CLASS);
+        }
         petState.currentAnimation = resolved.key || type;
         if (resolved.baseState) {
           petState.baseState = resolved.baseState;
