@@ -2,9 +2,17 @@ window.addEventListener("DOMContentLoaded", () => {
   const STATE = Object.freeze({
     RESTING: "RESTING",
     RESTING_BUBBLE: "RESTING_BUBBLE",
+    REST_TO_FLOAT: "REST_TO_FLOAT",
+    REST_TO_SLEEP: "REST_TO_SLEEP",
     FLOATING: "FLOATING",
+    FLOAT_TO_REST: "FLOAT_TO_REST",
+    FLOAT_TO_SLEEP: "FLOAT_TO_SLEEP",
+    FLOAT_TO_SWIM: "FLOAT_TO_SWIM",
     SLEEPING: "SLEEPING",
+    SLEEP_TO_REST: "SLEEP_TO_REST",
+    SLEEP_TO_FLOAT: "SLEEP_TO_FLOAT",
     SWIMMING: "SWIMMING",
+    SWIM_TO_FLOAT: "SWIM_TO_FLOAT",
     FAST_SWIM: "FAST_SWIM",
   });
 
@@ -13,57 +21,107 @@ window.addEventListener("DOMContentLoaded", () => {
   const ANIMATIONS = {
     [STATE.RESTING]: { src: "./assets/resting.gif", hold: 6000 },
     [STATE.RESTING_BUBBLE]: { src: "./assets/restingbubble.gif", hold: 6000 },
+    [STATE.REST_TO_FLOAT]: {
+      src: "./assets/rest-to-float.gif",
+      duration: 1600,
+      queueState: STATE.FLOATING,
+    },
+    [STATE.REST_TO_SLEEP]: {
+      src: "./assets/rest-to-sleep.gif",
+      duration: 1800,
+      queueState: STATE.SLEEPING,
+    },
     [STATE.FLOATING]: { src: "./assets/floating.gif", hold: 6200 },
+    [STATE.FLOAT_TO_REST]: {
+      src: "./assets/float-to-rest.gif",
+      duration: 1600,
+      queueState: STATE.RESTING,
+    },
+    [STATE.FLOAT_TO_SLEEP]: {
+      src: "./assets/float-to-sleep.gif",
+      duration: 1800,
+      queueState: STATE.SLEEPING,
+    },
+    [STATE.FLOAT_TO_SWIM]: {
+      src: "./assets/float-to-swim.gif",
+      duration: 1500,
+      queueState: STATE.SWIMMING,
+    },
     [STATE.SLEEPING]: { src: "./assets/sleeping.gif", hold: 7000 },
+    [STATE.SLEEP_TO_REST]: {
+      src: "./assets/sleep-to-rest.gif",
+      duration: 1800,
+      queueState: STATE.RESTING,
+    },
+    [STATE.SLEEP_TO_FLOAT]: {
+      src: "./assets/sleep-to-float.gif",
+      duration: 1800,
+      queueState: STATE.FLOATING,
+    },
     [STATE.SWIMMING]: { src: "./assets/swimming.gif", hold: 5200 },
+    [STATE.SWIM_TO_FLOAT]: {
+      src: "./assets/swim-to-float.gif",
+      duration: 1500,
+      queueState: STATE.FLOATING,
+    },
     [STATE.FAST_SWIM]: { src: "./assets/fast-swim.gif", hold: 4200 },
-    REST_TO_FLOAT: { src: "./assets/rest-to-float.gif", duration: 1600 },
-    FLOAT_TO_REST: { src: "./assets/float-to-rest.gif", duration: 1600 },
-    REST_TO_SLEEP: { src: "./assets/rest-to-sleep.gif", duration: 1800 },
-    SLEEP_TO_FLOAT: { src: "./assets/sleep-to-float.gif", duration: 1800 },
-    SLEEP_TO_REST: { src: "./assets/sleep-to-rest.gif", duration: 1800 },
-    FLOAT_TO_SLEEP: { src: "./assets/float-to-sleep.gif", duration: 1800 },
-    FLOAT_TO_SWIM: { src: "./assets/float-to-swim.gif", duration: 1500 },
-    SWIM_TO_FLOAT: { src: "./assets/swim-to-float.gif", duration: 1500 },
   };
 
-  const TRANSITIONS = {
-    [STATE.RESTING]: {
-      [STATE.FLOATING]: "REST_TO_FLOAT",
-      [STATE.SLEEPING]: "REST_TO_SLEEP",
-    },
-    [STATE.RESTING_BUBBLE]: {
-      [STATE.FLOATING]: "REST_TO_FLOAT",
-      [STATE.SLEEPING]: "REST_TO_SLEEP",
-    },
-    [STATE.FLOATING]: {
-      [STATE.RESTING]: "FLOAT_TO_REST",
-      [STATE.SLEEPING]: "FLOAT_TO_SLEEP",
-      [STATE.SWIMMING]: "FLOAT_TO_SWIM",
-      [STATE.FAST_SWIM]: "FLOAT_TO_SWIM",
-    },
-    [STATE.SLEEPING]: {
-      [STATE.FLOATING]: "SLEEP_TO_FLOAT",
-      [STATE.RESTING]: "SLEEP_TO_REST",
-    },
-    [STATE.SWIMMING]: {
-      [STATE.FLOATING]: "SWIM_TO_FLOAT",
-    },
-    [STATE.FAST_SWIM]: {
-      [STATE.FLOATING]: "SWIM_TO_FLOAT",
-    },
+  const ALLOWED_TRANSITIONS = {
+    [STATE.RESTING]: [
+      STATE.RESTING_BUBBLE,
+      STATE.REST_TO_FLOAT,
+      STATE.REST_TO_SLEEP,
+    ],
+    [STATE.RESTING_BUBBLE]: [STATE.RESTING],
+    [STATE.REST_TO_FLOAT]: [STATE.FLOATING],
+    [STATE.REST_TO_SLEEP]: [STATE.SLEEPING],
+    [STATE.FLOATING]: [
+      STATE.FLOAT_TO_REST,
+      STATE.FLOAT_TO_SLEEP,
+      STATE.FLOAT_TO_SWIM,
+    ],
+    [STATE.FLOAT_TO_REST]: [STATE.RESTING],
+    [STATE.FLOAT_TO_SLEEP]: [STATE.SLEEPING],
+    [STATE.FLOAT_TO_SWIM]: [STATE.SWIMMING],
+    [STATE.SLEEPING]: [STATE.SLEEP_TO_REST, STATE.SLEEP_TO_FLOAT],
+    [STATE.SLEEP_TO_REST]: [STATE.RESTING],
+    [STATE.SLEEP_TO_FLOAT]: [STATE.FLOATING],
+    [STATE.SWIMMING]: [STATE.FAST_SWIM, STATE.SWIM_TO_FLOAT],
+    [STATE.SWIM_TO_FLOAT]: [STATE.FLOATING],
+    [STATE.FAST_SWIM]: [STATE.SWIMMING],
   };
 
   const DEFAULT_HOLD = 6000;
   const DEFAULT_TRANSITION_DURATION = 1600;
 
+  const TRANSITION_STATES = new Set([
+    STATE.REST_TO_FLOAT,
+    STATE.REST_TO_SLEEP,
+    STATE.FLOAT_TO_REST,
+    STATE.FLOAT_TO_SLEEP,
+    STATE.FLOAT_TO_SWIM,
+    STATE.SLEEP_TO_REST,
+    STATE.SLEEP_TO_FLOAT,
+    STATE.SWIM_TO_FLOAT,
+  ]);
+
   const IDLE_PATH = [
     STATE.RESTING_BUBBLE,
+    STATE.RESTING,
+    STATE.REST_TO_FLOAT,
     STATE.FLOATING,
+    STATE.FLOAT_TO_SLEEP,
     STATE.SLEEPING,
+    STATE.SLEEP_TO_FLOAT,
     STATE.FLOATING,
+    STATE.FLOAT_TO_SWIM,
     STATE.SWIMMING,
+    STATE.FAST_SWIM,
+    STATE.SWIMMING,
+    STATE.SWIM_TO_FLOAT,
     STATE.FLOATING,
+    STATE.FLOAT_TO_REST,
     STATE.RESTING,
   ];
 
@@ -80,12 +138,22 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function getHoldDuration(state) {
+  function getStateDuration(state) {
     const config = ANIMATIONS[state];
-    if (!config || !Number.isFinite(config.hold)) {
-      return DEFAULT_HOLD;
+    if (!config) {
+      return TRANSITION_STATES.has(state)
+        ? DEFAULT_TRANSITION_DURATION
+        : DEFAULT_HOLD;
     }
-    return config.hold;
+    if (Number.isFinite(config.hold)) {
+      return config.hold;
+    }
+    if (Number.isFinite(config.duration)) {
+      return config.duration;
+    }
+    return TRANSITION_STATES.has(state)
+      ? DEFAULT_TRANSITION_DURATION
+      : DEFAULT_HOLD;
   }
 
   function playAnimation(name, options = {}) {
@@ -105,18 +173,17 @@ window.addEventListener("DOMContentLoaded", () => {
     spriteElement.setAttribute("src", config.src);
     CURRENT_ANIMATION = name;
 
-    const logicalState =
-      options.logicalState ??
-      config.state ??
-      (STATE_VALUES.has(name) ? name : CURRENT_STATE);
-    CURRENT_STATE = logicalState;
+    if (STATE_VALUES.has(name)) {
+      CURRENT_STATE = name;
+    }
 
     const queueState = options.queueState ?? config.queueState ?? null;
     if (queueState && STATE_VALUES.has(queueState)) {
-      const delay = options.delay ?? config.duration ?? DEFAULT_TRANSITION_DURATION;
+      const delay =
+        options.delay ?? config.duration ?? getStateDuration(name);
       transitionTimer = window.setTimeout(() => {
         transitionTimer = null;
-        playAnimation(queueState, { logicalState: queueState });
+        transitionToState(queueState, { initiatedByQueue: true });
       }, delay);
     }
 
@@ -126,30 +193,24 @@ window.addEventListener("DOMContentLoaded", () => {
   function transitionToState(targetState) {
     if (!STATE_VALUES.has(targetState)) {
       console.warn(`[BubblePet] Invalid target state: ${targetState}`);
-      return DEFAULT_HOLD;
+      return getStateDuration(CURRENT_STATE);
     }
 
     if (CURRENT_STATE === targetState && STATE_VALUES.has(CURRENT_ANIMATION)) {
-      playAnimation(targetState, { logicalState: targetState });
-      return getHoldDuration(targetState);
+      playAnimation(targetState);
+      return getStateDuration(targetState);
     }
 
-    const available = TRANSITIONS[CURRENT_STATE] || {};
-    const transitionKey = available[targetState];
-
-    if (transitionKey && ANIMATIONS[transitionKey]) {
-      const transitionConfig = ANIMATIONS[transitionKey];
-      const transitionDuration = transitionConfig.duration ?? DEFAULT_TRANSITION_DURATION;
-      playAnimation(transitionKey, {
-        queueState: targetState,
-        delay: transitionDuration,
-        logicalState: targetState,
-      });
-      return transitionDuration + getHoldDuration(targetState);
+    const allowedTargets = ALLOWED_TRANSITIONS[CURRENT_STATE] || [];
+    if (!allowedTargets.includes(targetState)) {
+      console.warn(
+        `[BubblePet] Transition from ${CURRENT_STATE} to ${targetState} is not allowed.`
+      );
+      return getStateDuration(CURRENT_STATE);
     }
 
-    playAnimation(targetState, { logicalState: targetState });
-    return getHoldDuration(targetState);
+    playAnimation(targetState);
+    return getStateDuration(targetState);
   }
 
   function stopAllTimers() {
@@ -161,7 +222,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function scheduleIdleStep(delayMs) {
     stopIdleTimer();
-    const safeDelay = Number.isFinite(delayMs) ? delayMs : DEFAULT_HOLD;
+    const safeDelay = Number.isFinite(delayMs) ? delayMs : getStateDuration(CURRENT_STATE);
     idleTimer = window.setTimeout(runIdleSequence, safeDelay);
   }
 
@@ -190,8 +251,8 @@ window.addEventListener("DOMContentLoaded", () => {
     stopAllTimers();
     CURRENT_STATE = STATE.RESTING;
     CURRENT_ANIMATION = STATE.RESTING;
-    playAnimation(STATE.RESTING, { logicalState: STATE.RESTING });
-    scheduleIdleStep(getHoldDuration(STATE.RESTING));
+    playAnimation(STATE.RESTING);
+    scheduleIdleStep(getStateDuration(STATE.RESTING));
   }
 
   function setupDebugAPI() {
@@ -208,6 +269,7 @@ window.addEventListener("DOMContentLoaded", () => {
       startIdleCycle,
       stopAllTimers,
       runIdleSequence,
+      ALLOWED_TRANSITIONS,
     };
   }
 
@@ -236,6 +298,7 @@ window.addEventListener("DOMContentLoaded", () => {
       transitionToState,
       startIdleCycle,
       stopAllTimers,
+      ALLOWED_TRANSITIONS,
     };
   };
 
