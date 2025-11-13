@@ -302,6 +302,13 @@ window.addEventListener("DOMContentLoaded", () => {
     };
   };
 
+  document.querySelectorAll("[data-action]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const action = btn.getAttribute("data-action");
+      performAction(action);
+    });
+  });
+
   window.initPetWidget(document.body);
   console.log("✅ script validated");
 });
