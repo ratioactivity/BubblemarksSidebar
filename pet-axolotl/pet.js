@@ -450,20 +450,20 @@ window.addEventListener("DOMContentLoaded", () => {
       swimming: "swim",
     };
 
-    const BASE_TRANSITIONS = {
-      rest: {
+    const TRANSITIONS = {
+      resting: {
         rest: ["resting"],
         float: ["rest_to_float", "floating"],
         sleep: ["rest_to_float", "floating", "float_to_sleep", "sleeping"],
         swim: ["rest_to_float", "floating", "float_to_swim", "swimming"],
       },
-      float: {
+      floating: {
         rest: ["float_to_sleep", "sleeping", "resting"],
         float: ["floating"],
         sleep: ["float_to_sleep", "sleeping"],
         swim: ["float_to_swim", "swimming"],
       },
-      sleep: {
+      sleeping: {
         rest: ["sleeping", "resting"],
         float: ["sleeping", "resting", "rest_to_float", "floating"],
         sleep: ["sleeping"],
@@ -476,51 +476,12 @@ window.addEventListener("DOMContentLoaded", () => {
           "swimming",
         ],
       },
-      swim: {
+      swimming: {
         rest: ["swim_to_float", "floating", "float_to_sleep", "sleeping", "resting"],
         float: ["swim_to_float", "floating"],
         sleep: ["swim_to_float", "floating", "float_to_sleep", "sleeping"],
         swim: ["swimming"],
       },
-    };
-
-    const IDLE_SEQUENCES = {
-      rest: [
-        "resting",
-        "rest_to_float",
-        "floating",
-        "float_to_sleep",
-        "sleeping",
-        "resting",
-      ],
-      float: [
-        "floating",
-        "float_to_sleep",
-        "sleeping",
-        "resting",
-        "rest_to_float",
-        "floating",
-      ],
-      sleep: [
-        "sleeping",
-        "resting",
-        "rest_to_float",
-        "floating",
-        "float_to_sleep",
-        "sleeping",
-      ],
-      swim: [
-        "swimming",
-        "swim_to_float",
-        "floating",
-        "float_to_sleep",
-        "sleeping",
-        "resting",
-        "rest_to_float",
-        "floating",
-        "float_to_swim",
-        "swimming",
-      ],
     };
 
     const MODE_CONFIG = {
@@ -543,6 +504,75 @@ window.addEventListener("DOMContentLoaded", () => {
       pet: { type: "overlay", animation: ["pet"], duration: MODE_DURATIONS.pet },
       eat: { type: "overlay", animation: ["munching"], duration: MODE_DURATIONS.eat },
     };
+
+    function normalizeBaseState(state) {
+      if (BASE_STATE_ANIMATIONS[state]) {
+        return state;
+      }
+      if (BASE_ANIM_TO_STATE[state]) {
+        return BASE_ANIM_TO_STATE[state];
+      }
+      return "rest";
+    }
+
+    function baseAnimationName(state) {
+      const normalized = normalizeBaseState(state);
+      return BASE_STATE_ANIMATIONS[normalized] || BASE_STATE_ANIMATIONS.rest;
+    }
+
+    function playBaseAnimation(state, options = {}) {
+      const normalized = normalizeBaseState(
+        typeof state === "string" ? state : petState.baseState
+      );
+      petState.baseState = normalized;
+      setAnimation(baseAnimationName(normalized), {
+        force: options.force === false ? false : true,
+      });
+    }
+
+    function transition(fromState, toState, options = {}) {
+      const currentBase = normalizeBaseState(
+        typeof fromState === "string" ? fromState : petState.baseState
+      );
+      const targetBase = normalizeBaseState(
+        typeof toState === "string" ? toState : petState.baseState
+      );
+      const fromAnim = baseAnimationName(currentBase);
+      const mapping = TRANSITIONS[fromAnim] || TRANSITIONS.resting;
+      const sequence =
+        (mapping && mapping[targetBase]) || [baseAnimationName(targetBase)];
+
+      const sequenceDelay =
+        typeof options.delay === "number"
+          ? options.delay
+          : options.fastTrack
+          ? 900
+          : 1500;
+
+      const shouldForce = options.force === false ? false : true;
+
+      transitionAnimation(sequence, {
+        delay: sequenceDelay,
+        force: shouldForce,
+        onFinalStart: (anim) => {
+          if (anim === baseAnimationName(targetBase)) {
+            petState.baseState = targetBase;
+          }
+          if (typeof options.onFinalStart === "function") {
+            options.onFinalStart(anim);
+          }
+        },
+        onComplete: (finalAnim) => {
+          const mapped = BASE_ANIM_TO_STATE[finalAnim];
+          if (mapped) {
+            petState.baseState = mapped;
+          }
+          if (typeof options.onComplete === "function") {
+            options.onComplete(finalAnim);
+          }
+        },
+      });
+    }
 
     let currentAnim = null;
     let isBusy = false;
@@ -575,6 +605,7 @@ window.addEventListener("DOMContentLoaded", () => {
       if (!force && anim === currentAnim) {
         return;
       }
+      petEl.style.width = "var(--pet-sprite-width)";
       if (petEl.getAttribute("src") !== SPRITES[anim]) {
         petEl.setAttribute("src", SPRITES[anim]);
       }
@@ -617,12 +648,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
       let index = 0;
       const finalIndex = sequence.length - 1;
+      const finalKey = sequence[finalIndex];
 
       const step = () => {
         if (index >= sequence.length) {
           isBusy = false;
           if (onComplete) {
-            onComplete();
+            onComplete(finalKey);
           }
           return;
         }
@@ -651,51 +683,6 @@ window.addEventListener("DOMContentLoaded", () => {
       step();
     }
 
-    function idleSequenceForState(state) {
-      return IDLE_SEQUENCES[state] || IDLE_SEQUENCES.rest;
-    }
-
-    function transitionToBaseState(targetState, options = {}) {
-      const desired = BASE_STATE_ANIMATIONS[targetState] ? targetState : "rest";
-      const current = BASE_STATE_ANIMATIONS[petState.baseState]
-        ? petState.baseState
-        : "rest";
-      const available = BASE_TRANSITIONS[current] || BASE_TRANSITIONS.rest;
-      const sequence = (available && available[desired]) || [
-        BASE_STATE_ANIMATIONS[desired],
-      ];
-      const finalAnim = sequence[sequence.length - 1];
-
-      const sequenceDelay =
-        typeof options.delay === "number"
-          ? options.delay
-          : options.fastTrack
-          ? 900
-          : 1500;
-
-      transitionAnimation(sequence, {
-        delay: sequenceDelay,
-        delays: options.delays,
-        force: options.force !== false,
-        onFinalStart: (anim) => {
-          petState.baseState = desired;
-          petState.currentAnimation = anim;
-          petState.idlePhase = anim;
-          if (typeof options.onFinalStart === "function") {
-            options.onFinalStart(anim);
-          }
-        },
-        onComplete: () => {
-          petState.baseState = desired;
-          petState.currentAnimation = finalAnim;
-          petState.idlePhase = finalAnim;
-          if (typeof options.onComplete === "function") {
-            options.onComplete(finalAnim);
-          }
-        },
-      });
-    }
-
     function clearIdleCycle() {
       idleActive = false;
       clearAllTimers();
@@ -704,48 +691,15 @@ window.addEventListener("DOMContentLoaded", () => {
     function startIdleCycle(startState) {
       clearIdleCycle();
       idleActive = true;
+      stopSwimBursts();
+      const desiredState =
+        typeof startState === "string"
+          ? normalizeBaseState(startState)
+          : normalizeBaseState(petState.baseState);
       petState.mode = "idle";
       petState.currentAction = "idle";
+      playBaseAnimation(desiredState, { force: true });
       persistState();
-
-      const requestedState =
-        typeof startState === "string" && BASE_STATE_ANIMATIONS[startState]
-          ? startState
-          : null;
-      const activeState = requestedState
-        ? requestedState
-        : BASE_STATE_ANIMATIONS[petState.baseState]
-        ? petState.baseState
-        : "rest";
-
-      const idleSequence = idleSequenceForState(activeState);
-      const runLoop = () => {
-        if (!idleActive || petState.mode !== "idle") {
-          return;
-        }
-        transitionAnimation(idleSequence, {
-          delay: 1500,
-          force: true,
-          onFinalStart: (anim) => {
-            if (!idleActive || petState.mode !== "idle") {
-              return;
-            }
-            const mapped = BASE_ANIM_TO_STATE[anim];
-            if (mapped) {
-              petState.baseState = mapped;
-              petState.currentAnimation = anim;
-              petState.idlePhase = anim;
-            }
-          },
-          onComplete: () => {
-            if (idleActive && petState.mode === "idle") {
-              runLoop();
-            }
-          },
-        });
-      };
-
-      runLoop();
     }
 
     window.testAnim = (sequence) => {
@@ -920,7 +874,6 @@ window.addEventListener("DOMContentLoaded", () => {
       const modeType = config.type || "idle";
 
       if (modeType === "idle") {
-        stopSwimBursts();
         const idleBaseState =
           typeof config.baseState === "string" && config.baseState.trim().length
             ? config.baseState
@@ -935,17 +888,32 @@ window.addEventListener("DOMContentLoaded", () => {
         const sequence = Array.isArray(config.animation)
           ? config.animation
           : [config.animation || mode];
+        const resumeBaseState = normalizeBaseState(petState.baseState);
+        clearIdleCycle();
+        stopSwimBursts();
         petState.mode = mode;
         petState.currentAction = config.actionName || mode;
         persistState();
         const overlayDelay =
           typeof config.duration === "number" && config.duration > 0 ? config.duration : 1500;
-        transitionAnimation(sequence, { force: true, delay: overlayDelay });
-        if (config.duration) {
-          scheduleModeReset(mode, config.duration, resumeMode, {
-            previousMode: mode,
-          });
-        }
+        transitionAnimation(sequence, {
+          force: true,
+          delay: overlayDelay,
+          onComplete: () => {
+            if (resumeMode === mode) {
+              startIdleCycle(resumeBaseState);
+              return;
+            }
+            if (resumeMode === "idle") {
+              startIdleCycle(resumeBaseState);
+            } else {
+              enterMode(resumeMode, {
+                previousMode: mode,
+                baseState: resumeBaseState,
+              });
+            }
+          },
+        });
         return;
       }
 
@@ -956,21 +924,22 @@ window.addEventListener("DOMContentLoaded", () => {
       petState.currentAction = config.actionName || mode;
       persistState();
 
-      const targetBaseState =
+      const targetBaseState = normalizeBaseState(
         typeof config.baseState === "string" && config.baseState.trim().length
           ? config.baseState
-          : petState.baseState || "rest";
+          : petState.baseState || "rest"
+      );
 
-      transitionToBaseState(targetBaseState, {
+      transition(petState.baseState, targetBaseState, {
         fastTrack: true,
-        onFinalStart: () => {
-          if (mode === "swim" && petState.mode === "swim") {
+        onFinalStart: (anim) => {
+          if (mode === "swim" && petState.mode === "swim" && anim === "swimming") {
             startSwimBursts();
           }
         },
       });
 
-      if (config.duration) {
+      if (config.duration && mode !== "sleep") {
         scheduleModeReset(mode, config.duration, config.nextMode || "idle");
       }
       scheduleAmbientCue();
