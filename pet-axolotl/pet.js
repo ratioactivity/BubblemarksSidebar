@@ -41,6 +41,25 @@ const SPRITES = {
     "swim-to-float": "assets/swim-to-float.gif"
 };
 
+const ANIMATION_LENGTHS = {
+  "fast-swim": 1.08,
+  "floating": 1.68,
+  "float-to-rest": 1.43,
+  "float-to-sleep": 2.04,
+  "float-to-swim": 0.96,
+  "munching": 0.96,
+  "pet": 2.34,
+  "resting": 0.78,
+  "restingbubble": 2.34,
+  "rest-to-float": 1.32,
+  "rest-to-sleep": 1.82,
+  "sleeping": 1.92,
+  "sleep-to-float": 2.47,
+  "sleep-to-rest": 1.82,
+  "swimming": 1.44,
+  "swim-to-float": 1.44
+};
+
 const TRANSITION_GRAPH = {
     resting: ["resting", "restingbubble", "rest-to-float", "rest-to-sleep", "munching", "petting"],
     restingbubble: ["restingbubble", "resting"],
@@ -82,92 +101,108 @@ const stateMachine = {
         resting: {
             gif: SPRITES.resting,
             loop: true,
-            idleEligible: true
+            idleEligible: true,
+            durationKey: "resting"
         },
         restingbubble: {
             gif: SPRITES.restingbubble,
             loop: true,
-            idleEligible: true
+            idleEligible: true,
+            durationKey: "restingbubble"
         },
         floating: {
             gif: SPRITES.floating,
             loop: true,
-            idleEligible: true
+            idleEligible: true,
+            durationKey: "floating"
         },
         swimming: {
             gif: SPRITES.swimming,
             loop: true,
-            idleEligible: true
+            idleEligible: true,
+            durationKey: "swimming"
         },
         "fast-swim": {
             gif: SPRITES["fast-swim"],
             loop: true,
-            idleEligible: false
+            idleEligible: false,
+            durationKey: "fast-swim"
         },
         sleeping: {
             gif: SPRITES.sleeping,
             loop: true,
-            idleEligible: false
+            idleEligible: false,
+            durationKey: "sleeping"
         },
         munching: {
             gif: SPRITES.munching,
             loop: false,
             transitional: true,
-            auto: { state: "resting", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "munching",
+            auto: { state: "resting" }
         },
         petting: {
             gif: SPRITES.petting,
             loop: false,
             transitional: true,
-            auto: { state: "resting", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "pet",
+            auto: { state: "resting" }
         },
         "rest-to-float": {
             gif: SPRITES["rest-to-float"],
             loop: false,
             transitional: true,
-            auto: { state: "floating", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "rest-to-float",
+            auto: { state: "floating" }
         },
         "float-to-rest": {
             gif: SPRITES["float-to-rest"],
             loop: false,
             transitional: true,
-            auto: { state: "resting", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "float-to-rest",
+            auto: { state: "resting" }
         },
         "rest-to-sleep": {
             gif: SPRITES["rest-to-sleep"],
             loop: false,
             transitional: true,
-            auto: { state: "sleeping", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "rest-to-sleep",
+            auto: { state: "sleeping" }
         },
         "float-to-sleep": {
             gif: SPRITES["float-to-sleep"],
             loop: false,
             transitional: true,
-            auto: { state: "sleeping", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "float-to-sleep",
+            auto: { state: "sleeping" }
         },
         "float-to-swim": {
             gif: SPRITES["float-to-swim"],
             loop: false,
             transitional: true,
-            auto: { state: "swimming", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "float-to-swim",
+            auto: { state: "swimming" }
         },
         "sleep-to-rest": {
             gif: SPRITES["sleep-to-rest"],
             loop: false,
             transitional: true,
-            auto: { state: "resting", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "sleep-to-rest",
+            auto: { state: "resting" }
         },
         "sleep-to-float": {
             gif: SPRITES["sleep-to-float"],
             loop: false,
             transitional: true,
-            auto: { state: "floating", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "sleep-to-float",
+            auto: { state: "floating" }
         },
         "swim-to-float": {
             gif: SPRITES["swim-to-float"],
             loop: false,
             transitional: true,
-            auto: { state: "floating", delay: DEFAULT_TRANSITION_DELAY }
+            durationKey: "swim-to-float",
+            auto: { state: "floating" }
         }
     },
     go(targetState, options = {}) {
@@ -241,6 +276,8 @@ const stateMachine = {
         pet.state = name;
         this.transitioning = Boolean(config.transitional);
 
+        const duration = this._durationFor(name);
+
         this._handleLoopTimers(name, config);
 
         if (spriteEl && config.gif) {
@@ -258,7 +295,7 @@ const stateMachine = {
         }
 
         if (config.auto) {
-            const delay = config.auto.delay ?? DEFAULT_TRANSITION_DELAY;
+            const delay = config.auto.delay ?? duration;
             this.autoTimer = setTimeout(() => {
                 this.transitioning = false;
                 this.go(config.auto.state, { priority: "transition" });
@@ -345,6 +382,15 @@ const stateMachine = {
     _priorityValue(key) {
         return this.priorityMap[key] ?? this.priorityMap.normal;
     },
+    _durationFor(name) {
+        const config = this.states[name];
+        const key = config?.durationKey || name;
+        const seconds = ANIMATION_LENGTHS[key];
+        if (typeof seconds === "number" && !Number.isNaN(seconds)) {
+            return seconds * 1000;
+        }
+        return DEFAULT_TRANSITION_DELAY;
+    },
     _handleLoopTimers(name, config) {
         Object.values(this.loopTimers).forEach(timerId => clearTimeout(timerId));
         this.loopTimers = {};
@@ -354,12 +400,13 @@ const stateMachine = {
         }
 
         if (name === "fast-swim") {
+            const fastSwimDuration = this._durationFor(name) * 2;
             this.loopTimers.returnToSwim = setTimeout(() => {
                 if (this.currentState !== "fast-swim" || this.transitioning) {
                     return;
                 }
                 this.go("swimming", { priority: "normal" });
-            }, 3000);
+            }, fastSwimDuration);
         }
     }
 };
