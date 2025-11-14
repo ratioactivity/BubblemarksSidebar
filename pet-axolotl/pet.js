@@ -353,14 +353,20 @@ function doPet() {
 }
 
 function doSleep() {
-    // Transitions handled by state machine
-    stateMachine.go("sleeping");
+    // Enforce rest-to-sleep transition chain
+    stateMachine.go("rest-to-sleep");
     messageBar.textContent = "Pico is sleeping...";
 }
 
 function doSwim() {
-    // Transitions handled by state machine
-    stateMachine.go("swimming");
+    // Float before swimming when necessary
+    if (stateMachine.currentState === "floating") {
+        stateMachine.go("float-to-swim");
+    } else if (stateMachine.currentState === "swimming" || stateMachine.currentState === "fast-swim") {
+        stateMachine.go("swimming");
+    } else {
+        stateMachine.go("float-to-swim");
+    }
     messageBar.textContent = "Pico is swimming!";
 }
 
