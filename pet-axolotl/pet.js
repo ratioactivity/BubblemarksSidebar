@@ -211,3 +211,8 @@ function initPetWidget(root) {
 
 // Expose globally
 window.initPetWidget = initPetWidget;
+
+window.addEventListener("DOMContentLoaded", () => {
+    initPetWidget(document);
+    console.log("✅ script validated");
+});
