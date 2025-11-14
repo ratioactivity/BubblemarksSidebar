@@ -5,6 +5,7 @@
 // DOM references assigned on init
 let spriteEl = null;
 let messageBar = null;
+let animationTimer = null;
 
 // Core pet state
 const pet = {
@@ -84,12 +85,42 @@ const TRANSITION_GRAPH = {
 // -------------------------------
 const DEFAULT_TRANSITION_DELAY = 1000;
 
+const playAnimation = (name, loop = false, onComplete = null) => {
+    if (animationTimer) {
+        clearTimeout(animationTimer);
+        animationTimer = null;
+    }
+
+    if (spriteEl) {
+        spriteEl.src = `./assets/${name}.gif`;
+    }
+
+    if (loop) {
+        return;
+    }
+
+    const durationSeconds = ANIMATION_LENGTHS[name];
+    if (typeof durationSeconds !== "number" || Number.isNaN(durationSeconds)) {
+        console.warn(`Missing animation length for ${name}`);
+        if (typeof onComplete === "function") {
+            onComplete();
+        }
+        return;
+    }
+
+    animationTimer = setTimeout(() => {
+        animationTimer = null;
+        if (typeof onComplete === "function") {
+            onComplete();
+        }
+    }, durationSeconds * 1000);
+};
+
 const stateMachine = {
     currentState: null,
     previousState: null,
     transitioning: false,
     queue: [],
-    autoTimer: null,
     loopTimers: {},
     priorityMap: {
         transition: 0,
@@ -146,6 +177,7 @@ const stateMachine = {
             loop: false,
             transitional: true,
             durationKey: "pet",
+            animationName: "pet",
             auto: { state: "resting" }
         },
         "rest-to-float": {
@@ -269,20 +301,33 @@ const stateMachine = {
             console.warn("Missing sprite for state:", name);
         }
 
-        clearTimeout(this.autoTimer);
-
         this.previousState = this.currentState;
         this.currentState = name;
         pet.state = name;
         this.transitioning = Boolean(config.transitional);
 
-        const duration = this._durationFor(name);
-
         this._handleLoopTimers(name, config);
 
-        if (spriteEl && config.gif) {
-            spriteEl.src = config.gif;
-        }
+        const animationName = config.animationName || name;
+        const shouldLoop = Boolean(config.loop);
+        const handleComplete = () => {
+            if (this.currentState !== name) {
+                return;
+            }
+
+            if (config.auto) {
+                this.transitioning = false;
+                this.go(config.auto.state, { priority: "transition" });
+                return;
+            }
+
+            if (!config.loop) {
+                this.transitioning = false;
+                this._flushQueue();
+            }
+        };
+
+        playAnimation(animationName, shouldLoop, shouldLoop ? null : handleComplete);
 
         if (config.transitional || !config.loop) {
             stopIdleLoop();
@@ -294,13 +339,7 @@ const stateMachine = {
             }
         }
 
-        if (config.auto) {
-            const delay = config.auto.delay ?? duration;
-            this.autoTimer = setTimeout(() => {
-                this.transitioning = false;
-                this.go(config.auto.state, { priority: "transition" });
-            }, delay);
-        } else if (!config.transitional) {
+        if (!config.transitional) {
             this.transitioning = false;
         }
     },
