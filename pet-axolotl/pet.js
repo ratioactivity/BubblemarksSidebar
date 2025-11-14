@@ -6,6 +6,7 @@
 let spriteEl = null;
 let messageBar = null;
 let animationTimer = null;
+let isTransitioning = false;
 
 // Core pet state
 const pet = {
@@ -304,7 +305,9 @@ const stateMachine = {
         this.previousState = this.currentState;
         this.currentState = name;
         pet.state = name;
+
         this.transitioning = Boolean(config.transitional);
+        isTransitioning = this.transitioning;
 
         this._handleLoopTimers(name, config);
 
@@ -317,12 +320,14 @@ const stateMachine = {
 
             if (config.auto) {
                 this.transitioning = false;
+                isTransitioning = false;
                 this.go(config.auto.state, { priority: "transition" });
                 return;
             }
 
             if (!config.loop) {
                 this.transitioning = false;
+                isTransitioning = false;
                 this._flushQueue();
             }
         };
@@ -341,6 +346,7 @@ const stateMachine = {
 
         if (!config.transitional) {
             this.transitioning = false;
+            isTransitioning = false;
         }
     },
     _flushQueue() {
@@ -457,7 +463,7 @@ function startIdleLoop() {
     if (pet.idleTimer) return;
 
     pet.idleTimer = setInterval(() => {
-        if (stateMachine.transitioning) {
+        if (stateMachine.transitioning || isTransitioning) {
             return;
         }
 
@@ -514,7 +520,7 @@ function stopIdleLoop() {
 // ACTION SYSTEM
 // -------------------------------
 function performAction(action) {
-    if (pet.actionCooldown) return;
+    if (pet.actionCooldown || isTransitioning) return;
     pet.actionCooldown = true;
 
     setTimeout(() => (pet.actionCooldown = false), 1200);
