@@ -590,6 +590,12 @@ function stopIdleLoop() {
     pet.idleTimer = null;
 }
 
+function stopIdleLoop() {
+    if (!pet.idleTimer) return;
+    clearInterval(pet.idleTimer);
+    pet.idleTimer = null;
+}
+
 // -------------------------------
 // ACTION SYSTEM
 // -------------------------------
