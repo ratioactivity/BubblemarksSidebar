@@ -590,12 +590,6 @@ function stopIdleLoop() {
     pet.idleTimer = null;
 }
 
-function stopIdleLoop() {
-    if (!pet.idleTimer) return;
-    clearInterval(pet.idleTimer);
-    pet.idleTimer = null;
-}
-
 // -------------------------------
 // ACTION SYSTEM
 // -------------------------------
@@ -635,46 +629,83 @@ function performAction(action) {
 // ACTION HANDLERS
 // --------------------------------
 
+function queueActionSequence(states) {
+    states.forEach(state => {
+        stateMachine.go(state, { priority: "action", source: "action" });
+    });
+}
+
+function normalizeStateForRouting(state) {
+    if (state === "fast-swim") {
+        return "swimming";
+    }
+
+    if (state === "restingbubble") {
+        return "resting";
+    }
+
+    return state;
+}
+
 function doFeed() {
-    stateMachine.go("munching", { priority: "action", source: "action" });
+    queueActionSequence(["munching", "rest-to-float", "floating", "resting"]);
     messageBar.textContent = "Pico munches happily!";
     pet.hunger = Math.max(0, pet.hunger - 5);
 }
 
 function doPet() {
-    stateMachine.go("petting", { priority: "action", source: "action" });
+    queueActionSequence(["petting", "rest-to-float", "floating", "resting"]);
     messageBar.textContent = "Pico wiggles happily ❤️";
     pet.affection = Math.min(10, pet.affection + 5);
 }
 
 function doSleep() {
-    // Enforce rest-to-sleep transition chain
-    stateMachine.go("rest-to-sleep", { priority: "action", source: "action" });
+    const current = normalizeStateForRouting(stateMachine.currentState);
+    if (current === "sleeping") {
+        queueActionSequence(["sleeping"]);
+    } else if (current === "floating") {
+        queueActionSequence(["float-to-sleep", "sleeping"]);
+    } else if (current === "swimming") {
+        queueActionSequence(["swim-to-float", "float-to-sleep", "sleeping"]);
+    } else {
+        queueActionSequence(["rest-to-sleep", "sleeping"]);
+    }
     messageBar.textContent = "Pico is sleeping...";
 }
 
 function doSwim() {
-    // Float before swimming when necessary
-    if (stateMachine.currentState === "floating") {
-        stateMachine.go("float-to-swim", { priority: "action", source: "action" });
-    } else if (stateMachine.currentState === "swimming" || stateMachine.currentState === "fast-swim") {
-        stateMachine.go("swimming", { priority: "action", source: "action" });
+    const current = normalizeStateForRouting(stateMachine.currentState);
+    if (current === "floating") {
+        queueActionSequence(["float-to-swim", "swimming"]);
+    } else if (current === "swimming") {
+        queueActionSequence(["swimming"]);
+    } else if (current === "sleeping") {
+        queueActionSequence(["sleep-to-float", "float-to-swim", "swimming"]);
     } else {
-        stateMachine.go("float-to-swim", { priority: "action", source: "action" });
+        queueActionSequence(["rest-to-float", "float-to-swim", "swimming"]);
     }
     messageBar.textContent = "Pico is swimming!";
 }
 
 function doRest() {
-    // Transitions handled by state machine
-    stateMachine.go("resting", { priority: "action", source: "action" });
+    const current = normalizeStateForRouting(stateMachine.currentState);
+    if (current === "floating") {
+        queueActionSequence(["float-to-rest", "resting"]);
+    } else if (current === "swimming") {
+        queueActionSequence(["swim-to-float", "float-to-rest", "resting"]);
+    } else if (current === "sleeping") {
+        queueActionSequence(["sleep-to-rest", "resting"]);
+    } else if (current === "resting") {
+        queueActionSequence(["resting"]);
+    } else {
+        queueActionSequence(["resting"]);
+    }
     messageBar.textContent = "Pico calms down.";
 }
 
 function doRoam() {
-    stateMachine.go("floating", { priority: "action", source: "action" });
-    messageBar.textContent = "Pico wanders off...";
-    stopIdleLoop();
+    messageBar.textContent = "Pico looks around, but nothing happens yet.";
+    startIdleLoop();
 }
 
 // --------------------------------
