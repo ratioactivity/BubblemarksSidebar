@@ -285,6 +285,22 @@ const stateMachine = {
                 if (source === "action") {
                     buttonActionActive = false;
                 }
+
+                if (this.queue.length === 0) {
+                    idleEnabled = true;
+                    const shouldKeepIdlePaused =
+                        config.idleEligible === false ||
+                        buttonActionActive ||
+                        this.transitioning ||
+                        isTransitioning;
+
+                    if (shouldKeepIdlePaused) {
+                        stopIdleLoop();
+                    } else {
+                        startIdleLoop();
+                    }
+                }
+
                 this._flushQueue();
                 return;
             }
@@ -331,14 +347,18 @@ const stateMachine = {
         this.previousState = this.currentState;
         this.currentState = name;
         pet.state = name;
-        resumeIdleAfter = performance.now() + 200;
+        const minimalResumeDelay = performance.now() + 200;
+        if (minimalResumeDelay > resumeIdleAfter) {
+            resumeIdleAfter = minimalResumeDelay;
+        }
 
-        const hasPendingTransition = this.queue.some(entry => {
+        const queueHasPendingTransitions = this.queue.some(entry => {
             const entryConfig = this.states[entry.state];
             return entryConfig?.transitional;
         });
 
-        if (!config.transitional && config.loop && hasPendingTransition) {
+        if (!config.transitional && config.loop && queueHasPendingTransitions) {
+            idleEnabled = false;
             this.transitioning = false;
             isTransitioning = true;
             stopIdleLoop();
@@ -348,6 +368,12 @@ const stateMachine = {
         this.transitioning = Boolean(config.transitional);
         isTransitioning = this.transitioning;
 
+        if (config.transitional) {
+            idleEnabled = false;
+        } else if (this.queue.length === 0) {
+            idleEnabled = true;
+        }
+
         this._handleLoopTimers(name, config);
 
         const animationName = config.animationName || name;
@@ -355,6 +381,10 @@ const stateMachine = {
         const handleComplete = () => {
             if (this.currentState !== name) {
                 return;
+            }
+
+            if (config.transitional) {
+                resumeIdleAfter = performance.now() + 500;
             }
 
             if (config.auto) {
@@ -390,11 +420,6 @@ const stateMachine = {
             }
         }
 
-        const queueHasPendingTransitions = this.queue.some(entry => {
-            const entryConfig = this.states[entry.state];
-            return entryConfig?.transitional;
-        });
-
         const shouldKeepIdlePaused =
             config.transitional ||
             !config.loop ||
@@ -403,7 +428,7 @@ const stateMachine = {
             this.transitioning ||
             isTransitioning ||
             queueHasPendingTransitions ||
-            performance.now() < resumeIdleAfter;
+            !idleEnabled;
 
         if (shouldKeepIdlePaused) {
             stopIdleLoop();
@@ -551,6 +576,7 @@ const stateMachine = {
 // IDLE BEHAVIOR
 // -------------------------------
 function startIdleLoop() {
+    if (!idleEnabled) return;
     if (pet.idleTimer) return;
 
     const now = performance.now();
@@ -566,12 +592,17 @@ function startIdleLoop() {
 }
 
 function scheduleIdleCycle() {
+    if (!idleEnabled) return;
     const delay = 6000 + Math.random() * 4000;
     pet.idleTimer = setTimeout(runIdleCycle, delay);
 }
 
 function runIdleCycle() {
     pet.idleTimer = null;
+
+    if (!idleEnabled) {
+        return;
+    }
 
     if (performance.now() < resumeIdleAfter) {
         scheduleIdleCycle();
