@@ -5,8 +5,9 @@
 // DOM references assigned on init
 let spriteEl = null;
 let messageBar = null;
-let animationTimer = null;
+let currentTimeout = null;
 let currentAnimationId = 0;
+let idleEnabled = true;
 let isTransitioning = false;
 let buttonActionActive = false;
 let resumeIdleAfter = 0;
@@ -90,12 +91,12 @@ const TRANSITION_GRAPH = {
 const DEFAULT_TRANSITION_DELAY = 1000;
 
 const playAnimation = (name, loop = false, onComplete = null) => {
-    if (animationTimer) {
-        clearTimeout(animationTimer);
-        animationTimer = null;
-    }
-
     const animationId = ++currentAnimationId;
+
+    if (currentTimeout) {
+        clearTimeout(currentTimeout);
+        currentTimeout = null;
+    }
 
     if (spriteEl) {
         spriteEl.src = `./assets/${name}.gif`;
@@ -114,12 +115,12 @@ const playAnimation = (name, loop = false, onComplete = null) => {
         return;
     }
 
-    animationTimer = setTimeout(() => {
+    currentTimeout = setTimeout(() => {
         if (animationId !== currentAnimationId) {
             return;
         }
 
-        animationTimer = null;
+        currentTimeout = null;
 
         if (typeof onComplete === "function") {
             onComplete();
