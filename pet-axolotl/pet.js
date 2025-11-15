@@ -63,12 +63,12 @@ const ANIMATION_LENGTHS = {
 };
 
 const TRANSITION_GRAPH = {
-    resting: ["resting", "restingbubble", "rest-to-float", "rest-to-sleep", "munching", "petting"],
-    restingbubble: ["restingbubble", "resting"],
-    floating: ["floating", "float-to-rest", "float-to-sleep", "float-to-swim"],
-    swimming: ["swimming", "fast-swim", "swim-to-float"],
-    "fast-swim": ["fast-swim", "swimming"],
-    sleeping: ["sleeping", "sleep-to-rest", "sleep-to-float"],
+    resting: ["rest-to-sleep", "rest-to-float", "restingbubble", "munching", "petting"],
+    restingbubble: ["resting"],
+    floating: ["float-to-rest", "float-to-sleep", "float-to-swim"],
+    swimming: ["fast-swim", "swim-to-float", "float-to-sleep"],
+    "fast-swim": ["swimming"],
+    sleeping: ["sleep-to-rest", "sleep-to-float"],
     "rest-to-float": ["floating"],
     "float-to-rest": ["resting"],
     "rest-to-sleep": ["sleeping"],
@@ -441,6 +441,34 @@ const stateMachine = {
         this.loopTimers = {};
 
         if (!config.loop || config.transitional) {
+            return;
+        }
+
+        if (name === "swimming") {
+            const checkDelay = this._durationFor(name);
+            const scheduleFastSwimCheck = () => {
+                if (this.currentState !== "swimming" || this.transitioning || isTransitioning) {
+                    return;
+                }
+
+                const hasPendingPriority = this.queue.some(entry => {
+                    return entry.priorityValue <= this.priorityMap.action;
+                });
+
+                if (hasPendingPriority) {
+                    this.loopTimers.fastSwimTrigger = setTimeout(scheduleFastSwimCheck, checkDelay);
+                    return;
+                }
+
+                if (Math.random() < 0.2) {
+                    this.go("fast-swim", { priority: "normal" });
+                    return;
+                }
+
+                this.loopTimers.fastSwimTrigger = setTimeout(scheduleFastSwimCheck, checkDelay);
+            };
+
+            this.loopTimers.fastSwimTrigger = setTimeout(scheduleFastSwimCheck, checkDelay);
             return;
         }
 
