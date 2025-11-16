@@ -65,8 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Animation → sound map
   const ANIM_SOUNDS = {
-    resting: "resting-sound",
-    restingBubble: "resting-sound",
     swimming: "swimming-sound",
     fastSwim: "fastswim-squeak",
     munching: "munch-squeak",
