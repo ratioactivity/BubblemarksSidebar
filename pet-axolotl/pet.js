@@ -3,6 +3,8 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ script validated");
+  let lastBubbleSound = 0;
+  const BUBBLE_COOLDOWN = 2500;
   const root = document.querySelector(".pet-container");
   if (!root) {
     console.error("[BubblePet] .pet-container not found");
@@ -65,7 +67,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const ANIM_SOUNDS = {
     resting: "resting-sound",
     restingBubble: "resting-sound",
-    floating: "float-squeak",
     swimming: "swimming-sound",
     fastSwim: "fastswim-squeak",
     munching: "munch-squeak",
@@ -86,8 +87,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- AUDIO --------------------------------------------------------------
 
   const sounds = {};
-  const BUBBLE_SOUND_COOLDOWN = 2300;
-  let lastBubbleSoundTime = 0;
   SOUND_FILES.forEach((name) => {
     const audio = new Audio(`sounds/${name}.mp3`);
     audio.preload = "auto";
@@ -174,16 +173,17 @@ document.addEventListener("DOMContentLoaded", () => {
       playSound(soundName);
     }
 
+    if (
+      key.toLowerCase() === "restingbubble" &&
+      Date.now() - lastBubbleSound > BUBBLE_COOLDOWN
+    ) {
+      playSound("float-squeak");
+      lastBubbleSound = Date.now();
+    }
+
     const duration = DURATIONS[key] ?? 1000;
     animTimer = setTimeout(() => {
       animTimer = null;
-      if (isRestingBubble) {
-        const now = Date.now();
-        if (now - lastBubbleSoundTime >= BUBBLE_SOUND_COOLDOWN) {
-          lastBubbleSoundTime = now;
-          playSound("resting-sound");
-        }
-      }
       if (typeof options.onDone === "function") {
         options.onDone();
       }
