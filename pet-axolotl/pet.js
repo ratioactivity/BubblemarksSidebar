@@ -2,6 +2,7 @@
 // Replace your entire pet.js file with this.
 
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ script validated");
   const root = document.querySelector(".pet-container");
   if (!root) {
     console.error("[BubblePet] .pet-container not found");
@@ -85,6 +86,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- AUDIO --------------------------------------------------------------
 
   const sounds = {};
+  const BUBBLE_SOUND_COOLDOWN = 2300;
+  let lastBubbleSoundTime = 0;
   SOUND_FILES.forEach((name) => {
     const audio = new Audio(`sounds/${name}.mp3`);
     audio.preload = "auto";
@@ -153,13 +156,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // sound per animation
     const soundName = ANIM_SOUNDS[key];
-    if (soundName) {
+    const isRestingBubble = key === "restingBubble";
+    if (soundName && !isRestingBubble) {
       playSound(soundName);
     }
 
     const duration = DURATIONS[key] ?? 1000;
     animTimer = setTimeout(() => {
       animTimer = null;
+      if (isRestingBubble) {
+        const now = Date.now();
+        if (now - lastBubbleSoundTime >= BUBBLE_SOUND_COOLDOWN) {
+          lastBubbleSoundTime = now;
+          playSound("resting-sound");
+        }
+      }
       if (typeof options.onDone === "function") {
         options.onDone();
       }
@@ -208,10 +219,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (petState.mode !== "idle") return;
 
     const r = Math.random();
-    // 0.0–0.5  : resting
-    // 0.5–0.8  : restingbubble
+    // 0.0–0.65 : resting
+    // 0.65–0.8 : restingbubble (reduced chance)
     // 0.8–1.0  : float cycle
-    if (r < 0.5) {
+    if (r < 0.65) {
       playAnim("resting", {
         onDone: () => {
           if (petState.mode === "idle") scheduleIdleCycle();
