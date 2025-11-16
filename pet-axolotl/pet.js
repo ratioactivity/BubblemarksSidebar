@@ -3,8 +3,8 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ script validated");
-  let lastBubbleSound = 0;
-  const BUBBLE_COOLDOWN = 2500;
+  let restingBubbleHasPlayed = false;
+  const RESTING_BUBBLE_COOLDOWN = 999999;
   const root = document.querySelector(".pet-container");
   if (!root) {
     console.error("[BubblePet] .pet-container not found");
@@ -65,8 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Animation → sound map
   const ANIM_SOUNDS = {
-    resting: "resting-sound",
-    restingBubble: "resting-sound",
     swimming: "swimming-sound",
     fastSwim: "fastswim-squeak",
     munching: "munch-squeak",
@@ -166,19 +164,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const requiresRestart = GIFS_REQUIRING_RESTART.has(key);
     setSpriteSource(src, requiresRestart);
 
+    // Play float-squeak ONCE per restingbubble animation
+    if (key === "restingBubble") {
+      if (!restingBubbleHasPlayed) {
+        playSound("float-squeak");
+        restingBubbleHasPlayed = true;
+      }
+    } else {
+      // Reset for next time the animation swaps back to restingbubble
+      restingBubbleHasPlayed = false;
+    }
+
     // sound per animation
     const soundName = ANIM_SOUNDS[key];
     const isRestingBubble = key === "restingBubble";
     if (soundName && !isRestingBubble) {
       playSound(soundName);
-    }
-
-    if (
-      key.toLowerCase() === "restingbubble" &&
-      Date.now() - lastBubbleSound > BUBBLE_COOLDOWN
-    ) {
-      playSound("float-squeak");
-      lastBubbleSound = Date.now();
     }
 
     const duration = DURATIONS[key] ?? 1000;
