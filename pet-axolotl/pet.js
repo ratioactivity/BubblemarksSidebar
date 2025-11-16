@@ -1,7 +1,7 @@
 // BubblePet Axolotl – clean advanced state machine
 // Replace your entire pet.js file with this.
 
-document.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", () => {
   console.log("✅ script validated");
   let restingBubbleHasPlayed = false;
   const RESTING_BUBBLE_COOLDOWN = 999999;
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     restingBubble: 2340,
     restToFloat: 1320,
     restToSleep: 1820,
-    sleeping: 1920,
+    sleeping: 3250,
     sleepToFloat: 2470,
     sleepToRest: 1820,
     swimming: 1440,
