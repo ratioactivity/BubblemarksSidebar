@@ -31,6 +31,18 @@ window.addEventListener("DOMContentLoaded", () => {
   let currentSpriteSrc = initialSpriteSrc;
   let failsafeTimeout = null;
 
+  function attachRoamSpriteIfNeeded() {
+    if (!tankWindow.contains(roamSprite)) {
+      tankWindow.appendChild(roamSprite);
+    }
+  }
+
+  function detachRoamSprite() {
+    if (tankWindow.contains(roamSprite)) {
+      tankWindow.removeChild(roamSprite);
+    }
+  }
+
   function ensureRoamSprite() {
     let sprite = tankWindow.querySelector("#pet-roam-sprite");
     if (!sprite) {
@@ -99,13 +111,18 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function revealRoamSpriteInstantly() {
+    attachRoamSpriteIfNeeded();
+    roamSprite.style.visibility = "visible";
     roamSprite.style.display = "block";
     snapRoamOpacity("1");
   }
 
   function hideRoamSpriteInstantly() {
     snapRoamOpacity("0");
+    roamSprite.style.visibility = "hidden";
     roamSprite.style.display = "none";
+    roamSprite.style.transform = "translate(0px, 0px) scaleX(1)";
+    detachRoamSprite();
   }
 
   function clearTimers() {
@@ -233,6 +250,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   roamSprite.addEventListener("transitionend", handleRoamSpriteTransitionEnd);
+
+  hideRoamSpriteInstantly();
 
   petManager.subscribeToAnimationChange((animName, state, meta = {}) => {
     const spriteSrc = meta.sprite || currentSpriteSrc;
