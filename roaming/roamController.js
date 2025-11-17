@@ -18,6 +18,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const MOVE_DURATION = 2200;
   const ROAM_FADE_DURATION = 320;
   const UI_FADE_DURATION = 280;
+  const RETURN_FAILSAFE = 2600;
   const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
   const initialSpriteSrc = uiSprite.getAttribute("src") || "";
   const roamSprite = ensureRoamSprite();
@@ -28,6 +29,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let fadeTimeout = null;
   let lastX = 0;
   let currentSpriteSrc = initialSpriteSrc;
+  let failsafeTimeout = null;
 
   function ensureRoamSprite() {
     let sprite = tankWindow.querySelector("#pet-roam-sprite");
@@ -119,6 +121,10 @@ window.addEventListener("DOMContentLoaded", () => {
       clearTimeout(fadeTimeout);
       fadeTimeout = null;
     }
+    if (failsafeTimeout) {
+      clearTimeout(failsafeTimeout);
+      failsafeTimeout = null;
+    }
   }
 
   function moveRoamSprite(immediate = false) {
@@ -171,6 +177,10 @@ window.addEventListener("DOMContentLoaded", () => {
     roamSprite.style.transform = "translate(0px, 0px) scaleX(1)";
     hideRoamSpriteInstantly();
     showUISprite();
+    if (failsafeTimeout) {
+      clearTimeout(failsafeTimeout);
+      failsafeTimeout = null;
+    }
   }
 
   function recallRoamSprite() {
@@ -201,10 +211,28 @@ window.addEventListener("DOMContentLoaded", () => {
       finishRecallSequence();
     }, fadeDelay + fadeDuration + 50);
 
+    failsafeTimeout = setTimeout(() => {
+      if (returning) {
+        finishRecallSequence();
+      }
+    }, RETURN_FAILSAFE);
+
     if (!wasRoaming) {
       finishRecallSequence();
     }
   }
+
+  function handleRoamSpriteTransitionEnd(event) {
+    if (!returning) return;
+    if (event.target !== roamSprite) return;
+    if (event.propertyName !== "opacity") return;
+    const computedOpacity = window.getComputedStyle(roamSprite).opacity;
+    if (Number(computedOpacity) <= 0) {
+      finishRecallSequence();
+    }
+  }
+
+  roamSprite.addEventListener("transitionend", handleRoamSpriteTransitionEnd);
 
   petManager.subscribeToAnimationChange((animName, state, meta = {}) => {
     const spriteSrc = meta.sprite || currentSpriteSrc;
