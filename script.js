@@ -234,6 +234,10 @@ const AXOLOTL_STATE_FRAME_PATTERNS = [
   (state, index, extension) =>
     `assets/axolotl/${state} (${index}).${extension}`,
 ];
+const AXOLOTL_PRESENCE_MODES = {
+  WINDOW: "window",
+  ROAMING: "roaming",
+};
 
 const imageProbeCache = new Map();
 
@@ -246,6 +250,7 @@ let preferences = loadPreferences();
 let axolotlInitialized = false;
 let axolotlController = { enable: () => {}, disable: () => {} };
 let axolotlInitPromise = null;
+let axolotlPresenceMode = AXOLOTL_PRESENCE_MODES.WINDOW;
 
 let grid;
 let emptyState;
@@ -300,6 +305,10 @@ let manageBookmarksList;
 let manageBookmarksTemplate;
 let manageBookmarksEmpty;
 let activeBookmarkManagerConfirm = null;
+let petWidgetFrame;
+let petWidgetPlaceholder;
+let sendAxolotlOutBtn;
+let callAxolotlBackBtn;
 const getControlPanels = () =>
   Array.from(document.querySelectorAll("[data-controls-panel]"));
 
@@ -690,6 +699,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   settingsModal = document.getElementById("settings-modal");
   settingsForm = document.getElementById("settings-form");
   settingsDialog = document.querySelector(".settings-modal__dialog");
+  petWidgetFrame = document.querySelector("#pet-widget iframe");
+  petWidgetPlaceholder = document.getElementById("pet-widget-placeholder");
+  sendAxolotlOutBtn = document.getElementById("axolotl-send-out");
+  callAxolotlBackBtn = document.getElementById("axolotl-call-back");
+
+  if (document.body) {
+    document.body.setAttribute("data-axolotl-presence", axolotlPresenceMode);
+  }
 
   toggleHeadingInput = document.getElementById("toggle-heading");
   toggleAxolotlInput = document.getElementById("toggle-axolotl");
@@ -722,6 +739,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   setupBookmarkManagement();
   setupCategoryCustomization();
   setupLayoutControls();
+  setupAxolotlTravelControls();
 
   applyPreferences({ lazyAxolotl: true });
 
@@ -2035,9 +2053,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
     }
   }
 
-  if (axolotlLayer) {
-    axolotlLayer.hidden = !showAxolotl;
-  }
+  syncAxolotlPresenceVisibility();
 
   if (document.body) {
     document.body.setAttribute("data-card-size", cardSize);
@@ -2052,6 +2068,79 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
     }
   } else {
     axolotlController?.disable?.();
+  }
+}
+
+function setupAxolotlTravelControls() {
+  if (sendAxolotlOutBtn) {
+    sendAxolotlOutBtn.addEventListener("click", () => {
+      setAxolotlPresenceMode(AXOLOTL_PRESENCE_MODES.ROAMING);
+    });
+  }
+
+  if (callAxolotlBackBtn) {
+    callAxolotlBackBtn.addEventListener("click", () => {
+      setAxolotlPresenceMode(AXOLOTL_PRESENCE_MODES.WINDOW);
+    });
+  }
+
+  syncAxolotlPresenceVisibility();
+}
+
+function setAxolotlPresenceMode(mode) {
+  const nextMode = Object.values(AXOLOTL_PRESENCE_MODES).includes(mode)
+    ? mode
+    : AXOLOTL_PRESENCE_MODES.WINDOW;
+
+  if (nextMode === AXOLOTL_PRESENCE_MODES.ROAMING && preferences.showAxolotl === false) {
+    preferences.showAxolotl = true;
+    if (toggleAxolotlInput) {
+      toggleAxolotlInput.checked = true;
+    }
+    savePreferences();
+  }
+
+  if (axolotlPresenceMode === nextMode) {
+    syncAxolotlPresenceVisibility();
+    return;
+  }
+
+  axolotlPresenceMode = nextMode;
+
+  if (document.body) {
+    document.body.setAttribute("data-axolotl-presence", axolotlPresenceMode);
+  }
+
+  if (axolotlPresenceMode === AXOLOTL_PRESENCE_MODES.ROAMING) {
+    if (preferences.showAxolotl !== false) {
+      ensureAxolotlInitialized();
+    }
+  } else {
+    axolotlController?.disable?.();
+  }
+
+  syncAxolotlPresenceVisibility();
+}
+
+function syncAxolotlPresenceVisibility() {
+  const showAxolotl = preferences.showAxolotl !== false;
+  const isRoaming = axolotlPresenceMode === AXOLOTL_PRESENCE_MODES.ROAMING;
+  const shouldShowLayer = showAxolotl && isRoaming;
+
+  if (axolotlLayer) {
+    axolotlLayer.hidden = !shouldShowLayer;
+  }
+  if (petWidgetFrame) {
+    petWidgetFrame.hidden = isRoaming;
+  }
+  if (petWidgetPlaceholder) {
+    petWidgetPlaceholder.hidden = !isRoaming;
+  }
+  if (sendAxolotlOutBtn) {
+    sendAxolotlOutBtn.hidden = isRoaming;
+  }
+  if (callAxolotlBackBtn) {
+    callAxolotlBackBtn.hidden = !isRoaming;
   }
 }
 
@@ -2294,6 +2383,9 @@ function setupSettingsMenu() {
       preferences.showAxolotl = event.target.checked;
       savePreferences();
       applyPreferences({ syncInputs: false });
+      if (!event.target.checked) {
+        setAxolotlPresenceMode(AXOLOTL_PRESENCE_MODES.WINDOW);
+      }
     });
   }
 
