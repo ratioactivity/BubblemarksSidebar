@@ -30,6 +30,7 @@ window.addEventListener("DOMContentLoaded", () => {
     resting: "assets/resting.gif",
     restingBubble: "assets/restingbubble.gif",
     restToFloat: "assets/rest-to-float.gif",
+    restToSwim: "assets/rest-to-swim.gif",
     floatToRest: "assets/float-to-rest.gif",
     restToSleep: "assets/rest-to-sleep.gif",
     sleepToRest: "assets/sleep-to-rest.gif",
@@ -37,6 +38,7 @@ window.addEventListener("DOMContentLoaded", () => {
     sleepToFloat: "assets/sleep-to-float.gif",
     floatToSwim: "assets/float-to-swim.gif",
     swimToFloat: "assets/swim-to-float.gif",
+    swimToRest: "assets/swim-to-rest.gif",
     floating: "assets/floating.gif",
     sleeping: "assets/sleeping.gif",
     swimming: "assets/swimming.gif",
@@ -52,6 +54,7 @@ window.addEventListener("DOMContentLoaded", () => {
     floatToRest: 1430,
     floatToSleep: 2040,
     floatToSwim: 960,
+    restToSwim: 2210,
     munching: 960,
     petting: 2340,
     resting: 780,
@@ -63,6 +66,7 @@ window.addEventListener("DOMContentLoaded", () => {
     sleepToRest: 1820,
     swimming: 1440,
     swimToFloat: 1440,
+    swimToRest: 2210,
   };
 
   // Animation → sound map
@@ -371,7 +375,7 @@ window.addEventListener("DOMContentLoaded", () => {
         seq = ["sleepToRest", "munching", "resting"];
         break;
       case "swim":
-        seq = ["swimToFloat", "floatToRest", "munching", "resting"];
+        seq = ["swimToRest", "munching", "resting"];
         break;
       default: // rest
         seq = ["munching", "resting"];
@@ -396,7 +400,7 @@ window.addEventListener("DOMContentLoaded", () => {
         seq = ["sleepToRest", "petting", "resting"];
         break;
       case "swim":
-        seq = ["swimToFloat", "floatToRest", "petting", "resting"];
+        seq = ["swimToRest", "petting", "resting"];
         break;
       default:
         seq = ["petting", "resting"];
@@ -421,7 +425,7 @@ window.addEventListener("DOMContentLoaded", () => {
         seq = ["sleepToRest", "resting"];
         break;
       case "swim":
-        seq = ["swimToFloat", "floatToRest", "resting"];
+        seq = ["swimToRest", "resting"];
         break;
       default:
         seq = ["resting"];
@@ -447,7 +451,7 @@ window.addEventListener("DOMContentLoaded", () => {
         startSleepLoop();
         return;
       case "swim":
-        seq = ["swimToFloat", "floatToSleep"];
+        seq = ["swimToRest", "restToSleep"];
         break;
       default: // rest
         seq = ["restToSleep"];
@@ -480,7 +484,7 @@ window.addEventListener("DOMContentLoaded", () => {
         startSwimLoop();
         return;
       default: // rest
-        seq = ["restToFloat", "floatToSwim"];
+        seq = ["restToSwim"];
         break;
     }
 
