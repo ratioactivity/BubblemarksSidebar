@@ -77,6 +77,17 @@ window.addEventListener("DOMContentLoaded", () => {
     petting: "pet-sound",
   };
 
+  const POSE_UPDATES = {
+    resting: "rest",
+    restingBubble: "rest",
+    floating: "float",
+    munching: "rest",
+    petting: "rest",
+    sleeping: "sleep",
+    swimming: "swim",
+    fastSwim: "swim",
+  };
+
   const SOUND_FILES = [
     "attention-squeak",
     "fastswim-squeak",
@@ -118,6 +129,7 @@ window.addEventListener("DOMContentLoaded", () => {
     busy: false,
     level: 1,
     name: nameEl.textContent.trim() || "Pico",
+    poseGroup: "rest",
   };
 
   let animTimer = null;
@@ -168,6 +180,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
     clearAnimTimer();
     petState.currentAnim = key;
+    const poseUpdate = POSE_UPDATES[key];
+    if (poseUpdate) {
+      petState.poseGroup = poseUpdate;
+    }
     const requiresRestart = GIFS_REQUIRING_RESTART.has(key);
     setSpriteSource(src, requiresRestart);
 
@@ -235,11 +251,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function getPoseGroup() {
-    const a = petState.currentAnim || "resting";
-    if (a.includes("swim")) return "swim";
-    if (a.includes("sleep")) return "sleep";
-    if (a.includes("float")) return "float";
-    return "rest";
+    return petState.poseGroup || "rest";
   }
 
   // --- IDLE LOOP ----------------------------------------------------------
