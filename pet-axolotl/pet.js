@@ -1,10 +1,12 @@
 // BubblePet Axolotl – clean advanced state machine
 // Replace your entire pet.js file with this.
 
-document.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", () => {
   console.log("✅ script validated");
-  let lastBubbleSound = 0;
-  const BUBBLE_COOLDOWN = 2500;
+  let restingBubbleHasPlayed = false;
+  const RESTING_BUBBLE_COOLDOWN = 999999;
+  let lastSwimSoundTime = 0;
+  const SWIM_SOUND_COOLDOWN = 10000;
   const root = document.querySelector(".pet-container");
   if (!root) {
     console.error("[BubblePet] .pet-container not found");
@@ -28,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     resting: "assets/resting.gif",
     restingBubble: "assets/restingbubble.gif",
     restToFloat: "assets/rest-to-float.gif",
+    restToSwim: "assets/rest-to-swim.gif",
     floatToRest: "assets/float-to-rest.gif",
     restToSleep: "assets/rest-to-sleep.gif",
     sleepToRest: "assets/sleep-to-rest.gif",
@@ -35,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sleepToFloat: "assets/sleep-to-float.gif",
     floatToSwim: "assets/float-to-swim.gif",
     swimToFloat: "assets/swim-to-float.gif",
+    swimToRest: "assets/swim-to-rest.gif",
     floating: "assets/floating.gif",
     sleeping: "assets/sleeping.gif",
     swimming: "assets/swimming.gif",
@@ -50,27 +54,38 @@ document.addEventListener("DOMContentLoaded", () => {
     floatToRest: 1430,
     floatToSleep: 2040,
     floatToSwim: 960,
+    restToSwim: 2210,
     munching: 960,
     petting: 2340,
     resting: 780,
     restingBubble: 2340,
     restToFloat: 1320,
     restToSleep: 1820,
-    sleeping: 1920,
+    sleeping: 3250,
     sleepToFloat: 2470,
     sleepToRest: 1820,
     swimming: 1440,
     swimToFloat: 1440,
+    swimToRest: 2210,
   };
 
   // Animation → sound map
   const ANIM_SOUNDS = {
-    resting: "resting-sound",
-    restingBubble: "resting-sound",
     swimming: "swimming-sound",
     fastSwim: "fastswim-squeak",
     munching: "munch-squeak",
     petting: "pet-sound",
+  };
+
+  const POSE_UPDATES = {
+    resting: "rest",
+    restingBubble: "rest",
+    floating: "float",
+    munching: "rest",
+    petting: "rest",
+    sleeping: "sleep",
+    swimming: "swim",
+    fastSwim: "swim",
   };
 
   const SOUND_FILES = [
@@ -114,9 +129,11 @@ document.addEventListener("DOMContentLoaded", () => {
     busy: false,
     level: 1,
     name: nameEl.textContent.trim() || "Pico",
+    poseGroup: "rest",
   };
 
   let animTimer = null;
+  let sequenceToken = 0;
   const GIFS_REQUIRING_RESTART = new Set(["sleeping"]);
 
   function setSpriteSource(src, forceRestart = false) {
@@ -163,22 +180,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     clearAnimTimer();
     petState.currentAnim = key;
+    const poseUpdate = POSE_UPDATES[key];
+    if (poseUpdate) {
+      petState.poseGroup = poseUpdate;
+    }
     const requiresRestart = GIFS_REQUIRING_RESTART.has(key);
     setSpriteSource(src, requiresRestart);
+
+    // Play float-squeak ONCE per restingbubble animation
+    if (key === "restingBubble") {
+      if (!restingBubbleHasPlayed) {
+        playSound("float-squeak");
+        restingBubbleHasPlayed = true;
+      }
+    } else {
+      // Reset for next time the animation swaps back to restingbubble
+      restingBubbleHasPlayed = false;
+    }
 
     // sound per animation
     const soundName = ANIM_SOUNDS[key];
     const isRestingBubble = key === "restingBubble";
-    if (soundName && !isRestingBubble) {
+    if (key === "swimming") {
+      const now = Date.now();
+      if (now - lastSwimSoundTime >= SWIM_SOUND_COOLDOWN) {
+        playSound("swimming-sound");
+        lastSwimSoundTime = now;
+      }
+    } else if (soundName && !isRestingBubble) {
       playSound(soundName);
-    }
-
-    if (
-      key.toLowerCase() === "restingbubble" &&
-      Date.now() - lastBubbleSound > BUBBLE_COOLDOWN
-    ) {
-      playSound("float-squeak");
-      lastBubbleSound = Date.now();
     }
 
     const duration = DURATIONS[key] ?? 1000;
@@ -190,39 +220,44 @@ document.addEventListener("DOMContentLoaded", () => {
     }, duration);
   }
 
+  function cancelSequences() {
+    sequenceToken += 1;
+  }
+
   /**
    * Run a sequence of animations in order.
    * sequence: [ "restToFloat", "floating", "floatToSwim" ]
    */
-  function runSequence(sequence, finalCallback) {
+  function runSequence(sequence, finalCallback, token = null) {
     if (!sequence || sequence.length === 0) {
-      if (typeof finalCallback === "function") finalCallback();
+      if (token === null || token === sequenceToken) {
+        if (typeof finalCallback === "function") finalCallback();
+      }
       return;
     }
 
+    const activeToken = token ?? ++sequenceToken;
     const [head, ...tail] = sequence;
     playAnim(head, {
       onDone: () => {
+        if (activeToken !== sequenceToken) return;
         if (tail.length === 0) {
           if (typeof finalCallback === "function") finalCallback();
         } else {
-          runSequence(tail, finalCallback);
+          runSequence(tail, finalCallback, activeToken);
         }
       },
     });
   }
 
   function getPoseGroup() {
-    const a = petState.currentAnim || "resting";
-    if (a.includes("swim")) return "swim";
-    if (a.includes("sleep")) return "sleep";
-    if (a.includes("float")) return "float";
-    return "rest";
+    return petState.poseGroup || "rest";
   }
 
   // --- IDLE LOOP ----------------------------------------------------------
 
   function startIdle() {
+    cancelSequences();
     petState.mode = "idle";
     petState.busy = false;
     scheduleIdleCycle();
@@ -257,6 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- SLEEP LOOP ---------------------------------------------------------
 
   function startSleepLoop() {
+    cancelSequences();
     petState.mode = "sleep";
     petState.busy = false;
     loopSleep();
@@ -276,6 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- SWIM LOOP ----------------------------------------------------------
 
   function startSwimLoop() {
+    cancelSequences();
     petState.mode = "swim";
     petState.busy = false;
     loopSwim();
@@ -302,6 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- ROAM MODE (placeholder) --------------------------------------------
 
   function startRoam() {
+    cancelSequences();
     petState.mode = "roam";
     petState.busy = false;
     spriteEl.style.opacity = "0";
@@ -321,6 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function beginAction(description) {
     recallFromRoam();
+    cancelSequences();
     petState.busy = true;
     petState.mode = "action";
     clearAnimTimer();
@@ -348,7 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
         seq = ["sleepToRest", "munching", "resting"];
         break;
       case "swim":
-        seq = ["swimToFloat", "floatToRest", "munching", "resting"];
+        seq = ["swimToRest", "munching", "resting"];
         break;
       default: // rest
         seq = ["munching", "resting"];
@@ -373,7 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
         seq = ["sleepToRest", "petting", "resting"];
         break;
       case "swim":
-        seq = ["swimToFloat", "floatToRest", "petting", "resting"];
+        seq = ["swimToRest", "petting", "resting"];
         break;
       default:
         seq = ["petting", "resting"];
@@ -398,7 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
         seq = ["sleepToRest", "resting"];
         break;
       case "swim":
-        seq = ["swimToFloat", "floatToRest", "resting"];
+        seq = ["swimToRest", "resting"];
         break;
       default:
         seq = ["resting"];
@@ -424,7 +463,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startSleepLoop();
         return;
       case "swim":
-        seq = ["swimToFloat", "floatToSleep"];
+        seq = ["swimToRest", "restToSleep"];
         break;
       default: // rest
         seq = ["restToSleep"];
@@ -457,7 +496,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startSwimLoop();
         return;
       default: // rest
-        seq = ["restToFloat", "floatToSwim"];
+        seq = ["restToSwim"];
         break;
     }
 
