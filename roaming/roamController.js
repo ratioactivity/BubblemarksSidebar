@@ -18,20 +18,15 @@ window.addEventListener("DOMContentLoaded", () => {
   const MOVE_DURATION = 2200;
   const ROAM_FADE_DURATION = 320;
   const UI_FADE_DURATION = 280;
-  const RETURN_FAILSAFE = 1400;
   const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
   const initialSpriteSrc = petSprite.getAttribute("src") || "";
   const roamSprite = ensureRoamSprite();
   const roamControllerState = { active: false, returning: false, isRoaming: false };
   window.bubblePetRoamState = roamControllerState;
-  let roamLoopTimeout = null;
+  let roamLoopId = null;
   let roamMode = false;
-  let returning = false;
-  let revealTimeout = null;
-  let fadeTimeout = null;
   let lastX = 0;
   let currentSpriteSrc = initialSpriteSrc;
-  let failsafeTimeout = null;
   let roamSpriteVisible = false;
 
   function setRoamControllerState(partial = {}) {
@@ -106,24 +101,21 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function hideUISprite() {
-    if (!petSprite) return;
-    petSprite.style.transition = `opacity ${UI_FADE_DURATION}ms ease`;
-    petSprite.style.opacity = "0";
-  }
-
-  function showUISprite() {
-    if (!petSprite) return;
-    petSprite.style.display = "";
-    petSprite.style.transition = `opacity ${UI_FADE_DURATION}ms ease`;
-    petSprite.style.opacity = "1";
-  }
-
   function hidePetSpriteInstantly() {
     if (!petSprite) return;
     petSprite.style.transition = "none";
     petSprite.style.opacity = "0";
     petSprite.style.display = "none";
+  }
+
+  function showPetSpriteInstantly() {
+    if (!petSprite) return;
+    const previousTransition = petSprite.style.transition;
+    petSprite.style.transition = "none";
+    petSprite.style.display = "block";
+    petSprite.style.opacity = "1";
+    void petSprite.offsetWidth;
+    petSprite.style.transition = previousTransition || `opacity ${UI_FADE_DURATION}ms ease`;
   }
 
   function snapRoamOpacity(targetOpacity) {
@@ -142,30 +134,21 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function hideRoamSpriteInstantly() {
+    const previousTransition = roamSprite.style.transition;
     snapRoamOpacity("0");
+    roamSprite.style.transition = "none";
+    roamSprite.style.transform = "translate(0px, 0px) scaleX(1)";
     roamSprite.style.visibility = "hidden";
     roamSprite.style.display = "none";
-    roamSprite.style.transform = "translate(0px, 0px) scaleX(1)";
     detachRoamSprite();
-    setRoamControllerState({ active: false, returning: false, isRoaming: false });
+    void roamSprite.offsetWidth;
+    roamSprite.style.transition = previousTransition || DEFAULT_TRANSITION;
   }
 
-  function clearTimers() {
-    if (roamLoopTimeout) {
-      clearTimeout(roamLoopTimeout);
-      roamLoopTimeout = null;
-    }
-    if (revealTimeout) {
-      clearTimeout(revealTimeout);
-      revealTimeout = null;
-    }
-    if (fadeTimeout) {
-      clearTimeout(fadeTimeout);
-      fadeTimeout = null;
-    }
-    if (failsafeTimeout) {
-      clearTimeout(failsafeTimeout);
-      failsafeTimeout = null;
+  function stopRoamLoop() {
+    if (roamLoopId !== null) {
+      clearTimeout(roamLoopId);
+      roamLoopId = null;
     }
   }
 
@@ -196,7 +179,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function queueNextMove() {
     if (!roamMode) return;
     const delay = 1600 + Math.random() * 2600;
-    roamLoopTimeout = setTimeout(() => {
+    roamLoopId = setTimeout(() => {
       moveRoamSprite();
       queueNextMove();
     }, delay);
@@ -204,8 +187,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function enterRoamMode() {
     if (roamMode) return;
-    clearTimers();
-    returning = false;
+    stopRoamLoop();
     roamMode = true;
     setState("isRoaming", true);
     setRoamControllerState({ active: true, returning: false });
@@ -215,68 +197,22 @@ window.addEventListener("DOMContentLoaded", () => {
     queueNextMove();
   }
 
-  function finishRecallSequence() {
-    returning = false;
-    roamSprite.style.transition = DEFAULT_TRANSITION;
-    roamSprite.style.transform = "translate(0px, 0px) scaleX(1)";
-    hideRoamSpriteInstantly();
-    showUISprite();
-    if (failsafeTimeout) {
-      clearTimeout(failsafeTimeout);
-      failsafeTimeout = null;
-    }
-    setRoamControllerState({ active: false, returning: false, isRoaming: false });
-  }
-
-  function recallRoamSprite() {
-    if (returning) return;
-    clearTimers();
-    const wasRoaming = roamMode;
+  function callBackToTank() {
+    stopRoamLoop();
     roamMode = false;
-    returning = true;
-    setRoamControllerState({ active: false, returning: true, isRoaming: false });
-
-    const bounds = tankWindow.getBoundingClientRect();
-    const spriteBounds = roamSprite.getBoundingClientRect();
-    const targetX = Math.max(0, (bounds.width - spriteBounds.width) / 2);
-    const targetY = Math.max(0, bounds.height * 0.25);
-
-    const swimDuration = 1200;
-    const fadeDuration = 360;
-    const fadeDelay = 820;
-
-    hideUISprite();
-    roamSprite.style.transition = `transform ${swimDuration}ms ease-in-out, opacity ${fadeDuration}ms ease-in-out`;
-    roamSprite.style.transform = `translate(${targetX}px, ${targetY}px) scaleX(1)`;
-
-    fadeTimeout = setTimeout(() => {
-      roamSprite.style.opacity = "0";
-    }, fadeDelay);
-
-    revealTimeout = setTimeout(() => {
-      finishRecallSequence();
-    }, fadeDelay + fadeDuration + 50);
-
-    failsafeTimeout = setTimeout(() => {
-      if (returning) {
-        finishRecallSequence();
-      }
-    }, RETURN_FAILSAFE);
-
-    if (!wasRoaming) {
-      finishRecallSequence();
-    }
+    hideRoamSpriteInstantly();
+    showPetSpriteInstantly();
+    setRoamControllerState({ active: false, returning: false });
+    setState("isRoaming", false);
   }
 
   function ensureRoamSpriteHidden() {
-    if (!roamMode && !returning && (roamSpriteVisible || tankWindow.contains(roamSprite))) {
-      hideRoamSpriteInstantly();
-      showUISprite();
-      setRoamControllerState({ active: false, returning: false, isRoaming: false });
+    if (roamSpriteVisible || tankWindow.contains(roamSprite) || roamMode) {
+      callBackToTank();
     }
   }
 
-  hideRoamSpriteInstantly();
+  callBackToTank();
 
   petManager.subscribeToAnimationChange((animName, state, meta = {}) => {
     const spriteSrc = meta.sprite || currentSpriteSrc;
@@ -288,8 +224,8 @@ window.addEventListener("DOMContentLoaded", () => {
     const mode = state && state.mode;
     if (mode === "roam") {
       enterRoamMode();
-    } else if (roamMode || returning) {
-      recallRoamSprite();
+    } else if (roamMode) {
+      callBackToTank();
     } else {
       ensureRoamSpriteHidden();
     }
