@@ -16,6 +16,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const DEFAULT_TRANSITION = "transform 4200ms ease-in-out, opacity 800ms ease";
+  const initialSpriteSrc = uiSprite.getAttribute("src") || "";
   const roamSprite = ensureRoamSprite();
   let roamLoopTimeout = null;
   let roamMode = false;
@@ -23,6 +24,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let revealTimeout = null;
   let fadeTimeout = null;
   let lastX = 0;
+  let currentSpriteSrc = initialSpriteSrc;
 
   function ensureRoamSprite() {
     let sprite = tankWindow.querySelector("#pet-roam-sprite");
@@ -30,7 +32,6 @@ window.addEventListener("DOMContentLoaded", () => {
       sprite = document.createElement("img");
       sprite.id = "pet-roam-sprite";
       sprite.alt = "Roaming BubblePet";
-      sprite.src = "./assets/swimming.gif";
       tankWindow.appendChild(sprite);
     }
 
@@ -48,7 +49,27 @@ window.addEventListener("DOMContentLoaded", () => {
     style.maxWidth = `${measuredWidth}px`;
     style.filter = "drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35))";
     style.willChange = "transform, opacity";
+    if (currentSpriteSrc) {
+      sprite.src = currentSpriteSrc;
+    } else if (!sprite.getAttribute("src")) {
+      sprite.src = uiSprite.getAttribute("src") || "./assets/swimming.gif";
+    }
     return sprite;
+  }
+
+  function setRoamSpriteSource(src, forceRestart = false) {
+    if (!src) return;
+    currentSpriteSrc = src;
+    if (forceRestart) {
+      roamSprite.src = "";
+      requestAnimationFrame(() => {
+        roamSprite.src = src;
+      });
+      return;
+    }
+    if (roamSprite.getAttribute("src") !== src) {
+      roamSprite.src = src;
+    }
   }
 
   function hideUISprite() {
@@ -167,7 +188,13 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  petManager.subscribeToAnimationChange((_, state) => {
+  petManager.subscribeToAnimationChange((animName, state, meta = {}) => {
+    const spriteSrc = meta.sprite || currentSpriteSrc;
+    const requiresRestart = Boolean(meta.requiresRestart);
+    if (spriteSrc) {
+      setRoamSpriteSource(spriteSrc, requiresRestart);
+    }
+
     const mode = state && state.mode;
     if (mode === "roam") {
       startRoamLoop();

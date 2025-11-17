@@ -84,10 +84,40 @@ window.addEventListener("DOMContentLoaded", () => {
     },
   };
 
+  const STAT_BOUNDS = {
+    hunger: [0, 100],
+    sleepiness: [0, 100],
+    boredom: [0, 100],
+    overstimulation: [0, 100],
+    affection: [0, 100],
+  };
+
   let animationTimerId = null;
   let sequenceToken = 0;
   let restingBubbleHasPlayed = false;
   let lastSwimSoundTime = 0;
+
+  function clampStatValue(key, value) {
+    const [min, max] = STAT_BOUNDS[key] || [0, 100];
+    return Math.max(min, Math.min(max, Math.round(value)));
+  }
+
+  function applyStatChanges(deltaMap = {}) {
+    let changed = false;
+    Object.entries(deltaMap).forEach(([key, delta]) => {
+      if (!Object.prototype.hasOwnProperty.call(petState.stats, key)) return;
+      if (typeof delta !== "number" || Number.isNaN(delta)) return;
+      const current = petState.stats[key];
+      const nextValue = clampStatValue(key, current + delta);
+      if (nextValue !== current) {
+        petState.stats[key] = nextValue;
+        changed = true;
+      }
+    });
+    if (changed) {
+      emitState({ statsUpdated: true });
+    }
+  }
 
   function getPetState() {
     return {
@@ -324,6 +354,7 @@ window.addEventListener("DOMContentLoaded", () => {
     clearAnimTimer();
     setRoamMode(true);
     setMessage(`${petState.name} is roaming around Bubblemarks!`);
+    adjustStatsFor("roam");
   }
 
   function recallFromRoam() {
@@ -353,6 +384,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function handleFeed() {
     if (petState.busy) return;
     beginAction(`${petState.name} is munching happily.`);
+    adjustStatsFor("feed");
 
     const pose = getPoseGroup();
     let seq;
@@ -377,6 +409,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function handlePet() {
     if (petState.busy) return;
     beginAction(`You pet ${petState.name}.`);
+    adjustStatsFor("pet");
 
     const pose = getPoseGroup();
     let seq;
@@ -401,6 +434,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function handleRest() {
     if (petState.busy) return;
     beginAction(`${petState.name} is taking a break.`);
+    adjustStatsFor("rest");
 
     const pose = getPoseGroup();
     let seq;
@@ -425,6 +459,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function handleSleep() {
     if (petState.busy) return;
     beginAction(`${petState.name} is getting sleepy...`);
+    adjustStatsFor("sleep");
 
     const pose = getPoseGroup();
     let seq;
@@ -453,6 +488,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function handleSwim() {
     if (petState.busy) return;
     beginAction(`${petState.name} goes for a swim!`);
+    adjustStatsFor("swim");
 
     const pose = getPoseGroup();
     let seq;
@@ -481,6 +517,22 @@ window.addEventListener("DOMContentLoaded", () => {
   function handleRoam() {
     if (petState.busy) return;
     startRoam();
+  }
+
+  const ACTION_STAT_EFFECTS = {
+    feed: { hunger: -35, boredom: -10, affection: 5, overstimulation: 4 },
+    pet: { boredom: -15, affection: 8, overstimulation: -5 },
+    rest: { overstimulation: -20, boredom: -5 },
+    sleep: { sleepiness: -45, overstimulation: -10 },
+    swim: { boredom: -25, hunger: 8, overstimulation: 12 },
+    roam: { boredom: -18, hunger: 6, sleepiness: 4 },
+  };
+
+  function adjustStatsFor(actionName) {
+    const delta = ACTION_STAT_EFFECTS[actionName];
+    if (delta) {
+      applyStatChanges(delta);
+    }
   }
 
   const ACTIONS = {
