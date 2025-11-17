@@ -24,6 +24,12 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  function isRoamOverlayActive() {
+    const roamState = window.bubblePetRoamState;
+    if (!roamState) return false;
+    return Boolean(roamState.active || roamState.returning);
+  }
+
   const SOUND_FILES = [
     "attention-squeak",
     "fastswim-squeak",
@@ -128,7 +134,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function updateRoamState(mode) {
     if (spriteEl) {
-      spriteEl.style.opacity = mode === "roam" ? "0" : "1";
+      if (mode === "roam") {
+        spriteEl.style.opacity = "0";
+      } else if (!isRoamOverlayActive()) {
+        spriteEl.style.opacity = "1";
+      }
     }
 
     const isRoaming = mode === "roam";
