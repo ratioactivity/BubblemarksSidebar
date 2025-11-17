@@ -18,7 +18,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const MOVE_DURATION = 2200;
   const ROAM_FADE_DURATION = 320;
   const UI_FADE_DURATION = 280;
-  const RETURN_FAILSAFE = 2600;
+  const RETURN_FAILSAFE = 1400;
   const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
   const initialSpriteSrc = uiSprite.getAttribute("src") || "";
   const roamSprite = ensureRoamSprite();
@@ -30,17 +30,20 @@ window.addEventListener("DOMContentLoaded", () => {
   let lastX = 0;
   let currentSpriteSrc = initialSpriteSrc;
   let failsafeTimeout = null;
+  let roamSpriteVisible = false;
 
   function attachRoamSpriteIfNeeded() {
     if (!tankWindow.contains(roamSprite)) {
       tankWindow.appendChild(roamSprite);
     }
+    roamSpriteVisible = true;
   }
 
   function detachRoamSprite() {
     if (tankWindow.contains(roamSprite)) {
       tankWindow.removeChild(roamSprite);
     }
+    roamSpriteVisible = false;
   }
 
   function ensureRoamSprite() {
@@ -239,17 +242,12 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function handleRoamSpriteTransitionEnd(event) {
-    if (!returning) return;
-    if (event.target !== roamSprite) return;
-    if (event.propertyName !== "opacity") return;
-    const computedOpacity = window.getComputedStyle(roamSprite).opacity;
-    if (Number(computedOpacity) <= 0) {
-      finishRecallSequence();
+  function ensureRoamSpriteHidden() {
+    if (!roamMode && !returning && (roamSpriteVisible || tankWindow.contains(roamSprite))) {
+      hideRoamSpriteInstantly();
+      showUISprite();
     }
   }
-
-  roamSprite.addEventListener("transitionend", handleRoamSpriteTransitionEnd);
 
   hideRoamSpriteInstantly();
 
@@ -263,10 +261,10 @@ window.addEventListener("DOMContentLoaded", () => {
     const mode = state && state.mode;
     if (mode === "roam") {
       startRoamLoop();
-    } else if (roamMode) {
+    } else if (roamMode || returning) {
       recallRoamSprite();
-    } else if (!roamMode && !returning) {
-      hideRoamSpriteInstantly();
+    } else {
+      ensureRoamSpriteHidden();
     }
   });
 });
