@@ -18,6 +18,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const levelEl = root.querySelector(".pet-level");
   const nameEl = root.querySelector(".pet-name");
   const buttons = Array.from(root.querySelectorAll(".pet-actions button"));
+  const petManager = window.petManager || null;
 
   if (!spriteEl || !messageEl || !levelEl || !nameEl || !buttons.length) {
     console.error("[BubblePet] Missing core DOM elements");
@@ -132,6 +133,15 @@ window.addEventListener("DOMContentLoaded", () => {
     poseGroup: "rest",
   };
 
+  function syncPetManagerState(extra = {}) {
+    if (!petManager || typeof petManager._syncState !== "function") {
+      return;
+    }
+    petManager._syncState({ ...petState, ...extra });
+  }
+
+  syncPetManagerState();
+
   let animTimer = null;
   let sequenceToken = 0;
   const GIFS_REQUIRING_RESTART = new Set(["sleeping"]);
@@ -163,6 +173,9 @@ window.addEventListener("DOMContentLoaded", () => {
     if (animTimer !== null) {
       clearTimeout(animTimer);
       animTimer = null;
+      if (petManager && typeof petManager._setAnimationTimer === "function") {
+        petManager._setAnimationTimer(null);
+      }
     }
   }
 
@@ -186,6 +199,10 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     const requiresRestart = GIFS_REQUIRING_RESTART.has(key);
     setSpriteSource(src, requiresRestart);
+    syncPetManagerState();
+    if (petManager && typeof petManager.setAnimation === "function") {
+      petManager.setAnimation(key, { pose: petState.poseGroup });
+    }
 
     // Play float-squeak ONCE per restingbubble animation
     if (key === "restingBubble") {
@@ -214,10 +231,16 @@ window.addEventListener("DOMContentLoaded", () => {
     const duration = DURATIONS[key] ?? 1000;
     animTimer = setTimeout(() => {
       animTimer = null;
+      if (petManager && typeof petManager._setAnimationTimer === "function") {
+        petManager._setAnimationTimer(null);
+      }
       if (typeof options.onDone === "function") {
         options.onDone();
       }
     }, duration);
+    if (petManager && typeof petManager._setAnimationTimer === "function") {
+      petManager._setAnimationTimer(animTimer);
+    }
   }
 
   function cancelSequences() {
@@ -260,6 +283,7 @@ window.addEventListener("DOMContentLoaded", () => {
     cancelSequences();
     petState.mode = "idle";
     petState.busy = false;
+    syncPetManagerState();
     scheduleIdleCycle();
   }
 
@@ -295,6 +319,7 @@ window.addEventListener("DOMContentLoaded", () => {
     cancelSequences();
     petState.mode = "sleep";
     petState.busy = false;
+    syncPetManagerState();
     loopSleep();
   }
 
@@ -315,6 +340,7 @@ window.addEventListener("DOMContentLoaded", () => {
     cancelSequences();
     petState.mode = "swim";
     petState.busy = false;
+    syncPetManagerState();
     loopSwim();
   }
 
@@ -344,6 +370,10 @@ window.addEventListener("DOMContentLoaded", () => {
     petState.busy = false;
     spriteEl.style.opacity = "0";
     setMessage(`${petState.name} is roaming around Bubblemarks!`);
+    syncPetManagerState();
+    if (petManager && typeof petManager.setRoamMode === "function") {
+      petManager.setRoamMode(true);
+    }
     // In the future, tie this into the main app's roaming axolotl.
   }
 
@@ -352,6 +382,10 @@ window.addEventListener("DOMContentLoaded", () => {
       spriteEl.style.opacity = "1";
       setMessage(`${petState.name} swims back to the tank.`);
       petState.mode = "idle";
+      syncPetManagerState();
+      if (petManager && typeof petManager.setRoamMode === "function") {
+        petManager.setRoamMode(false);
+      }
     }
   }
 
@@ -364,10 +398,12 @@ window.addEventListener("DOMContentLoaded", () => {
     petState.mode = "action";
     clearAnimTimer();
     setMessage(description);
+    syncPetManagerState();
   }
 
   function endActionToIdle() {
     petState.busy = false;
+    syncPetManagerState();
     startIdle();
   }
 
@@ -536,7 +572,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Basic attention ping every 10 minutes (can be replaced with full stat logic later)
   const TEN_MIN = 10 * 60 * 1000;
-  setInterval(() => {
+  const attentionInterval = setInterval(() => {
     if (petState.mode === "sleep") return;
     // For now, just alternate between attention + happy for vibes
     const r = Math.random();
@@ -548,6 +584,9 @@ window.addEventListener("DOMContentLoaded", () => {
       setMessage(`${petState.name} chirps happily.`);
     }
   }, TEN_MIN);
+  if (petManager && typeof petManager._setTimer === "function") {
+    petManager._setTimer("attention", attentionInterval);
+  }
 
   // --- INIT ---------------------------------------------------------------
 
