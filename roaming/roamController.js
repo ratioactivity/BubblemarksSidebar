@@ -22,6 +22,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
   const initialSpriteSrc = uiSprite.getAttribute("src") || "";
   const roamSprite = ensureRoamSprite();
+  const roamControllerState = { active: false, returning: false };
+  window.bubblePetRoamState = roamControllerState;
   let roamLoopTimeout = null;
   let roamMode = false;
   let returning = false;
@@ -31,6 +33,10 @@ window.addEventListener("DOMContentLoaded", () => {
   let currentSpriteSrc = initialSpriteSrc;
   let failsafeTimeout = null;
   let roamSpriteVisible = false;
+
+  function setRoamControllerState(partial = {}) {
+    Object.assign(roamControllerState, partial);
+  }
 
   function attachRoamSpriteIfNeeded() {
     if (!tankWindow.contains(roamSprite)) {
@@ -126,6 +132,7 @@ window.addEventListener("DOMContentLoaded", () => {
     roamSprite.style.display = "none";
     roamSprite.style.transform = "translate(0px, 0px) scaleX(1)";
     detachRoamSprite();
+    setRoamControllerState({ active: false, returning: false });
   }
 
   function clearTimers() {
@@ -189,6 +196,7 @@ window.addEventListener("DOMContentLoaded", () => {
     revealRoamSpriteInstantly();
     moveRoamSprite(true);
     queueNextMove();
+    setRoamControllerState({ active: true, returning: false });
   }
 
   function finishRecallSequence() {
@@ -201,6 +209,7 @@ window.addEventListener("DOMContentLoaded", () => {
       clearTimeout(failsafeTimeout);
       failsafeTimeout = null;
     }
+    setRoamControllerState({ active: false, returning: false });
   }
 
   function recallRoamSprite() {
@@ -209,6 +218,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const wasRoaming = roamMode;
     roamMode = false;
     returning = true;
+    setRoamControllerState({ active: false, returning: true });
 
     const bounds = tankWindow.getBoundingClientRect();
     const spriteBounds = roamSprite.getBoundingClientRect();
@@ -246,6 +256,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!roamMode && !returning && (roamSpriteVisible || tankWindow.contains(roamSprite))) {
       hideRoamSpriteInstantly();
       showUISprite();
+      setRoamControllerState({ active: false, returning: false });
     }
   }
 
