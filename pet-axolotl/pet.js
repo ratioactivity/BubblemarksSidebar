@@ -1,30 +1,58 @@
-// BubblePet Axolotl – clean advanced state machine
-// Replace your entire pet.js file with this.
-
 window.addEventListener("DOMContentLoaded", () => {
   console.log("✅ script validated");
-  let restingBubbleHasPlayed = false;
-  const RESTING_BUBBLE_COOLDOWN = 999999;
-  let lastSwimSoundTime = 0;
-  const SWIM_SOUND_COOLDOWN = 10000;
-  const root = document.querySelector(".pet-container");
-  if (!root) {
+
+  const petContainer = document.querySelector(".pet-container");
+  if (!petContainer) {
     console.error("[BubblePet] .pet-container not found");
     return;
   }
 
-  const spriteEl = root.querySelector("#pet-sprite");
-  const messageEl = root.querySelector(".message-bar");
-  const levelEl = root.querySelector(".pet-level");
-  const nameEl = root.querySelector(".pet-name");
-  const buttons = Array.from(root.querySelectorAll(".pet-actions button"));
+  const spriteEl = petContainer.querySelector("#pet-sprite");
+  const messageEl = petContainer.querySelector(".message-bar");
+  const levelEl = petContainer.querySelector(".pet-level");
+  const nameEl = petContainer.querySelector(".pet-name");
+  const statBars = Array.from(petContainer.querySelectorAll(".stat-bar"));
+  const buttons = Array.from(petContainer.querySelectorAll(".pet-actions button"));
+  const callbackButtons = Array.from(
+    document.querySelectorAll('[data-action="call-back"], [data-action="callback"], [data-action="callBack"]')
+  ).filter((btn) => !buttons.includes(btn));
 
-  if (!spriteEl || !messageEl || !levelEl || !nameEl || !buttons.length) {
-    console.error("[BubblePet] Missing core DOM elements");
+  const petManager = window.petManager;
+  if (!petManager || typeof petManager.subscribeToAnimationChange !== "function") {
+    console.error("[BubblePet] petManager is not available");
     return;
   }
 
-  // --- CONFIG -------------------------------------------------------------
+  const SOUND_FILES = [
+    "attention-squeak",
+    "fastswim-squeak",
+    "float-squeak",
+    "happy-squeak",
+    "munch-squeak",
+    "pet-sound",
+    "resting-sound",
+    "swimming-sound",
+  ];
+
+  const sounds = {};
+  SOUND_FILES.forEach((name) => {
+    const audio = new Audio(`sounds/${name}.mp3`);
+    audio.preload = "auto";
+    audio.volume = 0.45;
+    sounds[name] = audio;
+  });
+
+  function playSound(name) {
+    const clip = sounds[name];
+    if (!clip) return;
+    try {
+      clip.pause();
+      clip.currentTime = 0;
+      clip.play().catch(() => {});
+    } catch {
+      // ignore audio errors
+    }
+  }
 
   const SPRITES = {
     resting: "assets/resting.gif",
@@ -47,516 +75,120 @@ window.addEventListener("DOMContentLoaded", () => {
     petting: "assets/pet.gif",
   };
 
-  // Durations in ms – from your chart (seconds × 1000, rounded)
-  const DURATIONS = {
-    fastSwim: 1080,
-    floating: 1680,
-    floatToRest: 1430,
-    floatToSleep: 2040,
-    floatToSwim: 960,
-    restToSwim: 2210,
-    munching: 960,
-    petting: 2340,
-    resting: 780,
-    restingBubble: 2340,
-    restToFloat: 1320,
-    restToSleep: 3250,
-    sleeping: 3250,
-    sleepToFloat: 2470,
-    sleepToRest: 3250,
-    swimming: 1440,
-    swimToFloat: 1440,
-    swimToRest: 2210,
+  const STAT_LABEL_MAP = {
+    hunger: "hunger",
+    sleepiness: "sleepiness",
+    boredom: "boredom",
+    "overstim.": "overstimulation",
+    affection: "affection",
   };
 
-  // Animation → sound map
-  const ANIM_SOUNDS = {
-    swimming: "swimming-sound",
-    fastSwim: "fastswim-squeak",
-    munching: "munch-squeak",
-    petting: "pet-sound",
-  };
-
-  const POSE_UPDATES = {
-    resting: "rest",
-    restingBubble: "rest",
-    floating: "float",
-    munching: "rest",
-    petting: "rest",
-    sleeping: "sleep",
-    swimming: "swim",
-    fastSwim: "swim",
-  };
-
-  const SOUND_FILES = [
-    "attention-squeak",
-    "fastswim-squeak",
-    "float-squeak",
-    "happy-squeak",
-    "munch-squeak",
-    "pet-sound",
-    "resting-sound",
-    "swimming-sound",
-  ];
-
-  // --- AUDIO --------------------------------------------------------------
-
-  const sounds = {};
-  SOUND_FILES.forEach((name) => {
-    const audio = new Audio(`sounds/${name}.mp3`);
-    audio.preload = "auto";
-    audio.volume = 0.45;
-    sounds[name] = audio;
-  });
-
-  function playSound(name) {
-    const a = sounds[name];
-    if (!a) return;
-    try {
-      a.pause();
-      a.currentTime = 0;
-      a.play().catch(() => {});
-    } catch {
-      // ignore audio edge cases
-    }
-  }
-
-  // --- STATE --------------------------------------------------------------
-
-  const petState = {
-    mode: "idle", // "idle" | "action" | "sleep" | "swim" | "roam"
-    currentAnim: "resting",
-    busy: false,
-    level: 1,
-    name: nameEl.textContent.trim() || "Pico",
-    poseGroup: "rest",
-  };
-
-  let animTimer = null;
-  let sequenceToken = 0;
-  const GIFS_REQUIRING_RESTART = new Set(["sleeping"]);
+  let lastSpriteSrc = spriteEl ? spriteEl.getAttribute("src") : "";
 
   function setSpriteSource(src, forceRestart = false) {
+    if (!spriteEl || !src) return;
     if (!forceRestart) {
       spriteEl.src = src;
+      lastSpriteSrc = src;
       return;
     }
     spriteEl.src = "";
     requestAnimationFrame(() => {
       spriteEl.src = src;
+      lastSpriteSrc = src;
     });
   }
 
-  function setMessage(text) {
+  function updateMessage(text) {
+    if (!messageEl || typeof text !== "string") return;
     messageEl.textContent = text;
   }
 
-  function updateLevelDisplay() {
-    levelEl.textContent = `Lv. ${petState.level}`;
+  function updateLevel(level) {
+    if (!levelEl) return;
+    const safeLevel = Number.isFinite(level) ? level : 1;
+    levelEl.textContent = `Lv. ${safeLevel}`;
   }
 
-  updateLevelDisplay();
-
-  // --- ANIMATION CORE -----------------------------------------------------
-
-  function clearAnimTimer() {
-    if (animTimer !== null) {
-      clearTimeout(animTimer);
-      animTimer = null;
-    }
-  }
-
-  /**
-   * Play a single animation by key (e.g., "resting", "restToFloat").
-   * options:
-   *   onDone: callback when the animation is finished.
-   */
-  function playAnim(key, options = {}) {
-    const src = SPRITES[key];
-    if (!src) {
-      console.warn("[BubblePet] Missing sprite for animation:", key);
-      return;
-    }
-
-    clearAnimTimer();
-    petState.currentAnim = key;
-    const poseUpdate = POSE_UPDATES[key];
-    if (poseUpdate) {
-      petState.poseGroup = poseUpdate;
-    }
-    const requiresRestart = GIFS_REQUIRING_RESTART.has(key);
-    setSpriteSource(src, requiresRestart);
-
-    // Play float-squeak ONCE per restingbubble animation
-    if (key === "restingBubble") {
-      if (!restingBubbleHasPlayed) {
-        playSound("float-squeak");
-        restingBubbleHasPlayed = true;
+  function updateStats(stats = {}) {
+    statBars.forEach((bar) => {
+      const label = (bar.dataset.label || "").toLowerCase();
+      const key = STAT_LABEL_MAP[label];
+      const fill = bar.querySelector(".stat-fill");
+      if (!fill || !key) return;
+      const value = stats[key];
+      if (typeof value === "number") {
+        fill.style.width = `${value}%`;
       }
-    } else {
-      // Reset for next time the animation swaps back to restingbubble
-      restingBubbleHasPlayed = false;
-    }
-
-    // sound per animation
-    const soundName = ANIM_SOUNDS[key];
-    const isRestingBubble = key === "restingBubble";
-    if (key === "swimming") {
-      const now = Date.now();
-      if (now - lastSwimSoundTime >= SWIM_SOUND_COOLDOWN) {
-        playSound("swimming-sound");
-        lastSwimSoundTime = now;
-      }
-    } else if (soundName && !isRestingBubble) {
-      playSound(soundName);
-    }
-
-    const duration = DURATIONS[key] ?? 1000;
-    animTimer = setTimeout(() => {
-      animTimer = null;
-      if (typeof options.onDone === "function") {
-        options.onDone();
-      }
-    }, duration);
-  }
-
-  function cancelSequences() {
-    sequenceToken += 1;
-  }
-
-  /**
-   * Run a sequence of animations in order.
-   * sequence: [ "restToFloat", "floating", "floatToSwim" ]
-   */
-  function runSequence(sequence, finalCallback, token = null) {
-    if (!sequence || sequence.length === 0) {
-      if (token === null || token === sequenceToken) {
-        if (typeof finalCallback === "function") finalCallback();
-      }
-      return;
-    }
-
-    const activeToken = token ?? ++sequenceToken;
-    const [head, ...tail] = sequence;
-    playAnim(head, {
-      onDone: () => {
-        if (activeToken !== sequenceToken) return;
-        if (tail.length === 0) {
-          if (typeof finalCallback === "function") finalCallback();
-        } else {
-          runSequence(tail, finalCallback, activeToken);
-        }
-      },
     });
   }
 
-  function getPoseGroup() {
-    return petState.poseGroup || "rest";
-  }
-
-  // --- IDLE LOOP ----------------------------------------------------------
-
-  function startIdle() {
-    cancelSequences();
-    petState.mode = "idle";
-    petState.busy = false;
-    scheduleIdleCycle();
-  }
-
-  function scheduleIdleCycle() {
-    if (petState.mode !== "idle") return;
-
-    const r = Math.random();
-    // 0.0–0.85 : resting
-    // 0.85–0.9 : restingbubble (further reduced chance)
-    // 0.9–1.0  : float cycle
-    if (r < 0.85) {
-      playAnim("resting", {
-        onDone: () => {
-          if (petState.mode === "idle") scheduleIdleCycle();
-        },
-      });
-    } else if (r < 0.9) {
-      playAnim("restingBubble", {
-        onDone: () => {
-          if (petState.mode === "idle") scheduleIdleCycle();
-        },
-      });
+  function updateRoamState(mode) {
+    if (!spriteEl) return;
+    if (mode === "roam") {
+      spriteEl.style.opacity = "0";
     } else {
-      runSequence(["restToFloat", "floating", "floatToRest"], () => {
-        if (petState.mode === "idle") scheduleIdleCycle();
-      });
-    }
-  }
-
-  // --- SLEEP LOOP ---------------------------------------------------------
-
-  function startSleepLoop() {
-    cancelSequences();
-    petState.mode = "sleep";
-    petState.busy = false;
-    loopSleep();
-  }
-
-  function loopSleep() {
-    if (petState.mode !== "sleep") return;
-    playAnim("sleeping", {
-      onDone: () => {
-        if (petState.mode === "sleep") {
-          loopSleep();
-        }
-      },
-    });
-  }
-
-  // --- SWIM LOOP ----------------------------------------------------------
-
-  function startSwimLoop() {
-    cancelSequences();
-    petState.mode = "swim";
-    petState.busy = false;
-    loopSwim();
-  }
-
-  function loopSwim() {
-    if (petState.mode !== "swim") return;
-    const r = Math.random();
-    // most of the time: just swim
-    // sometimes: swim -> fast-swim -> swim
-    if (r < 0.7) {
-      playAnim("swimming", {
-        onDone: () => {
-          if (petState.mode === "swim") loopSwim();
-        },
-      });
-    } else {
-      runSequence(["swimming", "fastSwim", "swimming"], () => {
-        if (petState.mode === "swim") loopSwim();
-      });
-    }
-  }
-
-  // --- ROAM MODE (placeholder) --------------------------------------------
-
-  function startRoam() {
-    cancelSequences();
-    petState.mode = "roam";
-    petState.busy = false;
-    spriteEl.style.opacity = "0";
-    setMessage(`${petState.name} is roaming around Bubblemarks!`);
-    // In the future, tie this into the main app's roaming axolotl.
-  }
-
-  function recallFromRoam() {
-    if (petState.mode === "roam") {
       spriteEl.style.opacity = "1";
-      setMessage(`${petState.name} swims back to the tank.`);
-      petState.mode = "idle";
     }
   }
 
-  // --- ACTION HELPERS -----------------------------------------------------
-
-  function beginAction(description) {
-    recallFromRoam();
-    cancelSequences();
-    petState.busy = true;
-    petState.mode = "action";
-    clearAnimTimer();
-    setMessage(description);
+  function applyProfileFromDom() {
+    const details = {};
+    if (nameEl) {
+      details.name = nameEl.textContent.trim();
+    }
+    if (levelEl) {
+      const levelText = levelEl.textContent || "";
+      const numeric = parseInt(levelText.replace(/[^0-9]/g, ""), 10);
+      if (Number.isFinite(numeric)) {
+        details.level = numeric;
+      }
+    }
+    if (typeof petManager.setProfile === "function") {
+      petManager.setProfile(details);
+    }
   }
 
-  function endActionToIdle() {
-    petState.busy = false;
-    startIdle();
-  }
+  applyProfileFromDom();
 
-  // FEED: follow your transition logic
-  function handleFeed() {
-    if (petState.busy) return;
-    beginAction(`${petState.name} is munching happily.`);
-
-    const pose = getPoseGroup();
-    let seq;
-
-    switch (pose) {
-      case "float":
-        seq = ["floatToRest", "munching", "resting"];
-        break;
-      case "sleep":
-        seq = ["sleepToRest", "munching", "resting"];
-        break;
-      case "swim":
-        seq = ["swimToRest", "munching", "resting"];
-        break;
-      default: // rest
-        seq = ["munching", "resting"];
+  function handleAnimationChange(animName, state, meta = {}) {
+    const isMessageOnly = Boolean(meta.messageOnly);
+    if (!isMessageOnly) {
+      const spriteSrc = meta.sprite || SPRITES[animName] || lastSpriteSrc;
+      const forceRestart = Boolean(meta.requiresRestart);
+      setSpriteSource(spriteSrc, forceRestart);
     }
 
-    runSequence(seq, endActionToIdle);
-  }
-
-  // PET
-  function handlePet() {
-    if (petState.busy) return;
-    beginAction(`You pet ${petState.name}.`);
-
-    const pose = getPoseGroup();
-    let seq;
-
-    switch (pose) {
-      case "float":
-        seq = ["floatToRest", "petting", "resting"];
-        break;
-      case "sleep":
-        seq = ["sleepToRest", "petting", "resting"];
-        break;
-      case "swim":
-        seq = ["swimToRest", "petting", "resting"];
-        break;
-      default:
-        seq = ["petting", "resting"];
+    if (meta.sound) {
+      playSound(meta.sound);
     }
 
-    runSequence(seq, endActionToIdle);
-  }
-
-  // REST – bring him gently back to chill mode
-  function handleRest() {
-    if (petState.busy) return;
-    beginAction(`${petState.name} is taking a break.`);
-
-    const pose = getPoseGroup();
-    let seq;
-
-    switch (pose) {
-      case "float":
-        seq = ["floatToRest", "resting"];
-        break;
-      case "sleep":
-        seq = ["sleepToRest", "resting"];
-        break;
-      case "swim":
-        seq = ["swimToRest", "resting"];
-        break;
-      default:
-        seq = ["resting"];
+    if (meta.message || state.message) {
+      updateMessage(meta.message ?? state.message);
     }
 
-    runSequence(seq, endActionToIdle);
+    updateLevel(state.level);
+    updateStats(state.stats);
+    updateRoamState(state.mode);
   }
 
-  // SLEEP
-  function handleSleep() {
-    if (petState.busy) return;
-    beginAction(`${petState.name} is getting sleepy...`);
+  petManager.subscribeToAnimationChange(handleAnimationChange);
 
-    const pose = getPoseGroup();
-    let seq;
-
-    switch (pose) {
-      case "float":
-        seq = ["floatToSleep"];
-        break;
-      case "sleep":
-        // already sleeping – just restart sleep loop cleanly
-        startSleepLoop();
+  function attachActionHandler(button) {
+    const action = button.dataset.action;
+    if (!action) return;
+    button.addEventListener("click", () => {
+      if (petManager.actions && typeof petManager.actions[action] === "function") {
+        petManager.actions[action]();
         return;
-      case "swim":
-        seq = ["swimToRest", "restToSleep"];
-        break;
-      default: // rest
-        seq = ["restToSleep"];
-        break;
-    }
-
-    runSequence(seq, () => {
-      setMessage(`${petState.name} is sleeping.`);
-      startSleepLoop();
+      }
+      if (typeof petManager.triggerAction === "function") {
+        petManager.triggerAction(action);
+      }
     });
   }
 
-  // SWIM
-  function handleSwim() {
-    if (petState.busy) return;
-    beginAction(`${petState.name} goes for a swim!`);
+  buttons.forEach((btn) => attachActionHandler(btn));
+  callbackButtons.forEach((btn) => attachActionHandler(btn));
 
-    const pose = getPoseGroup();
-    let seq;
-
-    switch (pose) {
-      case "float":
-        seq = ["floatToSwim"];
-        break;
-      case "sleep":
-        seq = ["sleepToFloat", "floatToSwim"];
-        break;
-      case "swim":
-        // already swimming, just restart loop
-        startSwimLoop();
-        return;
-      default: // rest
-        seq = ["restToSwim"];
-        break;
-    }
-
-    runSequence(seq, () => {
-      setMessage(`${petState.name} is happily swimming.`);
-      startSwimLoop();
-    });
-  }
-
-  // ROAM
-  function handleRoam() {
-    if (petState.busy) return;
-    startRoam();
-  }
-
-  // --- BUTTON WIRING ------------------------------------------------------
-
-  const ACTIONS = {
-    feed: handleFeed,
-    pet: handlePet,
-    sleep: handleSleep,
-    swim: handleSwim,
-    rest: handleRest,
-    roam: handleRoam,
-  };
-
-  buttons.forEach((btn) => {
-    const action = btn.dataset.action;
-    const handler = ACTIONS[action];
-    if (!handler) return;
-    btn.addEventListener("click", () => {
-      handler();
-    });
-  });
-
-  // --- ATTENTION / HAPPY NOISES (simple version) --------------------------
-
-  // Basic attention ping every 10 minutes (can be replaced with full stat logic later)
-  const TEN_MIN = 10 * 60 * 1000;
-  setInterval(() => {
-    if (petState.mode === "sleep") return;
-    // For now, just alternate between attention + happy for vibes
-    const r = Math.random();
-    if (r < 0.5) {
-      playSound("attention-squeak");
-      setMessage(`${petState.name} wants attention.`);
-    } else {
-      playSound("happy-squeak");
-      setMessage(`${petState.name} chirps happily.`);
-    }
-  }, TEN_MIN);
-
-  // --- INIT ---------------------------------------------------------------
-
-  // Start with idle loop from resting
-  playAnim("resting", {
-    onDone: () => {
-      startIdle();
-    },
-  });
-
-  console.log("[BubblePet] Axolotl state machine initialized.");
 });
