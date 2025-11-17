@@ -365,8 +365,11 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function isRoaming() {
+    return petState.mode === "roam";
+  }
+
   function beginAction(description) {
-    recallFromRoam();
     cancelSequences();
     petState.busy = true;
     petState.mode = "action";
@@ -382,7 +385,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleFeed() {
-    if (petState.busy) return;
+    if (petState.busy || isRoaming()) return;
     beginAction(`${petState.name} is munching happily.`);
     adjustStatsFor("feed");
 
@@ -407,7 +410,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function handlePet() {
-    if (petState.busy) return;
+    if (petState.busy || isRoaming()) return;
     beginAction(`You pet ${petState.name}.`);
     adjustStatsFor("pet");
 
@@ -432,7 +435,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleRest() {
-    if (petState.busy) return;
+    if (petState.busy || isRoaming()) return;
     beginAction(`${petState.name} is taking a break.`);
     adjustStatsFor("rest");
 
@@ -457,7 +460,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleSleep() {
-    if (petState.busy) return;
+    if (petState.busy || isRoaming()) return;
     beginAction(`${petState.name} is getting sleepy...`);
     adjustStatsFor("sleep");
 
@@ -486,7 +489,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleSwim() {
-    if (petState.busy) return;
+    if (petState.busy || isRoaming()) return;
     beginAction(`${petState.name} goes for a swim!`);
     adjustStatsFor("swim");
 
@@ -515,6 +518,10 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleRoam() {
+    if (petState.mode === "roam") {
+      recallFromRoam();
+      return;
+    }
     if (petState.busy) return;
     startRoam();
   }

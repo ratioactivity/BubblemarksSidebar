@@ -13,6 +13,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const nameEl = petContainer.querySelector(".pet-name");
   const statBars = Array.from(petContainer.querySelectorAll(".stat-bar"));
   const buttons = Array.from(petContainer.querySelectorAll(".pet-actions button"));
+  const roamButton = buttons.find((btn) => btn.dataset.action === "roam");
   const callbackButtons = Array.from(
     document.querySelectorAll('[data-action="call-back"], [data-action="callback"], [data-action="callBack"]')
   ).filter((btn) => !buttons.includes(btn));
@@ -123,13 +124,33 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const CALLBACK_ACTIONS = new Set(["call-back", "callback"]);
+
   function updateRoamState(mode) {
-    if (!spriteEl) return;
-    if (mode === "roam") {
-      spriteEl.style.opacity = "0";
-    } else {
-      spriteEl.style.opacity = "1";
+    if (spriteEl) {
+      spriteEl.style.opacity = mode === "roam" ? "0" : "1";
     }
+
+    const isRoaming = mode === "roam";
+    if (roamButton) {
+      roamButton.textContent = isRoaming ? "Call Back" : "Roam";
+      roamButton.disabled = false;
+    }
+
+    buttons.forEach((btn) => {
+      const action = (btn.dataset.action || "").toLowerCase();
+      const isRoamBtn = action === "roam";
+      const isCallbackBtn = CALLBACK_ACTIONS.has(action);
+      if (!isRoamBtn && !isCallbackBtn) {
+        btn.disabled = isRoaming;
+      } else if (!isRoaming) {
+        btn.disabled = false;
+      }
+    });
+
+    callbackButtons.forEach((btn) => {
+      btn.disabled = false;
+    });
   }
 
   function applyProfileFromDom() {

@@ -15,7 +15,10 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const DEFAULT_TRANSITION = "transform 4200ms ease-in-out, opacity 800ms ease";
+  const MOVE_DURATION = 2200;
+  const ROAM_FADE_DURATION = 320;
+  const UI_FADE_DURATION = 280;
+  const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
   const initialSpriteSrc = uiSprite.getAttribute("src") || "";
   const roamSprite = ensureRoamSprite();
   let roamLoopTimeout = null;
@@ -74,17 +77,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function hideUISprite() {
     if (!uiSprite) return;
-    if (!uiSprite.style.transition) {
-      uiSprite.style.transition = "opacity 600ms ease";
-    }
+    uiSprite.style.transition = `opacity ${UI_FADE_DURATION}ms ease`;
     uiSprite.style.opacity = "0";
   }
 
   function showUISprite() {
     if (!uiSprite) return;
-    if (!uiSprite.style.transition) {
-      uiSprite.style.transition = "opacity 600ms ease";
-    }
+    uiSprite.style.transition = `opacity ${UI_FADE_DURATION}ms ease`;
     uiSprite.style.opacity = "1";
   }
 
@@ -167,9 +166,9 @@ window.addEventListener("DOMContentLoaded", () => {
     const targetX = Math.max(0, (bounds.width - spriteBounds.width) / 2);
     const targetY = Math.max(0, bounds.height * 0.25);
 
-    const swimDuration = 1800;
-    const fadeDuration = 650;
-    const fadeDelay = 1500;
+    const swimDuration = 1200;
+    const fadeDuration = 360;
+    const fadeDelay = 820;
 
     hideUISprite();
     roamSprite.style.transition = `transform ${swimDuration}ms ease-in-out, opacity ${fadeDuration}ms ease-in-out`;
