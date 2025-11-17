@@ -16,14 +16,14 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const MOVE_DURATION = 2200;
-  const ROAM_FADE_DURATION = 320;
-  const UI_FADE_DURATION = 280;
-  const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
+  const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out`;
   const initialSpriteSrc = petSprite.getAttribute("src") || "";
   const roamSprite = ensureRoamSprite();
   const roamControllerState = { active: false, returning: false, isRoaming: false };
   window.bubblePetRoamState = roamControllerState;
   let roamLoopId = null;
+  let lastMoveTimestamp = 0;
+  let roamLoopDelay = 0;
   let roamMode = false;
   let lastX = 0;
   let currentSpriteSrc = initialSpriteSrc;
@@ -103,51 +103,34 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function hidePetSpriteInstantly() {
     if (!petSprite) return;
-    petSprite.style.transition = "none";
-    petSprite.style.opacity = "0";
     petSprite.style.display = "none";
+    petSprite.style.opacity = "0";
   }
 
   function showPetSpriteInstantly() {
     if (!petSprite) return;
-    const previousTransition = petSprite.style.transition;
-    petSprite.style.transition = "none";
     petSprite.style.display = "block";
     petSprite.style.opacity = "1";
-    void petSprite.offsetWidth;
-    petSprite.style.transition = previousTransition || `opacity ${UI_FADE_DURATION}ms ease`;
-  }
-
-  function snapRoamOpacity(targetOpacity) {
-    const previousTransition = roamSprite.style.transition;
-    roamSprite.style.transition = "none";
-    roamSprite.style.opacity = targetOpacity;
-    void roamSprite.offsetWidth;
-    roamSprite.style.transition = previousTransition || DEFAULT_TRANSITION;
   }
 
   function revealRoamSpriteInstantly() {
     attachRoamSpriteIfNeeded();
     roamSprite.style.visibility = "visible";
     roamSprite.style.display = "block";
-    snapRoamOpacity("1");
+    roamSprite.style.opacity = "1";
   }
 
   function hideRoamSpriteInstantly() {
-    const previousTransition = roamSprite.style.transition;
-    snapRoamOpacity("0");
-    roamSprite.style.transition = "none";
+    roamSprite.style.opacity = "0";
     roamSprite.style.transform = "translate(0px, 0px) scaleX(1)";
     roamSprite.style.visibility = "hidden";
     roamSprite.style.display = "none";
     detachRoamSprite();
-    void roamSprite.offsetWidth;
-    roamSprite.style.transition = previousTransition || DEFAULT_TRANSITION;
   }
 
   function stopRoamLoop() {
     if (roamLoopId !== null) {
-      clearTimeout(roamLoopId);
+      cancelAnimationFrame(roamLoopId);
       roamLoopId = null;
     }
   }
@@ -176,13 +159,30 @@ window.addEventListener("DOMContentLoaded", () => {
     lastX = nextX;
   }
 
-  function queueNextMove() {
-    if (!roamMode) return;
-    const delay = 1600 + Math.random() * 2600;
-    roamLoopId = setTimeout(() => {
-      moveRoamSprite();
-      queueNextMove();
-    }, delay);
+  function scheduleNextMove() {
+    if (!roamMode) {
+      roamLoopId = null;
+      return;
+    }
+
+    const tick = (timestamp) => {
+      if (!roamMode) {
+        roamLoopId = null;
+        return;
+      }
+
+      if (timestamp - lastMoveTimestamp >= roamLoopDelay) {
+        moveRoamSprite();
+        lastMoveTimestamp = timestamp;
+        roamLoopDelay = 1600 + Math.random() * 2600;
+      }
+
+      roamLoopId = requestAnimationFrame(tick);
+    };
+
+    lastMoveTimestamp = performance.now();
+    roamLoopDelay = 1600 + Math.random() * 2600;
+    roamLoopId = requestAnimationFrame(tick);
   }
 
   function enterRoamMode() {
@@ -194,7 +194,7 @@ window.addEventListener("DOMContentLoaded", () => {
     hidePetSpriteInstantly();
     revealRoamSpriteInstantly();
     moveRoamSprite(true);
-    queueNextMove();
+    scheduleNextMove();
   }
 
   function callBackToTank() {
