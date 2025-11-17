@@ -5,6 +5,8 @@ window.addEventListener("DOMContentLoaded", () => {
   console.log("✅ script validated");
   let restingBubbleHasPlayed = false;
   const RESTING_BUBBLE_COOLDOWN = 999999;
+  let lastSwimSoundTime = 0;
+  const SWIM_SOUND_COOLDOWN = 10000;
   const root = document.querySelector(".pet-container");
   if (!root) {
     console.error("[BubblePet] .pet-container not found");
@@ -115,6 +117,7 @@ window.addEventListener("DOMContentLoaded", () => {
   };
 
   let animTimer = null;
+  let sequenceToken = 0;
   const GIFS_REQUIRING_RESTART = new Set(["sleeping"]);
 
   function setSpriteSource(src, forceRestart = false) {
@@ -178,7 +181,13 @@ window.addEventListener("DOMContentLoaded", () => {
     // sound per animation
     const soundName = ANIM_SOUNDS[key];
     const isRestingBubble = key === "restingBubble";
-    if (soundName && !isRestingBubble) {
+    if (key === "swimming") {
+      const now = Date.now();
+      if (now - lastSwimSoundTime >= SWIM_SOUND_COOLDOWN) {
+        playSound("swimming-sound");
+        lastSwimSoundTime = now;
+      }
+    } else if (soundName && !isRestingBubble) {
       playSound(soundName);
     }
 
@@ -191,23 +200,31 @@ window.addEventListener("DOMContentLoaded", () => {
     }, duration);
   }
 
+  function cancelSequences() {
+    sequenceToken += 1;
+  }
+
   /**
    * Run a sequence of animations in order.
    * sequence: [ "restToFloat", "floating", "floatToSwim" ]
    */
-  function runSequence(sequence, finalCallback) {
+  function runSequence(sequence, finalCallback, token = null) {
     if (!sequence || sequence.length === 0) {
-      if (typeof finalCallback === "function") finalCallback();
+      if (token === null || token === sequenceToken) {
+        if (typeof finalCallback === "function") finalCallback();
+      }
       return;
     }
 
+    const activeToken = token ?? ++sequenceToken;
     const [head, ...tail] = sequence;
     playAnim(head, {
       onDone: () => {
+        if (activeToken !== sequenceToken) return;
         if (tail.length === 0) {
           if (typeof finalCallback === "function") finalCallback();
         } else {
-          runSequence(tail, finalCallback);
+          runSequence(tail, finalCallback, activeToken);
         }
       },
     });
@@ -224,6 +241,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // --- IDLE LOOP ----------------------------------------------------------
 
   function startIdle() {
+    cancelSequences();
     petState.mode = "idle";
     petState.busy = false;
     scheduleIdleCycle();
@@ -258,6 +276,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // --- SLEEP LOOP ---------------------------------------------------------
 
   function startSleepLoop() {
+    cancelSequences();
     petState.mode = "sleep";
     petState.busy = false;
     loopSleep();
@@ -277,6 +296,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // --- SWIM LOOP ----------------------------------------------------------
 
   function startSwimLoop() {
+    cancelSequences();
     petState.mode = "swim";
     petState.busy = false;
     loopSwim();
@@ -303,6 +323,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // --- ROAM MODE (placeholder) --------------------------------------------
 
   function startRoam() {
+    cancelSequences();
     petState.mode = "roam";
     petState.busy = false;
     spriteEl.style.opacity = "0";
@@ -322,6 +343,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function beginAction(description) {
     recallFromRoam();
+    cancelSequences();
     petState.busy = true;
     petState.mode = "action";
     clearAnimTimer();
