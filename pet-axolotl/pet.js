@@ -7,7 +7,7 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const spriteEl = petContainer.querySelector("#pet-sprite");
+  let spriteEl = petContainer.querySelector("#pet-sprite");
   const messageEl = petContainer.querySelector(".message-bar");
   const levelEl = petContainer.querySelector(".pet-level");
   const nameEl = petContainer.querySelector(".pet-name");
@@ -82,6 +82,20 @@ window.addEventListener("DOMContentLoaded", () => {
     petting: "assets/pet.gif",
   };
 
+  const preloadedSpriteSources = new Set();
+  function preloadSprite(src) {
+    if (!src || preloadedSpriteSources.has(src)) {
+      return;
+    }
+    const image = new Image();
+    image.loading = "eager";
+    image.decoding = "async";
+    image.src = src;
+    preloadedSpriteSources.add(src);
+  }
+
+  Object.values(SPRITES).forEach((spriteSrc) => preloadSprite(spriteSrc));
+
   const STAT_LABEL_MAP = {
     hunger: "hunger",
     sleepiness: "sleepiness",
@@ -94,16 +108,38 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function setSpriteSource(src, forceRestart = false) {
     if (!spriteEl || !src) return;
+    preloadSprite(src);
     if (!forceRestart) {
       spriteEl.src = src;
       lastSpriteSrc = src;
       return;
     }
-    spriteEl.src = "";
-    requestAnimationFrame(() => {
+
+    const replacement = spriteEl.cloneNode(true);
+    let hasSwapped = false;
+
+    const applyReplacement = () => {
+      if (hasSwapped) return;
+      hasSwapped = true;
+      spriteEl.replaceWith(replacement);
+      spriteEl = replacement;
+      lastSpriteSrc = src;
+    };
+
+    const handleError = () => {
+      if (hasSwapped) return;
+      hasSwapped = true;
       spriteEl.src = src;
       lastSpriteSrc = src;
-    });
+    };
+
+    replacement.addEventListener("load", applyReplacement, { once: true });
+    replacement.addEventListener("error", handleError, { once: true });
+    replacement.src = src;
+
+    if (replacement.complete && replacement.naturalWidth > 0) {
+      applyReplacement();
+    }
   }
 
   function updateMessage(text) {
