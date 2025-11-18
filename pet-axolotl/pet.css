@@ -129,6 +129,15 @@ body {
   background-size: 115% auto;
 }
 
+.roaming-axolotl {
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+}
+
+.roaming-axolotl.ready {
+  opacity: 1;
+}
+
 /* --- STAR DECORATIONS --- */
 .stars {
   position: absolute;

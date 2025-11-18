@@ -24,6 +24,12 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  function isRoamOverlayActive() {
+    const roamState = window.bubblePetRoamState;
+    if (!roamState) return false;
+    return Boolean(roamState.active || roamState.returning);
+  }
+
   const SOUND_FILES = [
     "attention-squeak",
     "fastswim-squeak",
@@ -125,13 +131,44 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const CALLBACK_ACTIONS = new Set(["call-back", "callback"]);
+  let lastReportedRoamState = null;
+
+  function notifyParentAboutRoamState(isRoaming) {
+    if (lastReportedRoamState === isRoaming) {
+      return;
+    }
+    lastReportedRoamState = isRoaming;
+    if (!window.parent || window.parent === window) {
+      return;
+    }
+    try {
+      window.parent.postMessage(
+        {
+          source: "bubblepet",
+          type: "roam-state",
+          payload: {
+            roaming: isRoaming,
+            timestamp: Date.now(),
+          },
+        },
+        "*"
+      );
+    } catch (error) {
+      console.warn("[BubblePet] Unable to notify parent about roam state", error);
+    }
+  }
 
   function updateRoamState(mode) {
     if (spriteEl) {
-      spriteEl.style.opacity = mode === "roam" ? "0" : "1";
+      if (mode === "roam") {
+        spriteEl.style.opacity = "0";
+      } else if (!isRoamOverlayActive()) {
+        spriteEl.style.opacity = "1";
+      }
     }
 
     const isRoaming = mode === "roam";
+    notifyParentAboutRoamState(isRoaming);
     if (roamButton) {
       roamButton.textContent = isRoaming ? "Call Back" : "Roam";
       roamButton.disabled = false;
