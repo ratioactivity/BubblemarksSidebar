@@ -370,7 +370,6 @@ let axolotlSprite;
 let axolotlFigure;
 let axolotlFrameDisplay;
 let axolotlPresenceMode = AXOLOTL_PRESENCE_MODES.WINDOW;
-let roamFallbackActive = false;
 let heroHeading;
 let settingsBtn;
 let settingsModal;
@@ -2182,30 +2181,6 @@ function setAxolotlPresenceMode(mode) {
   return axolotlPresenceMode;
 }
 
-function showAxolotlFallbackImmediately() {
-  if (!axolotlFigure) {
-    return;
-  }
-  axolotlFigure.classList.add("axolotl--fallback");
-  if (axolotlFrameDisplay && typeof axolotlFrameDisplay.useFallback === "function") {
-    axolotlFrameDisplay.useFallback(DEFAULT_AXOLOTL_IMAGE);
-  }
-  roamFallbackActive = true;
-}
-
-function clearRoamFallbackIfNeeded() {
-  if (!roamFallbackActive) {
-    return;
-  }
-  roamFallbackActive = false;
-  if (axolotlFigure) {
-    axolotlFigure.classList.remove("axolotl--fallback");
-  }
-  if (axolotlFrameDisplay && typeof axolotlFrameDisplay.clearFallback === "function") {
-    axolotlFrameDisplay.clearFallback();
-  }
-}
-
 function setupKeyboard() {
   const container = keyboardContainer || document.getElementById("keyboard");
   if (!container) {
@@ -2538,12 +2513,10 @@ function setupAxolotlTravelControls(petWidgetFrame) {
     const isRoaming = Boolean(data.payload?.roaming);
     if (isRoaming) {
       setAxolotlPresenceMode(AXOLOTL_PRESENCE_MODES.ROAMING);
-      showAxolotlFallbackImmediately();
     } else {
       if (axolotlPresenceMode === AXOLOTL_PRESENCE_MODES.ROAMING) {
         setAxolotlPresenceMode(AXOLOTL_PRESENCE_MODES.WINDOW);
       }
-      clearRoamFallbackIfNeeded();
     }
   };
 
