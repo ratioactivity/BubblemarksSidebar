@@ -16,8 +16,12 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const MOVE_DURATION = 2200;
-  const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out`;
-  const initialSpriteSrc = petSprite.getAttribute("src") || "";
+  const ROAM_FADE_DURATION = 320;
+  const UI_FADE_DURATION = 280;
+  const RETURN_FAILSAFE = 1400;
+  const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
+  const initialSpriteSrc = uiSprite.getAttribute("src") || "";
+  const roamSpritePreloadHost = ensureRoamSpritePreloadHost();
   const roamSprite = ensureRoamSprite();
   const roamControllerState = { active: false, returning: false };
   window.bubblePetRoamState = roamControllerState;
@@ -29,8 +33,40 @@ window.addEventListener("DOMContentLoaded", () => {
   let roamSpriteReady = false;
   let pendingRoamStart = false;
 
-  function setRoamControllerState(partial = {}) {
-    Object.assign(roamControllerState, partial);
+  function ensureRoamSpritePreloadHost() {
+    let host = document.querySelector("#pet-roam-preload");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "pet-roam-preload";
+      host.setAttribute("aria-hidden", "true");
+      const hostStyle = host.style;
+      hostStyle.position = "absolute";
+      hostStyle.left = "-9999px";
+      hostStyle.top = "0";
+      hostStyle.width = "1px";
+      hostStyle.height = "1px";
+      hostStyle.overflow = "hidden";
+      document.body.appendChild(host);
+    }
+    return host;
+  }
+
+  function handleRoamSpriteLoad() {
+    roamSpriteReady = true;
+    const shouldBegin = pendingRoamStart && roamMode;
+    if (shouldBegin) {
+      beginRoamDisplay();
+    }
+  }
+
+  function moveSpriteToPreloadHost() {
+    if (!roamSpritePreloadHost || !roamSprite) {
+      return;
+    }
+    roamSprite.classList.remove("ready");
+    if (roamSprite.parentElement !== roamSpritePreloadHost) {
+      roamSpritePreloadHost.appendChild(roamSprite);
+    }
   }
 
   function setRoamControllerState(partial = {}) {
@@ -53,6 +89,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (tankWindow.contains(roamSprite)) {
       tankWindow.removeChild(roamSprite);
     }
+    moveSpriteToPreloadHost();
     roamSpriteVisible = false;
   }
 
@@ -65,13 +102,14 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     sprite.setAttribute("aria-hidden", "true");
+    sprite.loading = "eager";
+    sprite.decoding = "async";
+    sprite.classList.add("roaming-axolotl");
     const style = sprite.style;
     const measuredWidth = petSprite.clientWidth || petSprite.naturalWidth || 150;
     style.position = "absolute";
     style.left = "0";
     style.top = "0";
-    style.opacity = "0";
-    style.display = "none";
     style.pointerEvents = "none";
     style.transform = "translate(0px, 0px) scaleX(1)";
     style.transition = DEFAULT_TRANSITION;
@@ -79,15 +117,11 @@ window.addEventListener("DOMContentLoaded", () => {
     style.maxWidth = `${measuredWidth}px`;
     style.filter = "drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35))";
     style.willChange = "transform, opacity";
-    const handleSpriteReady = () => {
-      roamSpriteReady = true;
-      style.display = "block";
-      if (roamMode && pendingRoamStart) {
-        beginRoamDisplay();
-      }
-    };
+    sprite.addEventListener("load", handleRoamSpriteLoad);
 
-    sprite.addEventListener("load", handleSpriteReady);
+    if (sprite.parentElement !== roamSpritePreloadHost) {
+      roamSpritePreloadHost.appendChild(sprite);
+    }
 
     if (currentSpriteSrc) {
       sprite.src = currentSpriteSrc;
@@ -98,21 +132,42 @@ window.addEventListener("DOMContentLoaded", () => {
     if (sprite.complete && sprite.naturalWidth > 0) {
       handleSpriteReady();
     }
+
+    if (sprite.complete && sprite.naturalWidth > 0) {
+      handleRoamSpriteLoad();
+    }
     return sprite;
   }
 
   function setRoamSpriteSource(src, forceRestart = false) {
     if (!src) return;
     currentSpriteSrc = src;
-    if (forceRestart) {
-      roamSprite.src = "";
-      requestAnimationFrame(() => {
-        roamSprite.src = src;
-      });
+    const existingSrc = roamSprite.getAttribute("src");
+    if (!forceRestart && existingSrc === src) {
       return;
     }
-    if (roamSprite.getAttribute("src") !== src) {
+
+    roamSpriteReady = false;
+    pendingRoamStart = pendingRoamStart || roamMode;
+    detachRoamSprite();
+
+    const applySrc = () => {
       roamSprite.src = src;
+    };
+
+    if (forceRestart) {
+      roamSprite.removeAttribute("src");
+      requestAnimationFrame(applySrc);
+      return;
+    }
+
+    if (existingSrc !== src) {
+      applySrc();
+      return;
+    }
+
+    if (roamSprite.complete && roamSprite.naturalWidth > 0) {
+      handleRoamSpriteLoad();
     }
   }
 
@@ -122,26 +177,17 @@ window.addEventListener("DOMContentLoaded", () => {
     petSprite.style.opacity = "0";
   }
 
-  function showPetSpriteInstantly() {
-    if (!petSprite) return;
-    petSprite.style.display = "block";
-    petSprite.style.opacity = "1";
-  }
-
   function revealRoamSpriteInstantly() {
     if (!attachRoamSpriteIfNeeded()) {
       return;
     }
-    roamSprite.style.visibility = "visible";
-    roamSprite.style.display = "block";
-    roamSprite.style.opacity = "1";
+    void roamSprite.offsetWidth;
+    roamSprite.classList.add("ready");
   }
 
   function hideRoamSpriteInstantly() {
-    roamSprite.style.opacity = "0";
+    roamSprite.classList.remove("ready");
     roamSprite.style.transform = "translate(0px, 0px) scaleX(1)";
-    roamSprite.style.visibility = "hidden";
-    roamSprite.style.display = "none";
     detachRoamSprite();
     pendingRoamStart = false;
     setRoamControllerState({ active: false, returning: false });
@@ -218,6 +264,17 @@ window.addEventListener("DOMContentLoaded", () => {
     queueNextMove();
   }
 
+  function beginRoamDisplay() {
+    if (!roamSpriteReady) {
+      pendingRoamStart = true;
+      return;
+    }
+    pendingRoamStart = false;
+    revealRoamSpriteInstantly();
+    moveRoamSprite(true);
+    queueNextMove();
+  }
+
   function startRoamLoop() {
     if (roamMode) return;
     stopRoamLoop();
@@ -266,7 +323,7 @@ window.addEventListener("DOMContentLoaded", () => {
     roamSprite.style.transform = `translate(${targetX}px, ${targetY}px) scaleX(1)`;
 
     fadeTimeout = setTimeout(() => {
-      roamSprite.style.opacity = "0";
+      roamSprite.classList.remove("ready");
     }, fadeDelay);
 
     revealTimeout = setTimeout(() => {
