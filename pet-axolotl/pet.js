@@ -82,6 +82,20 @@ window.addEventListener("DOMContentLoaded", () => {
     petting: "assets/pet.gif",
   };
 
+  const preloadedSpriteSources = new Set();
+  function preloadSprite(src) {
+    if (!src || preloadedSpriteSources.has(src)) {
+      return;
+    }
+    const image = new Image();
+    image.loading = "eager";
+    image.decoding = "async";
+    image.src = src;
+    preloadedSpriteSources.add(src);
+  }
+
+  Object.values(SPRITES).forEach((spriteSrc) => preloadSprite(spriteSrc));
+
   const STAT_LABEL_MAP = {
     hunger: "hunger",
     sleepiness: "sleepiness",
@@ -94,6 +108,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function setSpriteSource(src, forceRestart = false) {
     if (!spriteEl || !src) return;
+    preloadSprite(src);
     if (!forceRestart) {
       spriteEl.src = src;
       lastSpriteSrc = src;
@@ -101,37 +116,30 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     const replacement = spriteEl.cloneNode(true);
-    const syncInlineStyle = () => {
-      const inlineStyle = spriteEl.getAttribute("style");
-      if (inlineStyle !== null) {
-        replacement.setAttribute("style", inlineStyle);
-      } else {
-        replacement.removeAttribute("style");
-      }
+    let hasSwapped = false;
+
+    const applyReplacement = () => {
+      if (hasSwapped) return;
+      hasSwapped = true;
+      spriteEl.replaceWith(replacement);
+      spriteEl = replacement;
+      lastSpriteSrc = src;
     };
 
-    replacement.removeAttribute("src");
-    replacement.addEventListener(
-      "load",
-      () => {
-        syncInlineStyle();
-        spriteEl.replaceWith(replacement);
-        spriteEl = replacement;
-        lastSpriteSrc = src;
-      },
-      { once: true }
-    );
+    const handleError = () => {
+      if (hasSwapped) return;
+      hasSwapped = true;
+      spriteEl.src = src;
+      lastSpriteSrc = src;
+    };
 
-    replacement.addEventListener(
-      "error",
-      () => {
-        spriteEl.src = src;
-        lastSpriteSrc = src;
-      },
-      { once: true }
-    );
-
+    replacement.addEventListener("load", applyReplacement, { once: true });
+    replacement.addEventListener("error", handleError, { once: true });
     replacement.src = src;
+
+    if (replacement.complete && replacement.naturalWidth > 0) {
+      applyReplacement();
+    }
   }
 
   function updateMessage(text) {
