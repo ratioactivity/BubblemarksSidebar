@@ -7,7 +7,7 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const spriteEl = petContainer.querySelector("#pet-sprite");
+  let spriteEl = petContainer.querySelector("#pet-sprite");
   const messageEl = petContainer.querySelector(".message-bar");
   const levelEl = petContainer.querySelector(".pet-level");
   const nameEl = petContainer.querySelector(".pet-name");
@@ -99,11 +99,39 @@ window.addEventListener("DOMContentLoaded", () => {
       lastSpriteSrc = src;
       return;
     }
-    spriteEl.src = "";
-    requestAnimationFrame(() => {
-      spriteEl.src = src;
-      lastSpriteSrc = src;
-    });
+
+    const replacement = spriteEl.cloneNode(true);
+    const syncInlineStyle = () => {
+      const inlineStyle = spriteEl.getAttribute("style");
+      if (inlineStyle !== null) {
+        replacement.setAttribute("style", inlineStyle);
+      } else {
+        replacement.removeAttribute("style");
+      }
+    };
+
+    replacement.removeAttribute("src");
+    replacement.addEventListener(
+      "load",
+      () => {
+        syncInlineStyle();
+        spriteEl.replaceWith(replacement);
+        spriteEl = replacement;
+        lastSpriteSrc = src;
+      },
+      { once: true }
+    );
+
+    replacement.addEventListener(
+      "error",
+      () => {
+        spriteEl.src = src;
+        lastSpriteSrc = src;
+      },
+      { once: true }
+    );
+
+    replacement.src = src;
   }
 
   function updateMessage(text) {
