@@ -26,16 +26,27 @@ window.addEventListener("DOMContentLoaded", () => {
   let lastX = 0;
   let currentSpriteSrc = initialSpriteSrc;
   let roamSpriteVisible = false;
+  let roamSpriteReady = false;
+  let pendingRoamStart = false;
+
+  function setRoamControllerState(partial = {}) {
+    Object.assign(roamControllerState, partial);
+  }
 
   function setRoamControllerState(partial = {}) {
     Object.assign(roamControllerState, partial);
   }
 
   function attachRoamSpriteIfNeeded() {
+    if (!roamSpriteReady) {
+      pendingRoamStart = true;
+      return false;
+    }
     if (!tankWindow.contains(roamSprite)) {
       tankWindow.appendChild(roamSprite);
     }
     roamSpriteVisible = true;
+    return true;
   }
 
   function detachRoamSprite() {
@@ -51,7 +62,6 @@ window.addEventListener("DOMContentLoaded", () => {
       sprite = document.createElement("img");
       sprite.id = "pet-roam-sprite";
       sprite.alt = "Roaming BubblePet";
-      tankWindow.appendChild(sprite);
     }
 
     sprite.setAttribute("aria-hidden", "true");
@@ -69,10 +79,24 @@ window.addEventListener("DOMContentLoaded", () => {
     style.maxWidth = `${measuredWidth}px`;
     style.filter = "drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35))";
     style.willChange = "transform, opacity";
+    const handleSpriteReady = () => {
+      roamSpriteReady = true;
+      style.display = "block";
+      if (roamMode && pendingRoamStart) {
+        beginRoamDisplay();
+      }
+    };
+
+    sprite.addEventListener("load", handleSpriteReady);
+
     if (currentSpriteSrc) {
       sprite.src = currentSpriteSrc;
     } else if (!sprite.getAttribute("src")) {
       sprite.src = petSprite.getAttribute("src") || "./assets/swimming.gif";
+    }
+
+    if (sprite.complete && sprite.naturalWidth > 0) {
+      handleSpriteReady();
     }
     return sprite;
   }
@@ -105,7 +129,9 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function revealRoamSpriteInstantly() {
-    attachRoamSpriteIfNeeded();
+    if (!attachRoamSpriteIfNeeded()) {
+      return;
+    }
     roamSprite.style.visibility = "visible";
     roamSprite.style.display = "block";
     roamSprite.style.opacity = "1";
@@ -117,6 +143,7 @@ window.addEventListener("DOMContentLoaded", () => {
     roamSprite.style.visibility = "hidden";
     roamSprite.style.display = "none";
     detachRoamSprite();
+    pendingRoamStart = false;
     setRoamControllerState({ active: false, returning: false });
   }
 
@@ -129,6 +156,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function moveRoamSprite(immediate = false) {
     const bounds = tankWindow.getBoundingClientRect();
+    if (!roamSpriteReady || !tankWindow.contains(roamSprite)) {
+      return;
+    }
     const spriteBounds = roamSprite.getBoundingClientRect();
     const spriteWidth = spriteBounds.width || bounds.width * 0.35;
     const spriteHeight = spriteBounds.height || bounds.height * 0.4;
@@ -177,16 +207,23 @@ window.addEventListener("DOMContentLoaded", () => {
     roamLoopId = requestAnimationFrame(tick);
   }
 
-  function enterRoamMode() {
-    if (roamMode) return;
-    stopRoamLoop();
-    roamMode = true;
-    setState("isRoaming", true);
-    setRoamControllerState({ active: true, returning: false });
-    hidePetSpriteInstantly();
+  function beginRoamDisplay() {
+    if (!roamSpriteReady) {
+      pendingRoamStart = true;
+      return;
+    }
+    pendingRoamStart = false;
     revealRoamSpriteInstantly();
     moveRoamSprite(true);
     queueNextMove();
+  }
+
+  function startRoamLoop() {
+    if (roamMode) return;
+    stopRoamLoop();
+    roamMode = true;
+    hideUISprite();
+    beginRoamDisplay();
     setRoamControllerState({ active: true, returning: false });
   }
 
@@ -207,7 +244,13 @@ window.addEventListener("DOMContentLoaded", () => {
     stopRoamLoop();
     roamMode = false;
     returning = true;
+    pendingRoamStart = false;
     setRoamControllerState({ active: false, returning: true });
+
+    if (!roamSpriteReady) {
+      finishRecallSequence();
+      return;
+    }
 
     const bounds = tankWindow.getBoundingClientRect();
     const spriteBounds = roamSprite.getBoundingClientRect();
@@ -265,6 +308,7 @@ window.addEventListener("DOMContentLoaded", () => {
       callBackToTank();
     } else {
       ensureRoamSpriteHidden();
+      pendingRoamStart = false;
     }
   });
 });
