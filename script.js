@@ -193,6 +193,12 @@ const DEFAULT_AXOLOTL_IMAGE = (() => {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 })();
 
+const AXOLOTL_PRESENCE_MODES = {
+  WINDOW: "window",
+  ROAMING: "roaming",
+  HIDDEN: "hidden",
+};
+
 const prefersReducedMotion = (() => {
   if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
     return window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -363,6 +369,7 @@ let axolotlPath;
 let axolotlSprite;
 let axolotlFigure;
 let axolotlFrameDisplay;
+let axolotlPresenceMode = AXOLOTL_PRESENCE_MODES.WINDOW;
 let heroHeading;
 let settingsBtn;
 let settingsModal;
@@ -782,6 +789,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   settingsModal = document.getElementById("settings-modal");
   settingsForm = document.getElementById("settings-form");
   settingsDialog = document.querySelector(".settings-modal__dialog");
+  const petWidgetFrame = document.querySelector("#pet-widget iframe");
 
   toggleHeadingInput = document.getElementById("toggle-heading");
   toggleAxolotlInput = document.getElementById("toggle-axolotl");
@@ -814,6 +822,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   setupBookmarkManagement();
   setupCategoryCustomization();
   setupLayoutControls();
+  setupAxolotlTravelControls(petWidgetFrame);
 
   applyPreferences({ lazyAxolotl: true });
 
@@ -2161,6 +2170,17 @@ function ensureAxolotlInitialized() {
   return initAxolotlMascot();
 }
 
+function setAxolotlPresenceMode(mode) {
+  if (!Object.values(AXOLOTL_PRESENCE_MODES).includes(mode)) {
+    return axolotlPresenceMode;
+  }
+  axolotlPresenceMode = mode;
+  if (axolotlLayer) {
+    axolotlLayer.dataset.axolotlPresenceMode = mode;
+  }
+  return axolotlPresenceMode;
+}
+
 function setupKeyboard() {
   const container = keyboardContainer || document.getElementById("keyboard");
   if (!container) {
@@ -2456,6 +2476,51 @@ function setupLayoutControls() {
   updatePaginationUI(normalizePageIndex(preferences.pageIndex), 0);
 
   window.addEventListener("resize", handleLayoutResize);
+}
+
+function setupAxolotlTravelControls(petWidgetFrame) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  let widgetWindow = petWidgetFrame?.contentWindow || null;
+
+  const updateWidgetWindowRef = () => {
+    if (petWidgetFrame?.contentWindow) {
+      widgetWindow = petWidgetFrame.contentWindow;
+    }
+  };
+
+  if (petWidgetFrame) {
+    petWidgetFrame.addEventListener("load", updateWidgetWindowRef);
+    updateWidgetWindowRef();
+  }
+
+  const handleTravelMessage = (event) => {
+    if (widgetWindow && event.source !== widgetWindow) {
+      return;
+    }
+
+    const data = event.data;
+    if (!data || data.source !== "bubblepet" || data.type !== "roam-state") {
+      return;
+    }
+
+    if (!widgetWindow) {
+      widgetWindow = event.source;
+    }
+
+    const isRoaming = Boolean(data.payload?.roaming);
+    if (isRoaming) {
+      setAxolotlPresenceMode(AXOLOTL_PRESENCE_MODES.ROAMING);
+    } else {
+      if (axolotlPresenceMode === AXOLOTL_PRESENCE_MODES.ROAMING) {
+        setAxolotlPresenceMode(AXOLOTL_PRESENCE_MODES.WINDOW);
+      }
+    }
+  };
+
+  window.addEventListener("message", handleTravelMessage);
 }
 
 function handleLayoutSettingChange() {
