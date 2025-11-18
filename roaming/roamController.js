@@ -22,6 +22,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
   const initialSpriteSrc = uiSprite.getAttribute("src") || "";
   const roamSprite = ensureRoamSprite();
+  const roamControllerState = { active: false, returning: false };
+  window.bubblePetRoamState = roamControllerState;
   let roamLoopTimeout = null;
   let roamMode = false;
   let returning = false;
@@ -31,12 +33,23 @@ window.addEventListener("DOMContentLoaded", () => {
   let currentSpriteSrc = initialSpriteSrc;
   let failsafeTimeout = null;
   let roamSpriteVisible = false;
+  let roamSpriteReady = false;
+  let pendingRoamStart = false;
+
+  function setRoamControllerState(partial = {}) {
+    Object.assign(roamControllerState, partial);
+  }
 
   function attachRoamSpriteIfNeeded() {
+    if (!roamSpriteReady) {
+      pendingRoamStart = true;
+      return false;
+    }
     if (!tankWindow.contains(roamSprite)) {
       tankWindow.appendChild(roamSprite);
     }
     roamSpriteVisible = true;
+    return true;
   }
 
   function detachRoamSprite() {
@@ -52,7 +65,6 @@ window.addEventListener("DOMContentLoaded", () => {
       sprite = document.createElement("img");
       sprite.id = "pet-roam-sprite";
       sprite.alt = "Roaming BubblePet";
-      tankWindow.appendChild(sprite);
     }
 
     sprite.setAttribute("aria-hidden", "true");
@@ -70,10 +82,24 @@ window.addEventListener("DOMContentLoaded", () => {
     style.maxWidth = `${measuredWidth}px`;
     style.filter = "drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35))";
     style.willChange = "transform, opacity";
+    const handleSpriteReady = () => {
+      roamSpriteReady = true;
+      style.display = "block";
+      if (roamMode && pendingRoamStart) {
+        beginRoamDisplay();
+      }
+    };
+
+    sprite.addEventListener("load", handleSpriteReady);
+
     if (currentSpriteSrc) {
       sprite.src = currentSpriteSrc;
     } else if (!sprite.getAttribute("src")) {
       sprite.src = uiSprite.getAttribute("src") || "./assets/swimming.gif";
+    }
+
+    if (sprite.complete && sprite.naturalWidth > 0) {
+      handleSpriteReady();
     }
     return sprite;
   }
@@ -114,7 +140,9 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function revealRoamSpriteInstantly() {
-    attachRoamSpriteIfNeeded();
+    if (!attachRoamSpriteIfNeeded()) {
+      return;
+    }
     roamSprite.style.visibility = "visible";
     roamSprite.style.display = "block";
     snapRoamOpacity("1");
@@ -126,6 +154,8 @@ window.addEventListener("DOMContentLoaded", () => {
     roamSprite.style.display = "none";
     roamSprite.style.transform = "translate(0px, 0px) scaleX(1)";
     detachRoamSprite();
+    pendingRoamStart = false;
+    setRoamControllerState({ active: false, returning: false });
   }
 
   function clearTimers() {
@@ -149,6 +179,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function moveRoamSprite(immediate = false) {
     const bounds = tankWindow.getBoundingClientRect();
+    if (!roamSpriteReady || !tankWindow.contains(roamSprite)) {
+      return;
+    }
     const spriteBounds = roamSprite.getBoundingClientRect();
     const spriteWidth = spriteBounds.width || bounds.width * 0.35;
     const spriteHeight = spriteBounds.height || bounds.height * 0.4;
@@ -180,15 +213,25 @@ window.addEventListener("DOMContentLoaded", () => {
     }, delay);
   }
 
+  function beginRoamDisplay() {
+    if (!roamSpriteReady) {
+      pendingRoamStart = true;
+      return;
+    }
+    pendingRoamStart = false;
+    revealRoamSpriteInstantly();
+    moveRoamSprite(true);
+    queueNextMove();
+  }
+
   function startRoamLoop() {
     if (roamMode) return;
     clearTimers();
     returning = false;
     roamMode = true;
     hideUISprite();
-    revealRoamSpriteInstantly();
-    moveRoamSprite(true);
-    queueNextMove();
+    beginRoamDisplay();
+    setRoamControllerState({ active: true, returning: false });
   }
 
   function finishRecallSequence() {
@@ -201,6 +244,7 @@ window.addEventListener("DOMContentLoaded", () => {
       clearTimeout(failsafeTimeout);
       failsafeTimeout = null;
     }
+    setRoamControllerState({ active: false, returning: false });
   }
 
   function recallRoamSprite() {
@@ -209,6 +253,13 @@ window.addEventListener("DOMContentLoaded", () => {
     const wasRoaming = roamMode;
     roamMode = false;
     returning = true;
+    pendingRoamStart = false;
+    setRoamControllerState({ active: false, returning: true });
+
+    if (!roamSpriteReady) {
+      finishRecallSequence();
+      return;
+    }
 
     const bounds = tankWindow.getBoundingClientRect();
     const spriteBounds = roamSprite.getBoundingClientRect();
@@ -246,6 +297,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!roamMode && !returning && (roamSpriteVisible || tankWindow.contains(roamSprite))) {
       hideRoamSpriteInstantly();
       showUISprite();
+      setRoamControllerState({ active: false, returning: false });
     }
   }
 
@@ -265,6 +317,7 @@ window.addEventListener("DOMContentLoaded", () => {
       recallRoamSprite();
     } else {
       ensureRoamSpriteHidden();
+      pendingRoamStart = false;
     }
   });
 });
