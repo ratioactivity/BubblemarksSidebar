@@ -98,6 +98,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let lastSwimSoundTime = 0;
   let sleepLoopWatchdogId = null;
   let sleepLoopToken = 0;
+  const HOUR_TICK_MS = 60 * 1000;
 
   function clampStatValue(key, value) {
     const [min, max] = STAT_BOUNDS[key] || [0, 100];
@@ -596,6 +597,23 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function isSleeping() {
+    return petState.mode === "sleep";
+  }
+
+  function tickHourUpdate() {
+    const hourlyDeltas = { hunger: 1, affection: -1 };
+    if (isSleeping()) {
+      hourlyDeltas.sleepiness = -5;
+    } else {
+      hourlyDeltas.sleepiness = 1;
+      if (!isRoaming()) {
+        hourlyDeltas.boredom = 1;
+      }
+    }
+    applyStatChanges(hourlyDeltas);
+  }
+
   function setProfile(details = {}) {
     if (typeof details.name === "string" && details.name.trim()) {
       petState.name = details.name.trim();
@@ -619,6 +637,11 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }, TEN_MIN);
   setTimer("attention", attentionInterval);
+
+  const hourInterval = setInterval(() => {
+    tickHourUpdate();
+  }, HOUR_TICK_MS);
+  setTimer("hourly", hourInterval);
 
   playAnimation("resting", {
     onDone: () => {
