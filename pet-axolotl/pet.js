@@ -211,15 +211,44 @@ window.addEventListener("DOMContentLoaded", () => {
 
   let lastSpriteSrc = spriteEl ? spriteEl.getAttribute("src") : "";
 
+  function hardResetSpriteElement(element, src) {
+    if (!element || !src) {
+      return;
+    }
+    spriteEl = element;
+    element.removeAttribute("src");
+    void element.offsetWidth;
+    const applySource = () => {
+      element.src = src;
+      lastSpriteSrc = src;
+    };
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(applySource);
+    } else {
+      setTimeout(applySource, 16);
+    }
+  }
+
   function restartSpriteWithClone(src) {
-    if (!spriteEl) return;
+    if (!spriteEl) return false;
     const previousSprite = spriteEl;
     const replacement = previousSprite.cloneNode(true);
     let hasSwapped = false;
+    let fallbackHandle = null;
+
+    const cleanup = () => {
+      if (fallbackHandle) {
+        clearTimeout(fallbackHandle);
+        fallbackHandle = null;
+      }
+      replacement.removeEventListener("load", applyReplacement);
+      replacement.removeEventListener("error", handleError);
+    };
 
     const applyReplacement = () => {
       if (hasSwapped) return;
       hasSwapped = true;
+      cleanup();
       previousSprite.replaceWith(replacement);
       spriteEl = replacement;
       lastSpriteSrc = src;
@@ -229,19 +258,26 @@ window.addEventListener("DOMContentLoaded", () => {
     const handleError = () => {
       if (hasSwapped) return;
       hasSwapped = true;
-      previousSprite.src = src;
-      spriteEl = previousSprite;
-      lastSpriteSrc = src;
+      cleanup();
+      hardResetSpriteElement(previousSprite, src);
       prepareStandbySprite(src);
     };
 
-    replacement.addEventListener("load", applyReplacement, { once: true });
-    replacement.addEventListener("error", handleError, { once: true });
+    fallbackHandle = setTimeout(() => {
+      if (!hasSwapped) {
+        handleError();
+      }
+    }, 120);
+
+    replacement.addEventListener("load", applyReplacement);
+    replacement.addEventListener("error", handleError);
     replacement.src = src;
 
     if (replacement.complete && replacement.naturalWidth > 0) {
       applyReplacement();
     }
+
+    return true;
   }
 
   function setSpriteSource(src, forceRestart = false) {
@@ -264,7 +300,12 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    restartSpriteWithClone(src);
+    if (restartSpriteWithClone(src)) {
+      return;
+    }
+
+    hardResetSpriteElement(spriteEl, src);
+    prepareStandbySprite(src);
   }
 
   function clearSleepSpriteLoopTimer() {
