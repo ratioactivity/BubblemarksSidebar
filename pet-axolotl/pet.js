@@ -85,6 +85,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const preloadedSpriteSources = new Set();
   const RESTARTABLE_SPRITES = new Set([SPRITES.sleeping]);
   const restartableSpritePools = new Map();
+  const spriteVariantCounters = new Map();
   const SLEEP_LOOP_BUFFER_MS = 100;
   const SLEEP_LOOP_MIN_DELAY_MS = 350;
   const SLEEP_LOOP_FALLBACK_DURATION = 3200;
@@ -168,7 +169,7 @@ window.addEventListener("DOMContentLoaded", () => {
     state.loading = true;
     candidate.addEventListener("load", handleLoad, { once: true });
     candidate.addEventListener("error", handleError, { once: true });
-    candidate.src = src;
+    candidate.src = getNextRestartableVariant(src);
   }
 
   function takeStandbySprite(src) {
@@ -211,7 +212,20 @@ window.addEventListener("DOMContentLoaded", () => {
 
   let lastSpriteSrc = spriteEl ? spriteEl.getAttribute("src") : "";
 
-  function hardResetSpriteElement(element, src) {
+  function getNextRestartableVariant(src) {
+    if (!RESTARTABLE_SPRITES.has(src)) {
+      return src;
+    }
+    const nextToggle = (spriteVariantCounters.get(src) || 0) ^ 1;
+    spriteVariantCounters.set(src, nextToggle);
+    const hashIndex = src.indexOf("#");
+    const base = hashIndex >= 0 ? src.slice(0, hashIndex) : src;
+    const hash = hashIndex >= 0 ? src.slice(hashIndex) : "";
+    const joiner = base.includes("?") ? "&" : "?";
+    return `${base}${joiner}__loop=${nextToggle}${hash}`;
+  }
+
+  function hardResetSpriteElement(element, src, useRestartVariant = false) {
     if (!element || !src) {
       return;
     }
@@ -219,7 +233,7 @@ window.addEventListener("DOMContentLoaded", () => {
     element.removeAttribute("src");
     void element.offsetWidth;
     const applySource = () => {
-      element.src = src;
+      element.src = useRestartVariant ? getNextRestartableVariant(src) : src;
       lastSpriteSrc = src;
     };
     if (typeof requestAnimationFrame === "function") {
@@ -229,7 +243,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function restartSpriteWithClone(src) {
+  function restartSpriteWithClone(src, useRestartVariant = false) {
     if (!spriteEl) return false;
     const previousSprite = spriteEl;
     const replacement = previousSprite.cloneNode(true);
@@ -259,7 +273,7 @@ window.addEventListener("DOMContentLoaded", () => {
       if (hasSwapped) return;
       hasSwapped = true;
       cleanup();
-      hardResetSpriteElement(previousSprite, src);
+      hardResetSpriteElement(previousSprite, src, useRestartVariant);
       prepareStandbySprite(src);
     };
 
@@ -271,7 +285,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     replacement.addEventListener("load", applyReplacement);
     replacement.addEventListener("error", handleError);
-    replacement.src = src;
+    replacement.src = useRestartVariant ? getNextRestartableVariant(src) : src;
 
     if (replacement.complete && replacement.naturalWidth > 0) {
       applyReplacement();
@@ -283,7 +297,8 @@ window.addEventListener("DOMContentLoaded", () => {
   function setSpriteSource(src, forceRestart = false) {
     if (!spriteEl || !src) return;
     preloadSprite(src);
-    if (!forceRestart || !RESTARTABLE_SPRITES.has(src)) {
+    const requiresVariant = forceRestart && RESTARTABLE_SPRITES.has(src);
+    if (!requiresVariant) {
       spriteEl.src = src;
       lastSpriteSrc = src;
       return;
@@ -300,11 +315,11 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (restartSpriteWithClone(src)) {
+    if (restartSpriteWithClone(src, true)) {
       return;
     }
 
-    hardResetSpriteElement(spriteEl, src);
+    hardResetSpriteElement(spriteEl, src, true);
     prepareStandbySprite(src);
   }
 
