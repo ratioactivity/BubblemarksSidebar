@@ -22,6 +22,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const initialSpriteSrc = refreshUiSprite()?.getAttribute("src") || "";
   const roamSpritePreloadHost = ensureRoamSpritePreloadHost();
   const roamSprite = ensureRoamSprite();
+  const roamSpriteVariantCounters = new Map();
   const roamControllerState = { active: false, returning: false };
 
   window.bubblePetRoamState = roamControllerState;
@@ -160,9 +161,23 @@ window.addEventListener("DOMContentLoaded", () => {
     return sprite;
   }
 
+  function getNextRoamSpriteVariant(src) {
+    if (!src) {
+      return src;
+    }
+    const nextToggle = (roamSpriteVariantCounters.get(src) || 0) ^ 1;
+    roamSpriteVariantCounters.set(src, nextToggle);
+    const hashIndex = src.indexOf("#");
+    const base = hashIndex >= 0 ? src.slice(0, hashIndex) : src;
+    const hash = hashIndex >= 0 ? src.slice(hashIndex) : "";
+    const joiner = base.includes("?") ? "&" : "?";
+    return `${base}${joiner}__loop=${nextToggle}${hash}`;
+  }
+
   function setRoamSpriteSource(src, forceRestart = false) {
     if (!src) return;
     currentSpriteSrc = src;
+    const appliedSrc = forceRestart ? getNextRoamSpriteVariant(src) : src;
     const existingSrc = roamSprite.getAttribute("src");
     if (!forceRestart && existingSrc === src) {
       if (roamSprite.complete && roamSprite.naturalWidth > 0) {
@@ -176,7 +191,7 @@ window.addEventListener("DOMContentLoaded", () => {
     detachRoamSprite();
 
     const applySrc = () => {
-      roamSprite.src = src;
+      roamSprite.src = appliedSrc;
       if (roamSprite.complete && roamSprite.naturalWidth > 0) {
         handleRoamSpriteLoad();
       }
