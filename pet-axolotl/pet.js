@@ -85,6 +85,12 @@ window.addEventListener("DOMContentLoaded", () => {
   const preloadedSpriteSources = new Set();
   const RESTARTABLE_SPRITES = new Set([SPRITES.sleeping]);
   const restartableSpritePools = new Map();
+  const SLEEP_LOOP_BUFFER_MS = 100;
+  const SLEEP_LOOP_MIN_DELAY_MS = 350;
+  const SLEEP_LOOP_FALLBACK_DURATION = 3200;
+  let sleepSpriteLoopHandle = null;
+  let sleepSpriteLoopDelay = SLEEP_LOOP_FALLBACK_DURATION;
+  let sleepSpriteLoopActive = false;
 
   function getRestartableState(src) {
     if (!restartableSpritePools.has(src)) {
@@ -261,6 +267,45 @@ window.addEventListener("DOMContentLoaded", () => {
     restartSpriteWithClone(src);
   }
 
+  function clearSleepSpriteLoopTimer() {
+    if (sleepSpriteLoopHandle !== null) {
+      clearTimeout(sleepSpriteLoopHandle);
+      sleepSpriteLoopHandle = null;
+    }
+  }
+
+  function stopSleepSpriteLoopTicker() {
+    sleepSpriteLoopActive = false;
+    clearSleepSpriteLoopTimer();
+  }
+
+  function queueSleepSpriteLoopTick() {
+    if (!sleepSpriteLoopActive) return;
+    clearSleepSpriteLoopTimer();
+    sleepSpriteLoopHandle = setTimeout(() => {
+      sleepSpriteLoopHandle = null;
+      if (!sleepSpriteLoopActive) {
+        return;
+      }
+      setSpriteSource(SPRITES.sleeping, true);
+      queueSleepSpriteLoopTick();
+    }, sleepSpriteLoopDelay);
+  }
+
+  function armSleepSpriteLoopTicker(durationMs) {
+    const numericDuration = Number(durationMs);
+    const resolvedDuration =
+      Number.isFinite(numericDuration) && numericDuration > 0
+        ? numericDuration
+        : SLEEP_LOOP_FALLBACK_DURATION;
+    sleepSpriteLoopDelay = Math.max(
+      SLEEP_LOOP_MIN_DELAY_MS,
+      resolvedDuration - SLEEP_LOOP_BUFFER_MS
+    );
+    sleepSpriteLoopActive = true;
+    queueSleepSpriteLoopTick();
+  }
+
   function updateMessage(text) {
     if (!messageEl || typeof text !== "string") return;
     messageEl.textContent = text;
@@ -383,6 +428,13 @@ window.addEventListener("DOMContentLoaded", () => {
     updateLevel(state.level);
     updateStats(state.stats);
     updateRoamState(state.mode);
+
+    const shouldMaintainSleepLoop = animName === "sleeping" && state.mode === "sleep";
+    if (shouldMaintainSleepLoop) {
+      armSleepSpriteLoopTicker(meta.duration);
+    } else {
+      stopSleepSpriteLoopTicker();
+    }
   }
 
   petManager.subscribeToAnimationChange(handleAnimationChange);

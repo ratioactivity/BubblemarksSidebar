@@ -134,6 +134,7 @@ window.addEventListener("DOMContentLoaded", () => {
       sprite: SPRITES[animName] || null,
       pose: petState.poseGroup,
       message: petState.message,
+      duration: DURATIONS[animName] ?? null,
       ...meta,
     };
     subscribers.forEach((callback) => {
