@@ -3,8 +3,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const petManager = window.petManager;
   const tankWindow = document.querySelector(".tank-window");
-  const petSprite = document.querySelector("#pet-sprite");
-  const uiSprite = petSprite;
+  let uiSprite = document.querySelector("#pet-sprite");
 
   if (
     !petManager ||
@@ -20,12 +19,29 @@ window.addEventListener("DOMContentLoaded", () => {
   const ROAM_FADE_DURATION = 320;
   const UI_FADE_DURATION = 280;
   const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
-  const initialSpriteSrc = uiSprite.getAttribute("src") || "";
+  const initialSpriteSrc = refreshUiSprite()?.getAttribute("src") || "";
   const roamSpritePreloadHost = ensureRoamSpritePreloadHost();
   const roamSprite = ensureRoamSprite();
   const roamControllerState = { active: false, returning: false };
 
   window.bubblePetRoamState = roamControllerState;
+
+  function refreshUiSprite() {
+    if (!uiSprite || !document.body.contains(uiSprite)) {
+      uiSprite = document.querySelector("#pet-sprite");
+    }
+    if (uiSprite && !uiSprite.style.transition) {
+      uiSprite.style.transition = `opacity ${UI_FADE_DURATION}ms ease`;
+    }
+    return uiSprite;
+  }
+
+  refreshUiSprite();
+
+  const spriteObserver = new MutationObserver(() => {
+    refreshUiSprite();
+  });
+  spriteObserver.observe(tankWindow, { childList: true });
 
   let roamSpriteVisible = false;
   let roamSpriteReady = false;
@@ -36,9 +52,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let currentSpriteSrc = initialSpriteSrc;
   let roamLoopTimeout = null;
 
-  if (!uiSprite.style.transition) {
-    uiSprite.style.transition = `opacity ${UI_FADE_DURATION}ms ease`;
-  }
+  refreshUiSprite();
 
   function ensureRoamSpritePreloadHost() {
     let host = document.querySelector("#pet-roam-preload");
@@ -112,7 +126,10 @@ window.addEventListener("DOMContentLoaded", () => {
     sprite.decoding = "async";
     sprite.classList.add("roaming-axolotl");
     const style = sprite.style;
-    const measuredWidth = uiSprite.clientWidth || uiSprite.naturalWidth || 150;
+    const measuredSource = refreshUiSprite();
+    const measuredWidth = measuredSource
+      ? measuredSource.clientWidth || measuredSource.naturalWidth || 150
+      : 150;
     style.position = "absolute";
     style.left = "0";
     style.top = "0";
@@ -132,7 +149,8 @@ window.addEventListener("DOMContentLoaded", () => {
     if (currentSpriteSrc) {
       sprite.src = currentSpriteSrc;
     } else if (!sprite.getAttribute("src")) {
-      sprite.src = uiSprite.getAttribute("src") || "./assets/swimming.gif";
+      const currentUiSprite = refreshUiSprite();
+      sprite.src = (currentUiSprite && currentUiSprite.getAttribute("src")) || "./assets/swimming.gif";
     }
 
     if (sprite.complete && sprite.naturalWidth > 0) {
@@ -248,11 +266,17 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function hideUISprite() {
-    uiSprite.style.opacity = "0";
+    const sprite = refreshUiSprite();
+    if (sprite) {
+      sprite.style.opacity = "0";
+    }
   }
 
   function showUISprite() {
-    uiSprite.style.opacity = "1";
+    const sprite = refreshUiSprite();
+    if (sprite) {
+      sprite.style.opacity = "1";
+    }
   }
 
   function enterRoamMode() {
