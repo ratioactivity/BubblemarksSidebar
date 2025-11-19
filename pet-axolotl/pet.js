@@ -7,7 +7,7 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const spriteEl = petContainer.querySelector("#pet-sprite");
+  let spriteEl = petContainer.querySelector("#pet-sprite");
   const messageEl = petContainer.querySelector(".message-bar");
   const levelEl = petContainer.querySelector(".pet-level");
   const nameEl = petContainer.querySelector(".pet-name");
@@ -82,6 +82,125 @@ window.addEventListener("DOMContentLoaded", () => {
     petting: "assets/pet.gif",
   };
 
+  const preloadedSpriteSources = new Set();
+  const RESTARTABLE_SPRITES = new Set([SPRITES.sleeping]);
+  const restartableSpritePools = new Map();
+  const SLEEP_LOOP_BUFFER_MS = 100;
+  const SLEEP_LOOP_MIN_DELAY_MS = 350;
+  const SLEEP_LOOP_FALLBACK_DURATION = 3200;
+  let sleepSpriteLoopHandle = null;
+  let sleepSpriteLoopDelay = SLEEP_LOOP_FALLBACK_DURATION;
+  let sleepSpriteLoopActive = false;
+
+  function getRestartableState(src) {
+    if (!restartableSpritePools.has(src)) {
+      restartableSpritePools.set(src, { standby: null, ready: false, loading: false });
+    }
+    return restartableSpritePools.get(src);
+  }
+
+  function copySpriteAttributes(target, source) {
+    if (!target || !source) {
+      return;
+    }
+    const currentSrc = target.getAttribute("src");
+    Array.from(target.attributes).forEach((attr) => {
+      if (attr.name === "src") return;
+      target.removeAttribute(attr.name);
+    });
+    Array.from(source.attributes).forEach((attr) => {
+      if (attr.name === "src") return;
+      target.setAttribute(attr.name, attr.value);
+    });
+    if (currentSrc) {
+      target.setAttribute("src", currentSrc);
+    }
+    target.className = source.className;
+    target.style.cssText = source.style.cssText;
+    target.decoding = source.decoding || "async";
+    target.loading = source.loading || "eager";
+  }
+
+  function scheduleStandbyRetry(src) {
+    const state = restartableSpritePools.get(src);
+    if (!state) return;
+    if (state.retryHandle) {
+      clearTimeout(state.retryHandle);
+    }
+    state.retryHandle = setTimeout(() => {
+      state.retryHandle = null;
+      if (!state.loading && !state.ready) {
+        prepareStandbySprite(src);
+      }
+    }, 250);
+  }
+
+  function prepareStandbySprite(src, reuseEl = null) {
+    if (!RESTARTABLE_SPRITES.has(src)) {
+      return;
+    }
+    const state = getRestartableState(src);
+    if (state.loading) {
+      return;
+    }
+    const candidate = reuseEl || new Image();
+    candidate.decoding = "async";
+    candidate.loading = "eager";
+    candidate.removeAttribute("id");
+    candidate.removeAttribute("class");
+    candidate.removeAttribute("style");
+    const cleanup = () => {
+      candidate.removeEventListener("load", handleLoad);
+      candidate.removeEventListener("error", handleError);
+      state.loading = false;
+    };
+    const handleLoad = () => {
+      cleanup();
+      state.standby = candidate;
+      state.ready = true;
+    };
+    const handleError = () => {
+      cleanup();
+      state.standby = null;
+      state.ready = false;
+      scheduleStandbyRetry(src);
+    };
+    state.loading = true;
+    candidate.addEventListener("load", handleLoad, { once: true });
+    candidate.addEventListener("error", handleError, { once: true });
+    candidate.src = src;
+  }
+
+  function takeStandbySprite(src) {
+    if (!RESTARTABLE_SPRITES.has(src)) {
+      return null;
+    }
+    const state = restartableSpritePools.get(src);
+    if (!state || !state.ready || !state.standby) {
+      return null;
+    }
+    const standbySprite = state.standby;
+    state.standby = null;
+    state.ready = false;
+    return standbySprite;
+  }
+
+  function preloadSprite(src) {
+    if (!src || preloadedSpriteSources.has(src)) {
+      return;
+    }
+    const image = new Image();
+    image.loading = "eager";
+    image.decoding = "async";
+    image.src = src;
+    preloadedSpriteSources.add(src);
+  }
+
+  Object.values(SPRITES).forEach((spriteSrc) => preloadSprite(spriteSrc));
+  RESTARTABLE_SPRITES.forEach((spriteSrc) => {
+    prepareStandbySprite(spriteSrc);
+  });
+
   const STAT_LABEL_MAP = {
     hunger: "hunger",
     sleepiness: "sleepiness",
@@ -92,18 +211,99 @@ window.addEventListener("DOMContentLoaded", () => {
 
   let lastSpriteSrc = spriteEl ? spriteEl.getAttribute("src") : "";
 
+  function restartSpriteWithClone(src) {
+    if (!spriteEl) return;
+    const previousSprite = spriteEl;
+    const replacement = previousSprite.cloneNode(true);
+    let hasSwapped = false;
+
+    const applyReplacement = () => {
+      if (hasSwapped) return;
+      hasSwapped = true;
+      previousSprite.replaceWith(replacement);
+      spriteEl = replacement;
+      lastSpriteSrc = src;
+      prepareStandbySprite(src, previousSprite);
+    };
+
+    const handleError = () => {
+      if (hasSwapped) return;
+      hasSwapped = true;
+      previousSprite.src = src;
+      spriteEl = previousSprite;
+      lastSpriteSrc = src;
+      prepareStandbySprite(src);
+    };
+
+    replacement.addEventListener("load", applyReplacement, { once: true });
+    replacement.addEventListener("error", handleError, { once: true });
+    replacement.src = src;
+
+    if (replacement.complete && replacement.naturalWidth > 0) {
+      applyReplacement();
+    }
+  }
+
   function setSpriteSource(src, forceRestart = false) {
     if (!spriteEl || !src) return;
-    if (!forceRestart) {
+    preloadSprite(src);
+    if (!forceRestart || !RESTARTABLE_SPRITES.has(src)) {
       spriteEl.src = src;
       lastSpriteSrc = src;
       return;
     }
-    spriteEl.src = "";
-    requestAnimationFrame(() => {
-      spriteEl.src = src;
+
+    const standbySprite = takeStandbySprite(src);
+    if (standbySprite) {
+      const previousSprite = spriteEl;
+      copySpriteAttributes(standbySprite, previousSprite);
+      previousSprite.replaceWith(standbySprite);
+      spriteEl = standbySprite;
       lastSpriteSrc = src;
-    });
+      prepareStandbySprite(src, previousSprite);
+      return;
+    }
+
+    restartSpriteWithClone(src);
+  }
+
+  function clearSleepSpriteLoopTimer() {
+    if (sleepSpriteLoopHandle !== null) {
+      clearTimeout(sleepSpriteLoopHandle);
+      sleepSpriteLoopHandle = null;
+    }
+  }
+
+  function stopSleepSpriteLoopTicker() {
+    sleepSpriteLoopActive = false;
+    clearSleepSpriteLoopTimer();
+  }
+
+  function queueSleepSpriteLoopTick() {
+    if (!sleepSpriteLoopActive) return;
+    clearSleepSpriteLoopTimer();
+    sleepSpriteLoopHandle = setTimeout(() => {
+      sleepSpriteLoopHandle = null;
+      if (!sleepSpriteLoopActive) {
+        return;
+      }
+      setSpriteSource(SPRITES.sleeping, true);
+      queueSleepSpriteLoopTick();
+    }, sleepSpriteLoopDelay);
+  }
+
+  function armSleepSpriteLoopTicker(durationMs) {
+    const numericDuration = Number(durationMs);
+    const resolvedDuration =
+      Number.isFinite(numericDuration) && numericDuration > 0
+        ? numericDuration
+        : SLEEP_LOOP_FALLBACK_DURATION;
+    sleepSpriteLoopDelay = Math.max(
+      SLEEP_LOOP_MIN_DELAY_MS,
+      resolvedDuration - SLEEP_LOOP_BUFFER_MS
+    );
+    sleepSpriteLoopActive = true;
+    queueSleepSpriteLoopTick();
   }
 
   function updateMessage(text) {
@@ -228,6 +428,13 @@ window.addEventListener("DOMContentLoaded", () => {
     updateLevel(state.level);
     updateStats(state.stats);
     updateRoamState(state.mode);
+
+    const shouldMaintainSleepLoop = animName === "sleeping" && state.mode === "sleep";
+    if (shouldMaintainSleepLoop) {
+      armSleepSpriteLoopTicker(meta.duration);
+    } else {
+      stopSleepSpriteLoopTicker();
+    }
   }
 
   petManager.subscribeToAnimationChange(handleAnimationChange);

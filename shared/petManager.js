@@ -37,12 +37,12 @@ window.addEventListener("DOMContentLoaded", () => {
     resting: 780,
     restingBubble: 2340,
     restToFloat: 1320,
-    restToSleep: 3250,
+    restToSleep: 1820,
     sleeping: 3250,
     sleepToFloat: 2470,
-    sleepToRest: 3250,
+    sleepToRest: 1820,
     swimming: 1440,
-    swimToFloat: 1440,
+    swimToFloat: 960,
     swimToRest: 2210,
   };
 
@@ -96,6 +96,8 @@ window.addEventListener("DOMContentLoaded", () => {
   let sequenceToken = 0;
   let restingBubbleHasPlayed = false;
   let lastSwimSoundTime = 0;
+  let sleepLoopWatchdogId = null;
+  let sleepLoopToken = 0;
 
   function clampStatValue(key, value) {
     const [min, max] = STAT_BOUNDS[key] || [0, 100];
@@ -132,6 +134,7 @@ window.addEventListener("DOMContentLoaded", () => {
       sprite: SPRITES[animName] || null,
       pose: petState.poseGroup,
       message: petState.message,
+      duration: DURATIONS[animName] ?? null,
       ...meta,
     };
     subscribers.forEach((callback) => {
@@ -275,8 +278,18 @@ window.addEventListener("DOMContentLoaded", () => {
     return petState.poseGroup || "rest";
   }
 
+  function stopSleepLoop() {
+    if (sleepLoopWatchdogId !== null) {
+      clearTimeout(sleepLoopWatchdogId);
+      sleepLoopWatchdogId = null;
+      setTimer("sleepWatchdog", null);
+    }
+    sleepLoopToken += 1;
+  }
+
   function startIdle() {
     cancelSequences();
+    stopSleepLoop();
     petState.mode = "idle";
     petState.busy = false;
     emitState();
@@ -308,6 +321,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function startSleepLoop() {
     cancelSequences();
+    stopSleepLoop();
     petState.mode = "sleep";
     petState.busy = false;
     emitState();
@@ -315,18 +329,37 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function loopSleep() {
-    if (petState.mode !== "sleep") return;
+    if (petState.mode !== "sleep") {
+      stopSleepLoop();
+      return;
+    }
+    const token = ++sleepLoopToken;
+    if (sleepLoopWatchdogId !== null) {
+      clearTimeout(sleepLoopWatchdogId);
+      sleepLoopWatchdogId = null;
+      setTimer("sleepWatchdog", null);
+    }
     playAnimation("sleeping", {
       onDone: () => {
-        if (petState.mode === "sleep") {
+        if (petState.mode === "sleep" && token === sleepLoopToken) {
           loopSleep();
         }
       },
     });
+    const guardDelay = (DURATIONS.sleeping ?? 1000) + 150;
+    sleepLoopWatchdogId = setTimeout(() => {
+      sleepLoopWatchdogId = null;
+      setTimer("sleepWatchdog", null);
+      if (token === sleepLoopToken && petState.mode === "sleep") {
+        loopSleep();
+      }
+    }, guardDelay);
+    setTimer("sleepWatchdog", sleepLoopWatchdogId);
   }
 
   function startSwimLoop() {
     cancelSequences();
+    stopSleepLoop();
     petState.mode = "swim";
     petState.busy = false;
     emitState();
@@ -351,6 +384,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function startRoam() {
     cancelSequences();
+    stopSleepLoop();
     clearAnimTimer();
     setRoamMode(true);
     setMessage(`${petState.name} is roaming around Bubblemarks!`);
@@ -371,6 +405,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function beginAction(description) {
     cancelSequences();
+    stopSleepLoop();
     petState.busy = true;
     petState.mode = "action";
     clearAnimTimer();
