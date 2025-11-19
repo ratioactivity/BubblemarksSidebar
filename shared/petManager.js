@@ -76,20 +76,20 @@ window.addEventListener("DOMContentLoaded", () => {
     poseGroup: "rest",
     message: "Pico looks happy today!",
     stats: {
-      hunger: 40,
-      sleepiness: 20,
-      boredom: 60,
-      overstimulation: 30,
-      affection: 90,
+      hunger: 4,
+      sleepiness: 2,
+      boredom: 6,
+      overstimulation: 3,
+      affection: 5,
     },
   };
 
   const STAT_BOUNDS = {
-    hunger: [0, 100],
-    sleepiness: [0, 100],
-    boredom: [0, 100],
-    overstimulation: [0, 100],
-    affection: [0, 100],
+    hunger: [0, 10],
+    sleepiness: [0, 10],
+    boredom: [0, 10],
+    overstimulation: [0, 10],
+    affection: [0, 10],
   };
 
   let animationTimerId = null;
@@ -98,6 +98,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let lastSwimSoundTime = 0;
   let sleepLoopWatchdogId = null;
   let sleepLoopToken = 0;
+  const HOUR_TICK_MS = 60 * 1000;
 
   function clampStatValue(key, value) {
     const [min, max] = STAT_BOUNDS[key] || [0, 100];
@@ -562,12 +563,12 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const ACTION_STAT_EFFECTS = {
-    feed: { hunger: -35, boredom: -10, affection: 5, overstimulation: 4 },
-    pet: { boredom: -15, affection: 8, overstimulation: -5 },
-    rest: { overstimulation: -20, boredom: -5 },
-    sleep: { sleepiness: -45, overstimulation: -10 },
-    swim: { boredom: -25, hunger: 8, overstimulation: 12 },
-    roam: { boredom: -18, hunger: 6, sleepiness: 4 },
+    feed: { hunger: -5, boredom: -1, affection: 2, overstimulation: 1 },
+    pet: { boredom: -1, affection: 5, overstimulation: -1 },
+    rest: { overstimulation: -2, boredom: -1 },
+    sleep: { sleepiness: -5, overstimulation: -2 },
+    swim: { boredom: -3, hunger: 1, overstimulation: 2 },
+    roam: { boredom: -2, hunger: 1, sleepiness: 1 },
   };
 
   function adjustStatsFor(actionName) {
@@ -596,6 +597,23 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function isSleeping() {
+    return petState.mode === "sleep";
+  }
+
+  function tickHourUpdate() {
+    const hourlyDeltas = { hunger: 1, affection: -1 };
+    if (isSleeping()) {
+      hourlyDeltas.sleepiness = -5;
+    } else {
+      hourlyDeltas.sleepiness = 1;
+      if (!isRoaming()) {
+        hourlyDeltas.boredom = 1;
+      }
+    }
+    applyStatChanges(hourlyDeltas);
+  }
+
   function setProfile(details = {}) {
     if (typeof details.name === "string" && details.name.trim()) {
       petState.name = details.name.trim();
@@ -619,6 +637,11 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }, TEN_MIN);
   setTimer("attention", attentionInterval);
+
+  const hourInterval = setInterval(() => {
+    tickHourUpdate();
+  }, HOUR_TICK_MS);
+  setTimer("hourly", hourInterval);
 
   playAnimation("resting", {
     onDone: () => {
