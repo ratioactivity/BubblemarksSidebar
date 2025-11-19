@@ -165,13 +165,13 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!src) {
       return src;
     }
-    const nextToggle = (roamSpriteVariantCounters.get(src) || 0) ^ 1;
-    roamSpriteVariantCounters.set(src, nextToggle);
+    const nextCount = (roamSpriteVariantCounters.get(src) || 0) + 1;
+    roamSpriteVariantCounters.set(src, nextCount);
     const hashIndex = src.indexOf("#");
     const base = hashIndex >= 0 ? src.slice(0, hashIndex) : src;
     const hash = hashIndex >= 0 ? src.slice(hashIndex) : "";
     const joiner = base.includes("?") ? "&" : "?";
-    return `${base}${joiner}__loop=${nextToggle}${hash}`;
+    return `${base}${joiner}__loop=${nextCount}&__t=${Date.now()}${hash}`;
   }
 
   function setRoamSpriteSource(src, forceRestart = false) {

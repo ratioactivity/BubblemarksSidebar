@@ -216,13 +216,13 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!RESTARTABLE_SPRITES.has(src)) {
       return src;
     }
-    const nextToggle = (spriteVariantCounters.get(src) || 0) ^ 1;
-    spriteVariantCounters.set(src, nextToggle);
+    const nextCount = (spriteVariantCounters.get(src) || 0) + 1;
+    spriteVariantCounters.set(src, nextCount);
     const hashIndex = src.indexOf("#");
     const base = hashIndex >= 0 ? src.slice(0, hashIndex) : src;
     const hash = hashIndex >= 0 ? src.slice(hashIndex) : "";
     const joiner = base.includes("?") ? "&" : "?";
-    return `${base}${joiner}__loop=${nextToggle}${hash}`;
+    return `${base}${joiner}__loop=${nextCount}&__t=${Date.now()}${hash}`;
   }
 
   function hardResetSpriteElement(element, src, useRestartVariant = false) {
