@@ -381,7 +381,9 @@ window.addEventListener("DOMContentLoaded", () => {
       if (!fill || !key) return;
       const value = stats[key];
       if (typeof value === "number") {
-        fill.style.width = `${value}%`;
+        const clamped = Math.max(0, Math.min(10, value));
+        const width = (clamped / 10) * 100;
+        fill.style.width = `${width}%`;
       }
     });
   }
