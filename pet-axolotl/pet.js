@@ -11,6 +11,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const messageEl = petContainer.querySelector(".message-bar");
   const levelEl = petContainer.querySelector(".pet-level");
   const nameEl = petContainer.querySelector(".pet-name");
+  const overlayEl = petContainer.querySelector("#pet-overlay");
   const statBars = Array.from(petContainer.querySelectorAll(".stat-bar"));
   const buttons = Array.from(petContainer.querySelectorAll(".pet-actions button"));
   const roamButton = buttons.find((btn) => btn.dataset.action === "roam");
@@ -35,6 +36,8 @@ window.addEventListener("DOMContentLoaded", () => {
     "fastswim-squeak",
     "float-squeak",
     "happy-squeak",
+    "help1",
+    "help2",
     "munch-squeak",
     "pet-sound",
     "resting-sound",
@@ -381,7 +384,9 @@ window.addEventListener("DOMContentLoaded", () => {
       if (!fill || !key) return;
       const value = stats[key];
       if (typeof value === "number") {
-        fill.style.width = `${value}%`;
+        const clamped = Math.max(0, Math.min(10, value));
+        const width = (clamped / 10) * 100;
+        fill.style.width = `${width}%`;
       }
     });
   }
@@ -414,9 +419,24 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function updateRoamState(mode) {
+  function updateDeathState(isDead) {
     if (spriteEl) {
-      if (mode === "roam") {
+      spriteEl.style.filter = isDead ? "grayscale(1)" : "";
+      spriteEl.style.opacity = isDead ? "0.35" : "1";
+    }
+
+    if (overlayEl) {
+      overlayEl.src = isDead ? "./assets/whitestars-top-right.png" : "";
+      overlayEl.style.display = isDead ? "block" : "none";
+      overlayEl.style.opacity = isDead ? "0.7" : "0";
+    }
+  }
+
+  function updateRoamState(mode, isDead = false) {
+    if (spriteEl) {
+      if (isDead) {
+        spriteEl.style.opacity = "0.35";
+      } else if (mode === "roam") {
         spriteEl.style.opacity = "0";
       } else if (!isRoamOverlayActive()) {
         spriteEl.style.opacity = "1";
@@ -427,14 +447,16 @@ window.addEventListener("DOMContentLoaded", () => {
     notifyParentAboutRoamState(isRoaming);
     if (roamButton) {
       roamButton.textContent = isRoaming ? "Call Back" : "Roam";
-      roamButton.disabled = false;
+      roamButton.disabled = isDead ? true : false;
     }
 
     buttons.forEach((btn) => {
       const action = (btn.dataset.action || "").toLowerCase();
       const isRoamBtn = action === "roam";
       const isCallbackBtn = CALLBACK_ACTIONS.has(action);
-      if (!isRoamBtn && !isCallbackBtn) {
+      if (isDead) {
+        btn.disabled = true;
+      } else if (!isRoamBtn && !isCallbackBtn) {
         btn.disabled = isRoaming;
       } else if (!isRoaming) {
         btn.disabled = false;
@@ -442,7 +464,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     callbackButtons.forEach((btn) => {
-      btn.disabled = false;
+      btn.disabled = Boolean(isDead);
     });
   }
 
@@ -481,11 +503,13 @@ window.addEventListener("DOMContentLoaded", () => {
       updateMessage(meta.message ?? state.message);
     }
 
+    const isDead = Boolean(state.isDead);
     updateLevel(state.level);
     updateStats(state.stats);
-    updateRoamState(state.mode);
+    updateDeathState(isDead);
+    updateRoamState(state.mode, isDead);
 
-    const shouldMaintainSleepLoop = animName === "sleeping" && state.mode === "sleep";
+    const shouldMaintainSleepLoop = animName === "sleeping" && state.mode === "sleep" && !isDead;
     if (shouldMaintainSleepLoop) {
       armSleepSpriteLoopTicker(meta.duration);
     } else {
