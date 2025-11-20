@@ -1,4 +1,4 @@
-window.addEventListener("DOMContentLoaded", () => {
+function initPetWidget() {
   console.log("✅ script validated");
 
   const petContainer = document.querySelector(".pet-container");
@@ -45,6 +45,9 @@ window.addEventListener("DOMContentLoaded", () => {
   ];
 
   const sounds = {};
+  let soundsEnabled = true;
+  let vacationModeEnabled = false;
+  let lastMessageBeforeVacation = null;
   SOUND_FILES.forEach((name) => {
     const audio = new Audio(`sounds/${name}.mp3`);
     audio.preload = "auto";
@@ -54,7 +57,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function playSound(name) {
     const clip = sounds[name];
-    if (!clip) return;
+    if (!clip || !soundsEnabled) return;
     try {
       clip.pause();
       clip.currentTime = 0;
@@ -536,4 +539,128 @@ window.addEventListener("DOMContentLoaded", () => {
   buttons.forEach((btn) => attachActionHandler(btn));
   callbackButtons.forEach((btn) => attachActionHandler(btn));
 
-});
+  const settingsBtn = petContainer.querySelector(".pet-settings");
+  const settingsModal = petContainer.querySelector("#pet-settings-modal");
+  const settingsCloses = petContainer.querySelectorAll("[data-settings-dismiss]");
+  const vacationToggle = petContainer.querySelector("#vacation-mode");
+  const nameInput = petContainer.querySelector("#pet-name-input");
+  const nameSaveBtn = petContainer.querySelector("#pet-name-save");
+  const soundToggle = petContainer.querySelector("#pet-sound-toggle");
+
+  function setVacationMode(enabled, { silent = false } = {}) {
+    vacationModeEnabled = Boolean(enabled);
+    if (vacationToggle) {
+      vacationToggle.checked = vacationModeEnabled;
+    }
+    window.bubblePetVacationMode = vacationModeEnabled;
+    petContainer.classList.toggle("is-on-vacation", vacationModeEnabled);
+    if (vacationModeEnabled) {
+      if (messageEl) {
+        lastMessageBeforeVacation = messageEl.textContent;
+      }
+      if (!silent) {
+        const currentName = nameEl ? nameEl.textContent.trim() || "Your pet" : "Your pet";
+        updateMessage(`${currentName} is taking a vacation.`);
+      }
+    } else if (!silent && lastMessageBeforeVacation) {
+      updateMessage(lastMessageBeforeVacation);
+      lastMessageBeforeVacation = null;
+    }
+  }
+
+  function setSoundsEnabled(enabled) {
+    soundsEnabled = Boolean(enabled);
+    if (soundToggle) {
+      soundToggle.checked = soundsEnabled;
+    }
+    Object.values(sounds).forEach((clip) => {
+      clip.muted = !soundsEnabled;
+      if (!soundsEnabled) {
+        try {
+          clip.pause();
+        } catch {
+          // ignore audio errors
+        }
+      }
+    });
+  }
+
+  function syncSettingsUi() {
+    if (vacationToggle) {
+      vacationToggle.checked = vacationModeEnabled;
+    }
+    if (soundToggle) {
+      soundToggle.checked = soundsEnabled;
+    }
+    if (nameInput && nameEl) {
+      nameInput.value = nameEl.textContent.trim();
+    }
+  }
+
+  function applyNameChange(nextName) {
+    const trimmed = (nextName || "").trim();
+    if (!trimmed) return;
+    if (nameEl) {
+      nameEl.textContent = trimmed;
+    }
+    if (typeof petManager.setProfile === "function") {
+      petManager.setProfile({ name: trimmed });
+    }
+    syncSettingsUi();
+  }
+
+  setVacationMode(false, { silent: true });
+  setSoundsEnabled(true);
+  syncSettingsUi();
+
+  if (settingsBtn && settingsModal) {
+    settingsBtn.addEventListener("click", () => {
+      syncSettingsUi();
+      settingsModal.hidden = false;
+    });
+  }
+
+  settingsCloses.forEach((el) => {
+    el.addEventListener("click", () => {
+      if (settingsModal) {
+        settingsModal.hidden = true;
+      }
+    });
+  });
+
+  if (vacationToggle) {
+    vacationToggle.addEventListener("change", (event) => {
+      setVacationMode(event.target.checked);
+    });
+  }
+
+  if (soundToggle) {
+    soundToggle.addEventListener("change", (event) => {
+      setSoundsEnabled(event.target.checked);
+    });
+  }
+
+  if (nameSaveBtn) {
+    nameSaveBtn.addEventListener("click", () => {
+      applyNameChange(nameInput ? nameInput.value : "");
+    });
+  }
+
+  if (nameInput) {
+    nameInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        applyNameChange(nameInput.value);
+      }
+    });
+  }
+
+}
+
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", () => {
+    initPetWidget();
+  }, { once: true });
+} else {
+  initPetWidget();
+}
