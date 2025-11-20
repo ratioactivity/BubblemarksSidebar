@@ -536,4 +536,22 @@ window.addEventListener("DOMContentLoaded", () => {
   buttons.forEach((btn) => attachActionHandler(btn));
   callbackButtons.forEach((btn) => attachActionHandler(btn));
 
+  const settingsBtn = petContainer.querySelector(".pet-settings");
+  const settingsModal = petContainer.querySelector("#pet-settings-modal");
+  const settingsCloses = petContainer.querySelectorAll("[data-settings-dismiss]");
+
+  if (settingsBtn && settingsModal) {
+    settingsBtn.addEventListener("click", () => {
+      settingsModal.hidden = false;
+    });
+  }
+
+  settingsCloses.forEach((el) => {
+    el.addEventListener("click", () => {
+      if (settingsModal) {
+        settingsModal.hidden = true;
+      }
+    });
+  });
+
 });
