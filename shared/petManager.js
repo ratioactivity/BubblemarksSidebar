@@ -76,20 +76,23 @@ window.addEventListener("DOMContentLoaded", () => {
     poseGroup: "rest",
     message: "Pico looks happy today!",
     stats: {
-      hunger: 40,
-      sleepiness: 20,
-      boredom: 60,
-      overstimulation: 30,
-      affection: 90,
+      hunger: 4,
+      sleepiness: 2,
+      boredom: 6,
+      overstimulation: 3,
+      affection: 5,
     },
+    happiness: 0,
   };
 
+  petState.happiness = calculateHappiness(petState.stats);
+
   const STAT_BOUNDS = {
-    hunger: [0, 100],
-    sleepiness: [0, 100],
-    boredom: [0, 100],
-    overstimulation: [0, 100],
-    affection: [0, 100],
+    hunger: [0, 10],
+    sleepiness: [0, 10],
+    boredom: [0, 10],
+    overstimulation: [0, 10],
+    affection: [0, 10],
   };
 
   let animationTimerId = null;
@@ -98,10 +101,44 @@ window.addEventListener("DOMContentLoaded", () => {
   let lastSwimSoundTime = 0;
   let sleepLoopWatchdogId = null;
   let sleepLoopToken = 0;
+  const HOUR_TICK_MS = 60 * 1000;
+  let levelUpLocked = false;
+
+  function calculateHappiness(stats = petState.stats) {
+    if (!stats) return 0;
+    const { hunger = 0, sleepiness = 0, boredom = 0, overstimulation = 0, affection = 0 } = stats;
+    const needsTotal = hunger + sleepiness + boredom + overstimulation;
+    return Math.round(10 - needsTotal + affection);
+  }
 
   function clampStatValue(key, value) {
     const [min, max] = STAT_BOUNDS[key] || [0, 100];
     return Math.max(min, Math.min(max, Math.round(value)));
+  }
+
+  function updateHappiness() {
+    const previous = petState.happiness;
+    const next = calculateHappiness(petState.stats);
+    petState.happiness = next;
+    return { previous, next, changed: previous !== next };
+  }
+
+  function attemptLevelUp(happinessValue) {
+    const affectionCap = STAT_BOUNDS.affection?.[1] ?? 10;
+    const affectionMaxed = petState.stats.affection === affectionCap;
+    if (happinessValue < 0 || !affectionMaxed) {
+      levelUpLocked = false;
+      return false;
+    }
+
+    if (levelUpLocked) {
+      return false;
+    }
+
+    petState.level += 1;
+    levelUpLocked = true;
+    setMessage(`✨ ${petState.name} grew to level ${petState.level}!`);
+    return true;
   }
 
   function applyStatChanges(deltaMap = {}) {
@@ -116,8 +153,10 @@ window.addEventListener("DOMContentLoaded", () => {
         changed = true;
       }
     });
-    if (changed) {
-      emitState({ statsUpdated: true });
+    const { next: happinessNow, changed: happinessChanged } = updateHappiness();
+    const leveledUp = attemptLevelUp(happinessNow);
+    if (changed || happinessChanged || leveledUp) {
+      emitState({ statsUpdated: changed, happinessChanged, leveledUp });
     }
   }
 
@@ -125,6 +164,7 @@ window.addEventListener("DOMContentLoaded", () => {
     return {
       ...petState,
       stats: { ...petState.stats },
+      happiness: petState.happiness,
       timers: { ...timers },
     };
   }
@@ -388,7 +428,6 @@ window.addEventListener("DOMContentLoaded", () => {
     clearAnimTimer();
     setRoamMode(true);
     setMessage(`${petState.name} is roaming around Bubblemarks!`);
-    adjustStatsFor("roam");
   }
 
   function recallFromRoam() {
@@ -497,7 +536,6 @@ window.addEventListener("DOMContentLoaded", () => {
   function handleSleep() {
     if (petState.busy || isRoaming()) return;
     beginAction(`${petState.name} is getting sleepy...`);
-    adjustStatsFor("sleep");
 
     const pose = getPoseGroup();
     let seq;
@@ -526,7 +564,8 @@ window.addEventListener("DOMContentLoaded", () => {
   function handleSwim() {
     if (petState.busy || isRoaming()) return;
     beginAction(`${petState.name} goes for a swim!`);
-    adjustStatsFor("swim");
+
+    const applySwimStats = () => adjustStatsFor("swim");
 
     const pose = getPoseGroup();
     let seq;
@@ -539,6 +578,7 @@ window.addEventListener("DOMContentLoaded", () => {
         seq = ["sleepToFloat", "floatToSwim"];
         break;
       case "swim":
+        applySwimStats();
         startSwimLoop();
         return;
       default:
@@ -547,6 +587,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     runSequence(seq, () => {
+      applySwimStats();
       setMessage(`${petState.name} is happily swimming.`);
       startSwimLoop();
     });
@@ -562,12 +603,10 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const ACTION_STAT_EFFECTS = {
-    feed: { hunger: -35, boredom: -10, affection: 5, overstimulation: 4 },
-    pet: { boredom: -15, affection: 8, overstimulation: -5 },
-    rest: { overstimulation: -20, boredom: -5 },
-    sleep: { sleepiness: -45, overstimulation: -10 },
-    swim: { boredom: -25, hunger: 8, overstimulation: 12 },
-    roam: { boredom: -18, hunger: 6, sleepiness: 4 },
+    feed: { hunger: -5 },
+    pet: { affection: 5 },
+    rest: { overstimulation: -10 },
+    swim: { boredom: -5, overstimulation: 1 },
   };
 
   function adjustStatsFor(actionName) {
@@ -596,6 +635,23 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function isSleeping() {
+    return petState.mode === "sleep";
+  }
+
+  function tickHourUpdate() {
+    const hourlyDeltas = { hunger: 1, affection: -1 };
+    if (isSleeping()) {
+      hourlyDeltas.sleepiness = -5;
+    } else {
+      hourlyDeltas.sleepiness = 1;
+      if (!isRoaming()) {
+        hourlyDeltas.boredom = 1;
+      }
+    }
+    applyStatChanges(hourlyDeltas);
+  }
+
   function setProfile(details = {}) {
     if (typeof details.name === "string" && details.name.trim()) {
       petState.name = details.name.trim();
@@ -619,6 +675,11 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }, TEN_MIN);
   setTimer("attention", attentionInterval);
+
+  const hourInterval = setInterval(() => {
+    tickHourUpdate();
+  }, HOUR_TICK_MS);
+  setTimer("hourly", hourInterval);
 
   playAnimation("resting", {
     onDone: () => {
