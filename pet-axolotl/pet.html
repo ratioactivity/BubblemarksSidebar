@@ -29,7 +29,7 @@
           <span class="pet-level">Lv. 1</span>
           <span class="pet-name">Pico</span>
           <button class="pet-header-settings" type="button" aria-label="Pet settings">
-            <img src="assets/gear.png" alt="Settings" />
+            <img src="assets/gear.svg" alt="Settings" />
           </button>
         </div>
 
@@ -86,7 +86,40 @@
                 ✕
               </button>
             </div>
-            <!-- Settings fields will be added here in the next steps -->
+            <div class="pet-settings-body">
+              <label class="settings-toggle">
+                <input type="checkbox" id="vacation-mode" />
+                <span>Vacation Mode</span>
+                <p class="settings-toggle__hint">Pause stat decay while you're away.</p>
+              </label>
+
+              <div class="settings-divider" aria-hidden="true"></div>
+
+              <div class="settings-field">
+                <div class="settings-field__header">
+                  <label for="pet-name-input">Pet Name</label>
+                  <span class="settings-field__hint">Give your buddy a new name.</span>
+                </div>
+                <div class="settings-field__row">
+                  <input
+                    type="text"
+                    id="pet-name-input"
+                    name="pet-name"
+                    maxlength="24"
+                    placeholder="Enter a name"
+                  />
+                  <button type="button" id="pet-name-save">Save</button>
+                </div>
+              </div>
+
+              <div class="settings-divider" aria-hidden="true"></div>
+
+              <label class="settings-toggle">
+                <input type="checkbox" id="pet-sound-toggle" checked />
+                <span>Sound Effects</span>
+                <p class="settings-toggle__hint">Toggle squeaks and splashes.</p>
+              </label>
+            </div>
           </div>
         </div>
 
