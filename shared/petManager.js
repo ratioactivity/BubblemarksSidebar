@@ -389,7 +389,6 @@ window.addEventListener("DOMContentLoaded", () => {
     clearAnimTimer();
     setRoamMode(true);
     setMessage(`${petState.name} is roaming around Bubblemarks!`);
-    adjustStatsFor("roam");
   }
 
   function recallFromRoam() {
@@ -498,7 +497,6 @@ window.addEventListener("DOMContentLoaded", () => {
   function handleSleep() {
     if (petState.busy || isRoaming()) return;
     beginAction(`${petState.name} is getting sleepy...`);
-    adjustStatsFor("sleep");
 
     const pose = getPoseGroup();
     let seq;
@@ -527,7 +525,8 @@ window.addEventListener("DOMContentLoaded", () => {
   function handleSwim() {
     if (petState.busy || isRoaming()) return;
     beginAction(`${petState.name} goes for a swim!`);
-    adjustStatsFor("swim");
+
+    const applySwimStats = () => adjustStatsFor("swim");
 
     const pose = getPoseGroup();
     let seq;
@@ -540,6 +539,7 @@ window.addEventListener("DOMContentLoaded", () => {
         seq = ["sleepToFloat", "floatToSwim"];
         break;
       case "swim":
+        applySwimStats();
         startSwimLoop();
         return;
       default:
@@ -548,6 +548,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     runSequence(seq, () => {
+      applySwimStats();
       setMessage(`${petState.name} is happily swimming.`);
       startSwimLoop();
     });
@@ -563,12 +564,10 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const ACTION_STAT_EFFECTS = {
-    feed: { hunger: -5, boredom: -1, affection: 2, overstimulation: 1 },
-    pet: { boredom: -1, affection: 5, overstimulation: -1 },
-    rest: { overstimulation: -2, boredom: -1 },
-    sleep: { sleepiness: -5, overstimulation: -2 },
-    swim: { boredom: -3, hunger: 1, overstimulation: 2 },
-    roam: { boredom: -2, hunger: 1, sleepiness: 1 },
+    feed: { hunger: -5 },
+    pet: { affection: 5 },
+    rest: { overstimulation: -10 },
+    swim: { boredom: -5, overstimulation: 1 },
   };
 
   function adjustStatsFor(actionName) {
