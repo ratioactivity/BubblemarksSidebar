@@ -35,6 +35,8 @@ window.addEventListener("DOMContentLoaded", () => {
     "fastswim-squeak",
     "float-squeak",
     "happy-squeak",
+    "help1",
+    "help2",
     "munch-squeak",
     "pet-sound",
     "resting-sound",

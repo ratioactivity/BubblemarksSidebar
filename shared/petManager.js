@@ -66,6 +66,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const GIFS_REQUIRING_RESTART = new Set(["sleeping"]);
   const SWIM_SOUND_COOLDOWN = 10000;
+  const VERY_LOW_HAPPINESS_THRESHOLD = -30;
+  const HELP_SOUND_COOLDOWN_MS = 5 * 60 * 1000;
+  const HELP_SOUNDS = ["help1", "help2"];
 
   const petState = {
     mode: "idle",
@@ -99,6 +102,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let sequenceToken = 0;
   let restingBubbleHasPlayed = false;
   let lastSwimSoundTime = 0;
+  let lastHelpSoundTime = 0;
   let sleepLoopWatchdogId = null;
   let sleepLoopToken = 0;
   const HOUR_TICK_MS = 60 * 1000;
@@ -139,6 +143,22 @@ window.addEventListener("DOMContentLoaded", () => {
     levelUpLocked = true;
     setMessage(`✨ ${petState.name} grew to level ${petState.level}!`);
     return true;
+  }
+
+  function maybePlayHelpSound() {
+    if (petState.happiness > VERY_LOW_HAPPINESS_THRESHOLD) {
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastHelpSoundTime < HELP_SOUND_COOLDOWN_MS) {
+      return;
+    }
+
+    lastHelpSoundTime = now;
+    const choiceIndex = Math.random() < 0.5 ? 0 : 1;
+    const selectedSound = HELP_SOUNDS[choiceIndex] || HELP_SOUNDS[0];
+    setMessage(`${petState.name} seems distressed...`, { sound: selectedSound, helpAlert: true });
   }
 
   function applyStatChanges(deltaMap = {}) {
@@ -650,6 +670,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
     applyStatChanges(hourlyDeltas);
+    maybePlayHelpSound();
   }
 
   function setProfile(details = {}) {
