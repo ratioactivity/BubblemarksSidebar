@@ -167,19 +167,22 @@ body {
 }
 
 .pet-settings-close {
-  background: none;
+  background: linear-gradient(to bottom, #f3b2f1, #b9dfff); /* pink to blue gradient */
   border: none;
-  color: #4b4275;
+  color: white;
   font-size: 1.2rem;
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.25rem 0.5rem;
   line-height: 1;
   border-radius: 8px;
   transition: background 0.2s ease;
+  box-shadow:
+    0 4px 10px rgba(90, 70, 130, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
 .pet-settings-close:hover {
-  background: rgba(75, 66, 117, 0.08);
+  background: linear-gradient(to bottom, #ffccf9, #c5e5ff);
 }
 
 /* Fix aquarium window size ratio */
