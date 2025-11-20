@@ -869,6 +869,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
   startAllIntervals();
 
+  const hourInterval = setInterval(() => {
+    tickHourUpdate();
+  }, HOUR_TICK_MS);
+  setTimer("hourly", hourInterval);
+
   playAnimation("resting", {
     onDone: () => {
       startIdle();
