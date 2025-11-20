@@ -28,7 +28,7 @@
         <div class="pet-header">
           <span class="pet-level">Lv. 1</span>
           <span class="pet-name">Pico</span>
-          <button class="pet-settings" type="button" aria-label="Pet settings">
+          <button class="pet-header-settings" type="button" aria-label="Pet settings">
             <img src="assets/gear.svg" alt="Settings" />
           </button>
         </div>
@@ -66,6 +66,28 @@
           <button data-action="swim">Swim</button>
           <button data-action="rest">Rest</button>
           <button data-action="roam">Roam</button>
+        </div>
+
+        <!-- Gear icon button -->
+        <img src="./assets/gear.png" class="pet-settings" alt="Settings" />
+
+        <!-- Settings Modal Structure (initially hidden) -->
+        <div id="pet-settings-modal" class="pet-settings-modal" hidden>
+          <div class="pet-settings-modal__backdrop" data-settings-dismiss="true"></div>
+          <div class="pet-settings-modal__dialog">
+            <div class="pet-settings-header">
+              <h2>Pet Settings</h2>
+              <button
+                type="button"
+                class="pet-settings-close"
+                data-settings-dismiss="true"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <!-- Settings fields will be added here in the next steps -->
+          </div>
         </div>
 
         <!-- ★ STAR DECORATIONS (keep these at the very end) ★ -->
