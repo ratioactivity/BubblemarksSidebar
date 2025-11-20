@@ -108,6 +108,206 @@ body {
   height: auto;
 }
 
+/* Gear icon style */
+.pet-settings {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  z-index: 60;
+}
+
+.pet-settings-modal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 70;
+}
+
+.pet-settings-modal[hidden] {
+  display: none;
+}
+
+.pet-settings-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 26, 44, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+.pet-settings-modal__dialog {
+  position: relative;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7ff 100%);
+  border-radius: 18px;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 10px 30px rgba(90, 70, 130, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  width: min(90%, 420px);
+  color: #4b4275;
+}
+
+.pet-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.pet-settings-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: inherit;
+}
+
+.pet-settings-close {
+  background: none;
+  border: none;
+  color: #4b4275;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.pet-settings-close:hover {
+  background: rgba(75, 66, 117, 0.08);
+}
+
+.pet-settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding-top: 0.35rem;
+}
+
+.settings-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(75, 66, 117, 0.1), rgba(75, 66, 117, 0.05));
+  border-radius: 999px;
+}
+
+.settings-toggle {
+  display: block;
+  padding: 0.65rem 0.7rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(75, 66, 117, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.settings-toggle:hover {
+  border-color: rgba(75, 66, 117, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 6px 14px rgba(75, 66, 117, 0.08);
+}
+
+.settings-toggle input[type="checkbox"] {
+  margin: 0 0.55rem 0 0.2rem;
+  accent-color: #7c66d8;
+  transform: scale(1.08);
+}
+
+.settings-toggle span {
+  font-weight: 700;
+}
+
+.settings-toggle__hint {
+  margin: 0.25rem 0 0 1.8rem;
+  color: #6a5fa0;
+  font-size: 0.88rem;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.settings-field__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.settings-field__header label {
+  font-weight: 700;
+  color: #3d336d;
+}
+
+.settings-field__hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6a5fa0;
+}
+
+.settings-field__row {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+#pet-name-input {
+  flex: 1;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(75, 66, 117, 0.18);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.98rem;
+  color: #4b4275;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+#pet-name-input:focus {
+  outline: none;
+  border-color: #7c66d8;
+  box-shadow:
+    0 0 0 3px rgba(124, 102, 216, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+#pet-name-save {
+  padding: 0.55rem 0.9rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c66d8, #a17cf0);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 8px 20px rgba(124, 102, 216, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+#pet-name-save:hover {
+  box-shadow:
+    0 10px 22px rgba(124, 102, 216, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+#pet-name-save:active {
+  transform: translateY(1px);
+}
+
+.pet-container.is-on-vacation .message-bar {
+  background: linear-gradient(90deg, rgba(124, 102, 216, 0.12), rgba(255, 255, 255, 0.7));
+  border-color: rgba(124, 102, 216, 0.35);
+}
+
 /* Fix aquarium window size ratio */
 .tank-window {
   position: relative;
@@ -228,8 +428,8 @@ body {
     0 3px 8px rgba(70,40,110,.35);
 }
 
-/* Right — gear button */
-.pet-settings {
+/* Right — gear button (header) */
+.pet-header-settings {
   justify-self: flex-end;
   background: rgba(255, 255, 255, 0.85);
   border: none;
@@ -243,19 +443,19 @@ body {
   transition: background 0.25s ease, transform 0.25s ease;
 }
 
-.pet-settings:hover {
+.pet-header-settings:hover {
   background: rgba(255, 255, 255, 1);
   transform: rotate(10deg);
 }
 
-.pet-settings img {
+.pet-header-settings img {
   width: 18px;
   height: 18px;
   opacity: 0.8;
   transition: opacity 0.2s ease;
 }
 
-.pet-settings:hover img {
+.pet-header-settings:hover img {
   opacity: 1;
 }
 
