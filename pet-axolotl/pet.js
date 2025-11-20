@@ -1,4 +1,4 @@
-window.addEventListener("DOMContentLoaded", () => {
+function initPetWidget() {
   console.log("✅ script validated");
 
   const petContainer = document.querySelector(".pet-container");
@@ -655,4 +655,12 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-});
+}
+
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", () => {
+    initPetWidget();
+  }, { once: true });
+} else {
+  initPetWidget();
+}
