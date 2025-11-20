@@ -82,7 +82,10 @@ window.addEventListener("DOMContentLoaded", () => {
       overstimulation: 3,
       affection: 5,
     },
+    happiness: 0,
   };
+
+  petState.happiness = calculateHappiness(petState.stats);
 
   const STAT_BOUNDS = {
     hunger: [0, 10],
@@ -99,10 +102,43 @@ window.addEventListener("DOMContentLoaded", () => {
   let sleepLoopWatchdogId = null;
   let sleepLoopToken = 0;
   const HOUR_TICK_MS = 60 * 1000;
+  let levelUpLocked = false;
+
+  function calculateHappiness(stats = petState.stats) {
+    if (!stats) return 0;
+    const { hunger = 0, sleepiness = 0, boredom = 0, overstimulation = 0, affection = 0 } = stats;
+    const needsTotal = hunger + sleepiness + boredom + overstimulation;
+    return Math.round(10 - needsTotal + affection);
+  }
 
   function clampStatValue(key, value) {
     const [min, max] = STAT_BOUNDS[key] || [0, 100];
     return Math.max(min, Math.min(max, Math.round(value)));
+  }
+
+  function updateHappiness() {
+    const previous = petState.happiness;
+    const next = calculateHappiness(petState.stats);
+    petState.happiness = next;
+    return { previous, next, changed: previous !== next };
+  }
+
+  function attemptLevelUp(happinessValue) {
+    const affectionCap = STAT_BOUNDS.affection?.[1] ?? 10;
+    const affectionMaxed = petState.stats.affection === affectionCap;
+    if (happinessValue < 0 || !affectionMaxed) {
+      levelUpLocked = false;
+      return false;
+    }
+
+    if (levelUpLocked) {
+      return false;
+    }
+
+    petState.level += 1;
+    levelUpLocked = true;
+    setMessage(`✨ ${petState.name} grew to level ${petState.level}!`);
+    return true;
   }
 
   function applyStatChanges(deltaMap = {}) {
@@ -117,8 +153,10 @@ window.addEventListener("DOMContentLoaded", () => {
         changed = true;
       }
     });
-    if (changed) {
-      emitState({ statsUpdated: true });
+    const { next: happinessNow, changed: happinessChanged } = updateHappiness();
+    const leveledUp = attemptLevelUp(happinessNow);
+    if (changed || happinessChanged || leveledUp) {
+      emitState({ statsUpdated: changed, happinessChanged, leveledUp });
     }
   }
 
@@ -126,6 +164,7 @@ window.addEventListener("DOMContentLoaded", () => {
     return {
       ...petState,
       stats: { ...petState.stats },
+      happiness: petState.happiness,
       timers: { ...timers },
     };
   }
