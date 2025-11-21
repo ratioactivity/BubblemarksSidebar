@@ -657,10 +657,26 @@ function initPetWidget() {
 
 }
 
-if (document.readyState === "loading") {
-  window.addEventListener("DOMContentLoaded", () => {
-    initPetWidget();
-  }, { once: true });
-} else {
-  initPetWidget();
-}
+window.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    const MAX_ATTEMPTS = 10;
+    const RETRY_DELAY_MS = 50;
+
+    function attemptInit(attempt = 1) {
+      if (window.petManager && typeof window.petManager.subscribeToAnimationChange === "function") {
+        initPetWidget();
+        return;
+      }
+
+      if (attempt < MAX_ATTEMPTS) {
+        setTimeout(() => attemptInit(attempt + 1), RETRY_DELAY_MS);
+      } else {
+        console.error("[BubblePet] petManager did not become available after DOMContentLoaded");
+      }
+    }
+
+    attemptInit();
+  },
+  { once: true }
+);
