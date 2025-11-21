@@ -1632,6 +1632,12 @@ body.modal-open {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.settings-fab img {
+  width: 1.4rem;
+  height: 1.4rem;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
+}
+
 .settings-fab:hover,
 .settings-fab:focus-visible {
   transform: translateY(-3px);
