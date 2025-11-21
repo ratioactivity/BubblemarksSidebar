@@ -13,7 +13,7 @@ function initPetWidget() {
   const nameEl = petContainer.querySelector(".pet-name");
   const overlayEl = petContainer.querySelector("#pet-overlay");
   const statBars = Array.from(petContainer.querySelectorAll(".stat-bar"));
-  const buttons = Array.from(petContainer.querySelectorAll(".pet-actions button"));
+  const buttons = Array.from(petContainer.querySelectorAll(".pet-actions button[data-action]"));
   const roamButton = buttons.find((btn) => btn.dataset.action === "roam");
   const callbackButtons = Array.from(
     document.querySelectorAll('[data-action="call-back"], [data-action="callback"], [data-action="callBack"]')
@@ -657,26 +657,28 @@ function initPetWidget() {
 
 }
 
-window.addEventListener(
-  "DOMContentLoaded",
-  () => {
-    const MAX_ATTEMPTS = 10;
-    const RETRY_DELAY_MS = 50;
+const MAX_ATTEMPTS = 10;
+const RETRY_DELAY_MS = 50;
+let petWidgetInitialized = false;
 
-    function attemptInit(attempt = 1) {
-      if (window.petManager && typeof window.petManager.subscribeToAnimationChange === "function") {
-        initPetWidget();
-        return;
-      }
+function attemptInit(attempt = 1) {
+  if (petWidgetInitialized) return;
 
-      if (attempt < MAX_ATTEMPTS) {
-        setTimeout(() => attemptInit(attempt + 1), RETRY_DELAY_MS);
-      } else {
-        console.error("[BubblePet] petManager did not become available after DOMContentLoaded");
-      }
-    }
+  if (window.petManager && typeof window.petManager.subscribeToAnimationChange === "function") {
+    petWidgetInitialized = true;
+    initPetWidget();
+    return;
+  }
 
-    attemptInit();
-  },
-  { once: true }
-);
+  if (attempt < MAX_ATTEMPTS) {
+    setTimeout(() => attemptInit(attempt + 1), RETRY_DELAY_MS);
+  } else {
+    console.error("[BubblePet] petManager did not become available after DOMContentLoaded");
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => attemptInit(), { once: true });
+
+if (document.readyState !== "loading") {
+  attemptInit();
+}
