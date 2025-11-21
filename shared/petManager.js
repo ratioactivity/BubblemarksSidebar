@@ -69,6 +69,9 @@ window.addEventListener("DOMContentLoaded", () => {
   const VERY_LOW_HAPPINESS_THRESHOLD = -30;
   const HELP_SOUND_COOLDOWN_MS = 5 * 60 * 1000;
   const HELP_SOUNDS = ["help1", "help2"];
+  const IDLE_LOOP_INTERVAL_MS = 7000;
+  const IDLE_FRIENDLY_ANIMS = new Set(["resting", "restingBubble", "floating", "swimming"]);
+  const ROAM_DURATION_MS = 7000;
   const DEATH_EXTREME_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
   const DEFAULT_STATS = {
     hunger: 4,
@@ -117,6 +120,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let deathStartTime = null;
   let attentionInterval = null;
   let hourInterval = null;
+  let roamReturnTimeout = null;
 
   function calculateHappiness(stats = petState.stats) {
     if (!stats) return 0;
@@ -265,6 +269,25 @@ window.addEventListener("DOMContentLoaded", () => {
     timers[label] = value;
   }
 
+  function clearRoamReturnTimer() {
+    if (roamReturnTimeout !== null) {
+      clearTimeout(roamReturnTimeout);
+      roamReturnTimeout = null;
+      setTimer("roamReturn", null);
+    }
+  }
+
+  function scheduleRoamReturnToIdle() {
+    clearRoamReturnTimer();
+    roamReturnTimeout = setTimeout(() => {
+      roamReturnTimeout = null;
+      setRoamMode(false);
+      setMessage(`${petState.name} swims back to the tank.`);
+      startIdle();
+    }, ROAM_DURATION_MS);
+    setTimer("roamReturn", roamReturnTimeout);
+  }
+
   function clearAnimTimer() {
     if (animationTimerId !== null) {
       clearTimeout(animationTimerId);
@@ -296,6 +319,7 @@ window.addEventListener("DOMContentLoaded", () => {
     petState.mode = isRoaming ? "roam" : "idle";
     if (!isRoaming) {
       petState.busy = false;
+      clearRoamReturnTimer();
     }
     emitState({ roam: petState.mode });
   }
@@ -411,6 +435,15 @@ window.addEventListener("DOMContentLoaded", () => {
   function scheduleIdleCycle() {
     if (petState.mode !== "idle") return;
 
+    if (!IDLE_FRIENDLY_ANIMS.has(petState.currentAnim)) {
+      setTimeout(() => {
+        if (petState.mode === "idle") {
+          scheduleIdleCycle();
+        }
+      }, IDLE_LOOP_INTERVAL_MS);
+      return;
+    }
+
     const r = Math.random();
     if (r < 0.85) {
       playAnimation("resting", {
@@ -503,10 +536,12 @@ window.addEventListener("DOMContentLoaded", () => {
     clearAnimTimer();
     setRoamMode(true);
     setMessage(`${petState.name} is roaming around Bubblemarks!`);
+    scheduleRoamReturnToIdle();
   }
 
   function recallFromRoam() {
     if (petState.mode === "roam") {
+      clearRoamReturnTimer();
       setRoamMode(false);
       setMessage(`${petState.name} swims back to the tank.`);
       startIdle();
