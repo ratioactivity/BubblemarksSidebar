@@ -678,7 +678,3 @@ function attemptInit(attempt = 1) {
 }
 
 window.addEventListener("DOMContentLoaded", () => attemptInit(), { once: true });
-
-if (document.readyState !== "loading") {
-  attemptInit();
-}
