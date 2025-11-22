@@ -544,35 +544,43 @@ function initPetWidget() {
 
   allActionButtons.forEach((btn) => attachActionHandler(btn));
 
-  petContainer.addEventListener(
-    "click",
-    (event) => {
-      const target = event.target;
-      if (!target) return;
+  const actionContainer = petContainer.querySelector(".pet-actions");
 
-      const actionTrigger = target.closest("[data-action]");
-      if (actionTrigger) {
-        const actionName = actionTrigger.dataset.action;
-        if (actionName === "settings") {
-          toggleSettingsModal();
-          return;
-        }
-        if (petManager.actions && typeof petManager.actions[actionName] === "function") {
-          petManager.actions[actionName]();
-          return;
-        }
-        if (typeof petManager.triggerAction === "function") {
-          petManager.triggerAction(actionName);
-        }
-        return;
-      }
+  const handleActionTrigger = (actionName) => {
+    if (!actionName) return;
+    if (actionName === "settings") {
+      toggleSettingsModal();
+      return;
+    }
+    if (petManager.actions && typeof petManager.actions[actionName] === "function") {
+      petManager.actions[actionName]();
+      return;
+    }
+    if (typeof petManager.triggerAction === "function") {
+      petManager.triggerAction(actionName);
+    }
+  };
 
-      if (target.closest(".pet-settings") || target.closest(".pet-header-settings")) {
-        toggleSettingsModal();
-      }
-    },
-    { passive: true }
-  );
+  const delegatedClickHandler = (event) => {
+    const target = event.target;
+    if (!target) return;
+
+    const actionTrigger = target.closest("[data-action]");
+    if (actionTrigger) {
+      handleActionTrigger(actionTrigger.dataset.action);
+      return;
+    }
+
+    if (target.closest(".pet-settings") || target.closest(".pet-header-settings")) {
+      toggleSettingsModal();
+    }
+  };
+
+  petContainer.addEventListener("click", delegatedClickHandler);
+
+  if (actionContainer) {
+    actionContainer.addEventListener("click", delegatedClickHandler);
+  }
 
   const settingsBtn = petContainer.querySelector(".pet-settings");
   const headerSettingsBtn = petContainer.querySelector(".pet-header-settings");
@@ -685,9 +693,7 @@ function initPetWidget() {
   [settingsBtn, headerSettingsBtn]
     .filter(Boolean)
     .forEach((btn) => {
-      if (!btn.dataset.action) {
-        btn.addEventListener("click", toggleSettingsModal);
-      }
+      btn.addEventListener("click", toggleSettingsModal);
     });
 
   settingsCloses.forEach((el) => {
