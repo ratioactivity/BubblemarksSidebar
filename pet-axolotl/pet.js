@@ -18,6 +18,7 @@ function initPetWidget() {
   const callbackButtons = Array.from(
     document.querySelectorAll('[data-action="call-back"], [data-action="callback"], [data-action="callBack"]')
   ).filter((btn) => !actionElements.includes(btn));
+  const buttons = Array.from(new Set([...actionElements, ...callbackButtons]));
 
   const petManager = window.petManager;
   if (!petManager || typeof petManager.subscribeToAnimationChange !== "function") {
@@ -539,10 +540,7 @@ function initPetWidget() {
       }
     });
   }
-
-  const allActionButtons = Array.from(new Set([...actionElements, ...callbackButtons]));
-
-  allActionButtons.forEach((btn) => attachActionHandler(btn));
+  buttons.forEach((btn) => attachActionHandler(btn));
 
   const actionContainer = petContainer.querySelector(".pet-actions");
 
