@@ -1618,7 +1618,7 @@ body.modal-open {
   bottom: clamp(1.2rem, 4vw, 2.4rem);
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(255, 234, 255, 0.95), rgba(216, 237, 255, 0.9));
+  background: linear-gradient(180deg, #ffb5d6 0%, #a1d7ff 100%);
   color: var(--accent);
   font-family: "Bigbesty", "Papernotes", cursive;
   font-size: clamp(1.3rem, 4vw, 1.6rem);
@@ -1630,6 +1630,12 @@ body.modal-open {
   cursor: pointer;
   z-index: 6;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.settings-fab img {
+  width: 1.9rem;
+  height: 1.9rem;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
 }
 
 .settings-fab:hover,
