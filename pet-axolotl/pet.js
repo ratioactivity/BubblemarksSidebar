@@ -544,6 +544,36 @@ function initPetWidget() {
 
   allActionButtons.forEach((btn) => attachActionHandler(btn));
 
+  petContainer.addEventListener(
+    "click",
+    (event) => {
+      const target = event.target;
+      if (!target) return;
+
+      const actionTrigger = target.closest("[data-action]");
+      if (actionTrigger) {
+        const actionName = actionTrigger.dataset.action;
+        if (actionName === "settings") {
+          toggleSettingsModal();
+          return;
+        }
+        if (petManager.actions && typeof petManager.actions[actionName] === "function") {
+          petManager.actions[actionName]();
+          return;
+        }
+        if (typeof petManager.triggerAction === "function") {
+          petManager.triggerAction(actionName);
+        }
+        return;
+      }
+
+      if (target.closest(".pet-settings") || target.closest(".pet-header-settings")) {
+        toggleSettingsModal();
+      }
+    },
+    { passive: true }
+  );
+
   const settingsBtn = petContainer.querySelector(".pet-settings");
   const headerSettingsBtn = petContainer.querySelector(".pet-header-settings");
   const settingsModal = petContainer.querySelector("#pet-settings-modal");
