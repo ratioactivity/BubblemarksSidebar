@@ -826,6 +826,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   applyPreferences({ lazyAxolotl: true });
 
+  console.log("✅ script validated");
+
   if (preferences.showAxolotl !== false) {
     ensureAxolotlInitialized();
   } else if (axolotlLayer) {
