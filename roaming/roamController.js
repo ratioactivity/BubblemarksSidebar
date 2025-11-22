@@ -20,6 +20,14 @@ window.addEventListener("DOMContentLoaded", () => {
   const UI_FADE_DURATION = 280;
   const DEFAULT_TRANSITION = `transform ${MOVE_DURATION}ms ease-in-out, opacity ${ROAM_FADE_DURATION}ms ease`;
   const initialSpriteSrc = refreshUiSprite()?.getAttribute("src") || "";
+  let currentSpriteSrc = initialSpriteSrc;
+  let roamSpriteVisible = false;
+  let roamSpriteReady = false;
+  let pendingRoamStart = false;
+  let roamMode = false;
+  let returning = false;
+  let lastX = 0;
+  let roamLoopTimeout = null;
   const roamSpritePreloadHost = ensureRoamSpritePreloadHost();
   const roamSprite = ensureRoamSprite();
   const roamSpriteVariantCounters = new Map();
@@ -43,15 +51,6 @@ window.addEventListener("DOMContentLoaded", () => {
     refreshUiSprite();
   });
   spriteObserver.observe(tankWindow, { childList: true });
-
-  let roamSpriteVisible = false;
-  let roamSpriteReady = false;
-  let pendingRoamStart = false;
-  let roamMode = false;
-  let returning = false;
-  let lastX = 0;
-  let currentSpriteSrc = initialSpriteSrc;
-  let roamLoopTimeout = null;
 
   refreshUiSprite();
 
