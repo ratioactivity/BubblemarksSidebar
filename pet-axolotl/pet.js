@@ -613,19 +613,45 @@ function initPetWidget() {
   setSoundsEnabled(true);
   syncSettingsUi();
 
+  const closeSettingsModal = () => {
+    if (!settingsModal) {
+      return;
+    }
+    settingsModal.setAttribute("hidden", "");
+    document.body.classList.remove("modal-open");
+  };
+
+  const openSettingsModal = () => {
+    if (!settingsModal) {
+      return;
+    }
+    syncSettingsUi();
+    settingsModal.removeAttribute("hidden");
+    document.body.classList.add("modal-open");
+  };
+
+  const toggleSettingsModal = () => {
+    if (!settingsModal) {
+      return;
+    }
+    const isHidden = settingsModal.hasAttribute("hidden");
+    if (isHidden) {
+      openSettingsModal();
+    } else {
+      closeSettingsModal();
+    }
+  };
+
+  if (settingsModal) {
+    settingsModal.setAttribute("hidden", "");
+  }
+
   if (settingsBtn && settingsModal) {
-    settingsBtn.addEventListener("click", () => {
-      syncSettingsUi();
-      settingsModal.hidden = false;
-    });
+    settingsBtn.addEventListener("click", toggleSettingsModal);
   }
 
   settingsCloses.forEach((el) => {
-    el.addEventListener("click", () => {
-      if (settingsModal) {
-        settingsModal.hidden = true;
-      }
-    });
+    el.addEventListener("click", closeSettingsModal);
   });
 
   if (vacationToggle) {
