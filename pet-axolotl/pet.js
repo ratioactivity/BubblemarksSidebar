@@ -13,11 +13,11 @@ function initPetWidget() {
   const nameEl = petContainer.querySelector(".pet-name");
   const overlayEl = petContainer.querySelector("#pet-overlay");
   const statBars = Array.from(petContainer.querySelectorAll(".stat-bar"));
-  const buttons = Array.from(petContainer.querySelectorAll(".pet-actions button[data-action]"));
-  const roamButton = buttons.find((btn) => btn.dataset.action === "roam");
+  const actionElements = Array.from(petContainer.querySelectorAll("[data-action]"));
+  const roamButton = actionElements.find((btn) => btn.dataset.action === "roam");
   const callbackButtons = Array.from(
     document.querySelectorAll('[data-action="call-back"], [data-action="callback"], [data-action="callBack"]')
-  ).filter((btn) => !buttons.includes(btn));
+  ).filter((btn) => !actionElements.includes(btn));
 
   const petManager = window.petManager;
   if (!petManager || typeof petManager.subscribeToAnimationChange !== "function") {
@@ -526,6 +526,10 @@ function initPetWidget() {
     const action = button.dataset.action;
     if (!action) return;
     button.addEventListener("click", () => {
+      if (action === "settings") {
+        toggleSettingsModal();
+        return;
+      }
       if (petManager.actions && typeof petManager.actions[action] === "function") {
         petManager.actions[action]();
         return;
@@ -536,10 +540,12 @@ function initPetWidget() {
     });
   }
 
-  buttons.forEach((btn) => attachActionHandler(btn));
-  callbackButtons.forEach((btn) => attachActionHandler(btn));
+  const allActionButtons = Array.from(new Set([...actionElements, ...callbackButtons]));
+
+  allActionButtons.forEach((btn) => attachActionHandler(btn));
 
   const settingsBtn = petContainer.querySelector(".pet-settings");
+  const headerSettingsBtn = petContainer.querySelector(".pet-header-settings");
   const settingsModal = petContainer.querySelector("#pet-settings-modal");
   const settingsCloses = petContainer.querySelectorAll("[data-settings-dismiss]");
   const vacationToggle = petContainer.querySelector("#vacation-mode");
@@ -646,9 +652,13 @@ function initPetWidget() {
     settingsModal.setAttribute("hidden", "");
   }
 
-  if (settingsBtn && settingsModal) {
-    settingsBtn.addEventListener("click", toggleSettingsModal);
-  }
+  [settingsBtn, headerSettingsBtn]
+    .filter(Boolean)
+    .forEach((btn) => {
+      if (!btn.dataset.action) {
+        btn.addEventListener("click", toggleSettingsModal);
+      }
+    });
 
   settingsCloses.forEach((el) => {
     el.addEventListener("click", closeSettingsModal);
