@@ -402,6 +402,14 @@ let activeBookmarkManagerConfirm = null;
 const getControlPanels = () =>
   Array.from(document.querySelectorAll("[data-controls-panel]"));
 
+function safeInitialize(sectionName, initializer) {
+  try {
+    initializer();
+  } catch (error) {
+    console.error(`[Bubblemarks] Failed to initialize ${sectionName}:`, error);
+  }
+}
+
 function replaceChildrenSafe(target, nodes) {
   if (!target) {
     return;
@@ -813,18 +821,22 @@ window.addEventListener("DOMContentLoaded", async () => {
   applyScrollLock(preferences.scrollLocked);
   applyPreferences({ syncInputs: false, lazyAxolotl: true });
 
-  setupControlTabs();
-  setupSearch();
-  setupKeyboard();
-  setupSettingsMenu();
-  setupDataTools();
-  setupBookmarkCreation();
-  setupBookmarkManagement();
-  setupCategoryCustomization();
-  setupLayoutControls();
-  setupAxolotlTravelControls(petWidgetFrame);
+  safeInitialize("control tabs", setupControlTabs);
+  safeInitialize("search", setupSearch);
+  safeInitialize("keyboard", setupKeyboard);
+  safeInitialize("settings menu", setupSettingsMenu);
+  safeInitialize("data tools", setupDataTools);
+  safeInitialize("bookmark creation", setupBookmarkCreation);
+  safeInitialize("bookmark management", setupBookmarkManagement);
+  safeInitialize("category customization", setupCategoryCustomization);
+  safeInitialize("layout controls", setupLayoutControls);
+  safeInitialize("axolotl travel controls", () =>
+    setupAxolotlTravelControls(petWidgetFrame)
+  );
 
   applyPreferences({ lazyAxolotl: true });
+
+  console.log("✅ script validated");
 
   if (preferences.showAxolotl !== false) {
     ensureAxolotlInitialized();
