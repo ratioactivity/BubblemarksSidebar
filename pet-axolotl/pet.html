@@ -28,7 +28,12 @@
         <div class="pet-header">
           <span class="pet-level">Lv. 1</span>
           <span class="pet-name">Pico</span>
-          <button class="pet-header-settings" type="button" aria-label="Pet settings">
+          <button
+            class="pet-header-settings"
+            type="button"
+            aria-label="Pet settings"
+            data-action="settings"
+          >
             <img src="./assets/gear.png" alt="Settings" />
           </button>
         </div>
@@ -69,7 +74,14 @@
         </div>
 
         <!-- Gear icon button -->
-        <img src="./assets/gear.png" class="pet-settings" alt="Settings" />
+        <button
+          type="button"
+          class="pet-settings"
+          aria-label="Pet settings"
+          data-action="settings"
+        >
+          <img src="./assets/gear.png" alt="" aria-hidden="true" />
+        </button>
 
         <!-- Settings Modal Structure (initially hidden) -->
         <div id="pet-settings-modal" class="pet-settings-modal" hidden>
