@@ -184,7 +184,7 @@ body {
 .pet-header {
   position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto; /* level | name | rename */
+  grid-template-columns: auto 1fr; /* level | name */
   align-items: center;
 
   /* a bit narrower than the card so it doesn’t feel huge */
@@ -237,27 +237,6 @@ body {
   text-shadow:
     0 0 3px rgba(255, 255, 255, 0.65),
     0 3px 8px rgba(70, 40, 110, 0.35);
-}
-
-/* Right — inline rename button */
-.pet-rename-button {
-  justify-self: flex-end;
-  background: linear-gradient(180deg, #ffb5d6 0%, #a1d7ff 100%);
-  border: none;
-  border-radius: 12px;
-  padding: 8px 12px;
-  color: #4b4275;
-  font-weight: 800;
-  font-family: "Papernotes", sans-serif;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(190, 160, 255, 0.25);
-  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.pet-rename-button:hover {
-  background: linear-gradient(180deg, #ffc2de 0%, #b3deff 100%);
-  box-shadow: 0 6px 14px rgba(190, 160, 255, 0.35);
-  transform: translateY(-1px);
 }
 
 .tank-window {

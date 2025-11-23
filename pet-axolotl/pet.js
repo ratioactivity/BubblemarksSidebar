@@ -566,31 +566,6 @@ function initPetWidget() {
     actionContainer.addEventListener("click", delegatedClickHandler);
   }
 
-  const renameButton = petContainer.querySelector(".pet-rename-button");
-
-  function applyNameChange(nextName) {
-    const trimmed = (nextName || "").trim();
-    if (!trimmed) return;
-    if (nameEl) {
-      nameEl.textContent = trimmed;
-    }
-    if (typeof petManager.setProfile === "function") {
-      petManager.setProfile({ name: trimmed });
-    }
-  }
-
-  function promptPetRename() {
-    if (!nameEl) return;
-    const currentName = nameEl.textContent.trim() || "Your pet";
-    const nextName = window.prompt("Name your pet", currentName);
-    if (nextName === null) return;
-    applyNameChange(nextName);
-  }
-
-  if (renameButton) {
-    renameButton.addEventListener("click", promptPetRename);
-  }
-
 }
 
 const MAX_ATTEMPTS = 10;
