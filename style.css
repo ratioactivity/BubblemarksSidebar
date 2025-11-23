@@ -1501,7 +1501,7 @@ body {
 .settings-section legend {
   font-family: "Bigbesty", "Papernotes", cursive;
   font-size: 1.25rem;
-  color: rgba(85, 65, 95, 0.85);
+  color: var(--accent);
 }
 
 .settings-toggle {
