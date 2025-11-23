@@ -26,9 +26,20 @@ function initPetWidget() {
     return;
   }
 
+  let petName = normalizePetName(nameEl ? nameEl.textContent : "");
   let vacationMode = false;
   let lastKnownMode = "idle";
   let lastIsDead = false;
+
+  function normalizePetName(name) {
+    if (typeof name === "string") {
+      const trimmed = name.trim();
+      if (trimmed) {
+        return trimmed.slice(0, 64);
+      }
+    }
+    return "BubblePet";
+  }
 
   function isRoamOverlayActive() {
     const roamState = window.bubblePetRoamState;
@@ -475,6 +486,16 @@ function initPetWidget() {
     });
   }
 
+  function setPetName(name) {
+    petName = normalizePetName(name);
+    if (nameEl) {
+      nameEl.textContent = petName;
+    }
+    applyProfileFromDom();
+  }
+
+  setPetName(petName);
+
   function updateVacationState(isVacation) {
     vacationMode = Boolean(isVacation);
     if (petContainer) {
@@ -485,7 +506,9 @@ function initPetWidget() {
 
   function applyProfileFromDom() {
     const details = {};
-    if (nameEl) {
+    if (petName) {
+      details.name = petName;
+    } else if (nameEl) {
       details.name = nameEl.textContent.trim();
     }
     if (levelEl) {
@@ -594,6 +617,12 @@ function initPetWidget() {
         petManager.setVacationMode(vacationEnabled);
       }
       updateVacationState(vacationEnabled);
+      return;
+    }
+
+    if (data.type === "set-pet-name") {
+      const nextName = typeof data.payload?.name === "string" ? data.payload.name : "";
+      setPetName(nextName);
     }
   };
 
