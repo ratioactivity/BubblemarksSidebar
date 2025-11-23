@@ -26,6 +26,9 @@ function initPetWidget() {
     return;
   }
 
+  const initialPetState =
+    typeof petManager.getPetState === "function" ? petManager.getPetState() : null;
+
   let petName = normalizePetName(nameEl ? nameEl.textContent : "");
   let vacationMode = false;
   let lastKnownMode = "idle";
@@ -61,7 +64,7 @@ function initPetWidget() {
   ];
 
   const sounds = {};
-  let soundsEnabled = true;
+  let soundsEnabled = initialPetState?.soundEnabled !== false;
   SOUND_FILES.forEach((name) => {
     const audio = new Audio(`sounds/${name}.mp3`);
     audio.preload = "auto";
@@ -78,6 +81,14 @@ function initPetWidget() {
       clip.play().catch(() => {});
     } catch {
       // ignore audio errors
+    }
+  }
+
+  function setSoundEnabled(enabled) {
+    const nextState = enabled !== false;
+    soundsEnabled = nextState;
+    if (typeof petManager.setSoundEnabled === "function") {
+      petManager.setSoundEnabled(nextState);
     }
   }
 
@@ -526,6 +537,8 @@ function initPetWidget() {
   applyProfileFromDom();
 
   function handleAnimationChange(animName, state, meta = {}) {
+    soundsEnabled = state.soundEnabled !== false;
+
     const isMessageOnly = Boolean(meta.messageOnly);
     if (!isMessageOnly) {
       const spriteSrc = meta.sprite || SPRITES[animName] || lastSpriteSrc;
@@ -617,6 +630,12 @@ function initPetWidget() {
         petManager.setVacationMode(vacationEnabled);
       }
       updateVacationState(vacationEnabled);
+      return;
+    }
+
+    if (data.type === "set-pet-sound-enabled") {
+      const soundEnabled = data.payload?.enabled !== false;
+      setSoundEnabled(soundEnabled);
       return;
     }
 

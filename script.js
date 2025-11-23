@@ -382,6 +382,7 @@ let toggleAxolotlInput;
 let petNameInput;
 let petNameSaveBtn;
 let togglePetVacationInput;
+let togglePetSoundsInput;
 let scrollLockToggleInput;
 let cardSizeInput;
 let customizeCategoriesBtn;
@@ -809,6 +810,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   petNameInput = document.getElementById("pet-name-input");
   petNameSaveBtn = document.getElementById("pet-name-save");
   togglePetVacationInput = document.getElementById("toggle-vacation");
+  togglePetSoundsInput = document.getElementById("toggle-pet-sounds");
   cardSizeInput = document.getElementById("card-size");
   cardsPerRowInput = document.getElementById("cards-per-row");
   rowsPerPageInput = document.getElementById("rows-per-page");
@@ -833,6 +835,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     petWidgetFrame.addEventListener("load", () => {
       notifyPetWidgetVacation(preferences.petVacation === true);
       updatePetWidgetName(preferences.petName);
+      notifyPetWidgetSoundEnabled(preferences.petSoundEnabled !== false);
     });
   }
 
@@ -1203,6 +1206,7 @@ function getDefaultPreferences() {
     pageIndex: 0,
     petName: DEFAULT_PET_NAME,
     petVacation: false,
+    petSoundEnabled: true,
   };
 }
 
@@ -1226,6 +1230,7 @@ function normalizePreferences(value) {
     pageIndex: normalizePageIndex(value.pageIndex),
     petName,
     petVacation: value.petVacation === true,
+    petSoundEnabled: value.petSoundEnabled !== false,
   };
 }
 
@@ -2145,6 +2150,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
   const cardSize = normalizeCardSize(preferences.cardSize);
   const petName = normalizePetName(preferences.petName);
   const petVacation = preferences.petVacation === true;
+  const petSoundEnabled = preferences.petSoundEnabled !== false;
   const cardsPerRow = normalizeLayoutCount(preferences.cardsPerRow, DEFAULT_CARDS_PER_ROW);
   const rowsPerPage = normalizeLayoutCount(preferences.rowsPerPage, DEFAULT_ROWS_PER_PAGE);
 
@@ -2156,6 +2162,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
   preferences.scrollLocked = scrollLocked;
   preferences.petName = petName;
   preferences.petVacation = petVacation;
+  preferences.petSoundEnabled = petSoundEnabled;
 
   if (heroHeading) {
     heroHeading.hidden = !showHeading;
@@ -2173,6 +2180,9 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
     }
     if (togglePetVacationInput) {
       togglePetVacationInput.checked = petVacation;
+    }
+    if (togglePetSoundsInput) {
+      togglePetSoundsInput.checked = !petSoundEnabled;
     }
     if (scrollLockToggleInput) {
       scrollLockToggleInput.checked = scrollLocked;
@@ -2199,6 +2209,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
   applyGridLayout(cardsPerRow, rowsPerPage);
   applyScrollLock(scrollLocked);
   applyPetVacationMode(petVacation);
+  applyPetSoundPreference(petSoundEnabled);
   updatePetWidgetName(petName);
 
   if (showAxolotl) {
@@ -2220,6 +2231,11 @@ function applyPetVacationMode(enabled) {
   notifyPetWidgetVacation(vacationEnabled);
 }
 
+function applyPetSoundPreference(enabled) {
+  const soundEnabled = enabled !== false;
+  notifyPetWidgetSoundEnabled(soundEnabled);
+}
+
 function notifyPetWidgetVacation(vacationEnabled) {
   if (typeof window === "undefined") {
     return;
@@ -2238,6 +2254,27 @@ function notifyPetWidgetVacation(vacationEnabled) {
     }
   } catch (error) {
     console.warn("Unable to notify pet widget about vacation mode", error);
+  }
+}
+
+function notifyPetWidgetSoundEnabled(soundEnabled) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const payload = {
+    source: "bubblemarks",
+    type: "set-pet-sound-enabled",
+    payload: { enabled: soundEnabled },
+  };
+
+  try {
+    const targetWindow = petWidgetFrame?.contentWindow;
+    if (targetWindow) {
+      targetWindow.postMessage(payload, window.location.origin || "*");
+    }
+  } catch (error) {
+    console.warn("Unable to notify pet widget about pet sounds", error);
   }
 }
 
@@ -2555,6 +2592,14 @@ function setupSettingsMenu() {
       preferences.petVacation = event.target.checked;
       savePreferences();
       applyPetVacationMode(preferences.petVacation);
+    });
+  }
+
+  if (togglePetSoundsInput) {
+    togglePetSoundsInput.addEventListener("change", (event) => {
+      preferences.petSoundEnabled = !event.target.checked;
+      savePreferences();
+      applyPetSoundPreference(preferences.petSoundEnabled);
     });
   }
 
