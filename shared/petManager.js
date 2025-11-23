@@ -97,6 +97,8 @@ window.addEventListener("DOMContentLoaded", () => {
     happiness: 0,
   };
 
+  let vacationMode = false;
+
   petState.happiness = calculateHappiness(petState.stats);
 
   const STAT_BOUNDS = {
@@ -241,6 +243,7 @@ window.addEventListener("DOMContentLoaded", () => {
       happiness: petState.happiness,
       deathStartTime,
       timers: { ...timers },
+      vacation: vacationMode,
     };
   }
 
@@ -322,6 +325,34 @@ window.addEventListener("DOMContentLoaded", () => {
       clearRoamReturnTimer();
     }
     emitState({ roam: petState.mode });
+  }
+
+  function setVacationMode(isVacation) {
+    const nextVacationState = Boolean(isVacation);
+    if (vacationMode === nextVacationState) {
+      return vacationMode;
+    }
+
+    vacationMode = nextVacationState;
+
+    if (vacationMode) {
+      cancelSequences();
+      stopSleepLoop();
+      clearAnimTimer();
+      stopAllIntervals();
+      petState.busy = false;
+      petState.mode = "vacation";
+      setMessage(`${petState.name} is adventuring on vacation!`);
+    } else {
+      petState.mode = petState.isDead ? petState.mode : "idle";
+      startAllIntervals();
+      if (!petState.isDead) {
+        startIdle();
+      }
+    }
+
+    emitState({ vacation: vacationMode });
+    return vacationMode;
   }
 
   function subscribeToAnimationChange(callback) {
@@ -745,6 +776,10 @@ window.addEventListener("DOMContentLoaded", () => {
   };
 
   function triggerAction(actionName) {
+    if (vacationMode) {
+      setMessage(`${petState.name} is on vacation right now!`, { vacation: true });
+      return;
+    }
     const fn = ACTIONS[actionName];
     if (typeof fn === "function") {
       fn();
@@ -797,6 +832,10 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function startAllIntervals() {
+    if (vacationMode) {
+      stopAllIntervals();
+      return;
+    }
     startAttentionInterval();
     startHourlyInterval();
   }
@@ -913,6 +952,7 @@ window.addEventListener("DOMContentLoaded", () => {
   window.petManager = {
     setAnimation,
     setRoamMode,
+    setVacationMode,
     getPetState,
     subscribeToAnimationChange,
     triggerAction,

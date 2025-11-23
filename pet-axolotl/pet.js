@@ -26,6 +26,10 @@ function initPetWidget() {
     return;
   }
 
+  let vacationMode = false;
+  let lastKnownMode = "idle";
+  let lastIsDead = false;
+
   function isRoamOverlayActive() {
     const roamState = window.bubblePetRoamState;
     if (!roamState) return false;
@@ -446,17 +450,18 @@ function initPetWidget() {
     }
 
     const isRoaming = mode === "roam";
+    const vacationActive = vacationMode;
     notifyParentAboutRoamState(isRoaming);
     if (roamButton) {
-      roamButton.textContent = isRoaming ? "Call Back" : "Roam";
-      roamButton.disabled = isDead ? true : false;
+      roamButton.textContent = vacationActive ? "On Vacation" : isRoaming ? "Call Back" : "Roam";
+      roamButton.disabled = vacationActive ? true : isDead ? true : false;
     }
 
     buttons.forEach((btn) => {
       const action = (btn.dataset.action || "").toLowerCase();
       const isRoamBtn = action === "roam";
       const isCallbackBtn = CALLBACK_ACTIONS.has(action);
-      if (isDead) {
+      if (vacationActive || isDead) {
         btn.disabled = true;
       } else if (!isRoamBtn && !isCallbackBtn) {
         btn.disabled = isRoaming;
@@ -466,8 +471,13 @@ function initPetWidget() {
     });
 
     callbackButtons.forEach((btn) => {
-      btn.disabled = Boolean(isDead);
+      btn.disabled = vacationActive ? true : Boolean(isDead);
     });
+  }
+
+  function updateVacationState(isVacation) {
+    vacationMode = Boolean(isVacation);
+    updateRoamState(lastKnownMode, lastIsDead);
   }
 
   function applyProfileFromDom() {
@@ -506,9 +516,12 @@ function initPetWidget() {
     }
 
     const isDead = Boolean(state.isDead);
+    lastKnownMode = state.mode;
+    lastIsDead = isDead;
     updateLevel(state.level);
     updateStats(state.stats);
     updateDeathState(isDead);
+    updateVacationState(state.vacation);
     updateRoamState(state.mode, isDead);
 
     const shouldMaintainSleepLoop = animName === "sleeping" && state.mode === "sleep" && !isDead;
@@ -565,6 +578,23 @@ function initPetWidget() {
   if (actionContainer) {
     actionContainer.addEventListener("click", delegatedClickHandler);
   }
+
+  const handleConfigMessage = (event) => {
+    const data = event.data;
+    if (!data || data.source !== "bubblemarks") {
+      return;
+    }
+
+    if (data.type === "set-vacation-mode") {
+      const vacationEnabled = Boolean(data.payload?.vacation);
+      if (typeof petManager.setVacationMode === "function") {
+        petManager.setVacationMode(vacationEnabled);
+      }
+      updateVacationState(vacationEnabled);
+    }
+  };
+
+  window.addEventListener("message", handleConfigMessage);
 
 }
 
