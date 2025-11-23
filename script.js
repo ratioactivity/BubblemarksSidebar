@@ -370,6 +370,7 @@ let axolotlSprite;
 let axolotlFigure;
 let axolotlFrameDisplay;
 let axolotlPresenceMode = AXOLOTL_PRESENCE_MODES.WINDOW;
+let petWidgetFrame;
 let heroHeading;
 let settingsBtn;
 let settingsModal;
@@ -377,6 +378,7 @@ let settingsForm;
 let settingsDialog;
 let toggleHeadingInput;
 let toggleAxolotlInput;
+let togglePetVacationInput;
 let scrollLockToggleInput;
 let cardSizeInput;
 let customizeCategoriesBtn;
@@ -797,10 +799,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   settingsModal = document.getElementById("settings-modal");
   settingsForm = document.getElementById("settings-form");
   settingsDialog = document.querySelector(".settings-modal__dialog");
-  const petWidgetFrame = document.querySelector("#pet-widget iframe");
+  petWidgetFrame = document.querySelector("#pet-widget iframe");
 
   toggleHeadingInput = document.getElementById("toggle-heading");
   toggleAxolotlInput = document.getElementById("toggle-axolotl");
+  togglePetVacationInput = document.getElementById("toggle-vacation");
   cardSizeInput = document.getElementById("card-size");
   cardsPerRowInput = document.getElementById("cards-per-row");
   rowsPerPageInput = document.getElementById("rows-per-page");
@@ -820,6 +823,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   preferences = loadPreferences();
   applyScrollLock(preferences.scrollLocked);
   applyPreferences({ syncInputs: false, lazyAxolotl: true });
+
+  if (petWidgetFrame) {
+    petWidgetFrame.addEventListener("load", () => {
+      notifyPetWidgetVacation(preferences.petVacation === true);
+    });
+  }
 
   safeInitialize("control tabs", setupControlTabs);
   safeInitialize("search", setupSearch);
@@ -1186,6 +1195,7 @@ function getDefaultPreferences() {
     cardsPerRow: DEFAULT_CARDS_PER_ROW,
     rowsPerPage: DEFAULT_ROWS_PER_PAGE,
     pageIndex: 0,
+    petVacation: false,
   };
 }
 
@@ -1206,6 +1216,7 @@ function normalizePreferences(value) {
     cardsPerRow,
     rowsPerPage,
     pageIndex: normalizePageIndex(value.pageIndex),
+    petVacation: value.petVacation === true,
   };
 }
 
@@ -2113,6 +2124,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
   const showAxolotl = preferences.showAxolotl !== false;
   const scrollLocked = preferences.scrollLocked === true;
   const cardSize = normalizeCardSize(preferences.cardSize);
+  const petVacation = preferences.petVacation === true;
   const cardsPerRow = normalizeLayoutCount(preferences.cardsPerRow, DEFAULT_CARDS_PER_ROW);
   const rowsPerPage = normalizeLayoutCount(preferences.rowsPerPage, DEFAULT_ROWS_PER_PAGE);
 
@@ -2122,6 +2134,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
 
   preferences.cardSize = cardSize;
   preferences.scrollLocked = scrollLocked;
+  preferences.petVacation = petVacation;
 
   if (heroHeading) {
     heroHeading.hidden = !showHeading;
@@ -2133,6 +2146,9 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
     }
     if (toggleAxolotlInput) {
       toggleAxolotlInput.checked = showAxolotl;
+    }
+    if (togglePetVacationInput) {
+      togglePetVacationInput.checked = petVacation;
     }
     if (scrollLockToggleInput) {
       scrollLockToggleInput.checked = scrollLocked;
@@ -2158,6 +2174,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
 
   applyGridLayout(cardsPerRow, rowsPerPage);
   applyScrollLock(scrollLocked);
+  applyPetVacationMode(petVacation);
 
   if (showAxolotl) {
     if (!lazyAxolotl) {
@@ -2165,6 +2182,37 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
     }
   } else {
     axolotlController?.disable?.();
+  }
+}
+
+function applyPetVacationMode(enabled) {
+  const vacationEnabled = enabled === true;
+
+  if (document.body) {
+    document.body.dataset.petVacation = vacationEnabled ? "true" : "false";
+  }
+
+  notifyPetWidgetVacation(vacationEnabled);
+}
+
+function notifyPetWidgetVacation(vacationEnabled) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const payload = {
+    source: "bubblemarks",
+    type: "set-vacation-mode",
+    payload: { vacation: vacationEnabled },
+  };
+
+  try {
+    const targetWindow = petWidgetFrame?.contentWindow;
+    if (targetWindow) {
+      targetWindow.postMessage(payload, window.location.origin || "*");
+    }
+  } catch (error) {
+    console.warn("Unable to notify pet widget about vacation mode", error);
   }
 }
 
@@ -2417,6 +2465,14 @@ function setupSettingsMenu() {
       preferences.showAxolotl = event.target.checked;
       savePreferences();
       applyPreferences({ syncInputs: false });
+    });
+  }
+
+  if (togglePetVacationInput) {
+    togglePetVacationInput.addEventListener("change", (event) => {
+      preferences.petVacation = event.target.checked;
+      savePreferences();
+      applyPetVacationMode(preferences.petVacation);
     });
   }
 
