@@ -83,6 +83,9 @@ window.addEventListener("DOMContentLoaded", () => {
   const DEFAULT_MESSAGE = "Pico looks happy today!";
   const PREFERENCES_STORAGE_KEY = "bubblemarks.preferences.v1";
 
+  const initialVacationPreference = readInitialVacationPreference();
+  const initialSoundPreference = readInitialSoundPreference();
+
   const petState = {
     mode: "idle",
     currentAnim: "resting",
@@ -96,11 +99,10 @@ window.addEventListener("DOMContentLoaded", () => {
       ...DEFAULT_STATS,
     },
     happiness: 0,
+    soundEnabled: initialSoundPreference,
   };
 
   let vacationMode = false;
-
-  const initialVacationPreference = readInitialVacationPreference();
 
   petState.happiness = calculateHappiness(petState.stats);
 
@@ -328,6 +330,17 @@ window.addEventListener("DOMContentLoaded", () => {
       clearRoamReturnTimer();
     }
     emitState({ roam: petState.mode });
+  }
+
+  function setSoundEnabled(isEnabled) {
+    const nextSoundState = isEnabled !== false;
+    if (petState.soundEnabled === nextSoundState) {
+      return petState.soundEnabled;
+    }
+
+    petState.soundEnabled = nextSoundState;
+    emitState({ soundEnabled: petState.soundEnabled });
+    return petState.soundEnabled;
   }
 
   function setVacationMode(isVacation) {
@@ -985,6 +998,7 @@ window.addEventListener("DOMContentLoaded", () => {
   window.petManager = {
     setAnimation,
     setRoamMode,
+    setSoundEnabled,
     setVacationMode,
     getPetState,
     subscribeToAnimationChange,
@@ -1022,5 +1036,36 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     return false;
+  }
+
+  function readInitialSoundPreference() {
+    const ownFlag = document.body?.dataset?.petSoundEnabled;
+    if (ownFlag === "true") return true;
+    if (ownFlag === "false") return false;
+
+    try {
+      if (window.parent && window.parent !== window) {
+        const parentFlag = window.parent.document?.body?.dataset?.petSoundEnabled;
+        if (parentFlag === "true") return true;
+        if (parentFlag === "false") return false;
+      }
+    } catch (error) {
+      // ignore cross-origin access errors
+    }
+
+    try {
+      const rawPrefs = window.localStorage?.getItem(PREFERENCES_STORAGE_KEY);
+      if (rawPrefs) {
+        const parsed = JSON.parse(rawPrefs);
+        if (parsed && typeof parsed === "object") {
+          if (parsed.petSoundEnabled === true) return true;
+          if (parsed.petSoundEnabled === false) return false;
+        }
+      }
+    } catch (error) {
+      console.warn("Unable to read initial pet sound preference", error);
+    }
+
+    return true;
   }
 });
