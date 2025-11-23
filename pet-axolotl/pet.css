@@ -412,6 +412,19 @@ body {
   box-shadow: 0 0 10px rgba(255, 190, 220, 0.6);
 }
 
+.pet-container.vacation-mode .status-bars {
+  filter: grayscale(0.85);
+}
+
+.pet-container.vacation-mode .stat-bar,
+.pet-container.vacation-mode .stat-fill {
+  opacity: 0.6;
+}
+
+.pet-container.vacation-mode .stat-bar::before {
+  color: #817a98;
+}
+
 .pet-actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

@@ -477,6 +477,9 @@ function initPetWidget() {
 
   function updateVacationState(isVacation) {
     vacationMode = Boolean(isVacation);
+    if (petContainer) {
+      petContainer.classList.toggle("vacation-mode", vacationMode);
+    }
     updateRoamState(lastKnownMode, lastIsDead);
   }
 

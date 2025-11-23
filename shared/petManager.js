@@ -81,6 +81,7 @@ window.addEventListener("DOMContentLoaded", () => {
     affection: 5,
   };
   const DEFAULT_MESSAGE = "Pico looks happy today!";
+  const PREFERENCES_STORAGE_KEY = "bubblemarks.preferences.v1";
 
   const petState = {
     mode: "idle",
@@ -98,6 +99,8 @@ window.addEventListener("DOMContentLoaded", () => {
   };
 
   let vacationMode = false;
+
+  const initialVacationPreference = readInitialVacationPreference();
 
   petState.happiness = calculateHappiness(petState.stats);
 
@@ -454,7 +457,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function startIdle() {
-    if (petState.isDead) return;
+    if (petState.isDead || vacationMode) return;
     cancelSequences();
     stopSleepLoop();
     petState.mode = "idle";
@@ -796,6 +799,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function startAttentionInterval() {
     stopAttentionInterval();
+    if (vacationMode) {
+      return;
+    }
     attentionInterval = setInterval(() => {
       if (petState.mode === "sleep" || petState.isDead) return;
       const r = Math.random();
@@ -820,6 +826,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function startHourlyInterval() {
     stopHourlyInterval();
+    if (vacationMode) {
+      return;
+    }
     hourInterval = setInterval(() => {
       tickHourUpdate();
     }, HOUR_TICK_MS);
@@ -832,8 +841,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function startAllIntervals() {
+    stopAllIntervals();
     if (vacationMode) {
-      stopAllIntervals();
       return;
     }
     startAttentionInterval();
@@ -915,7 +924,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function tickHourUpdate() {
-    if (petState.isDead) return;
+    if (petState.isDead || vacationMode) return;
 
     const hourlyDeltas = { hunger: 1, affection: -1 };
     if (isSleeping()) {
@@ -941,11 +950,20 @@ window.addEventListener("DOMContentLoaded", () => {
     emitState();
   }
 
+  vacationMode = initialVacationPreference;
+  if (vacationMode) {
+    petState.mode = "vacation";
+    petState.busy = false;
+    setMessage(`${petState.name} is adventuring on vacation!`, { vacation: true });
+  }
+
   startAllIntervals();
 
   playAnimation("resting", {
     onDone: () => {
-      startIdle();
+      if (!vacationMode) {
+        startIdle();
+      }
     },
   });
 
@@ -959,4 +977,35 @@ window.addEventListener("DOMContentLoaded", () => {
     actions: ACTIONS,
     setProfile,
   };
+
+  function readInitialVacationPreference() {
+    const ownFlag = document.body?.dataset?.petVacation;
+    if (ownFlag === "true") return true;
+    if (ownFlag === "false") return false;
+
+    try {
+      if (window.parent && window.parent !== window) {
+        const parentFlag = window.parent.document?.body?.dataset?.petVacation;
+        if (parentFlag === "true") return true;
+        if (parentFlag === "false") return false;
+      }
+    } catch (error) {
+      // ignore cross-origin access errors
+    }
+
+    try {
+      const rawPrefs = window.localStorage?.getItem(PREFERENCES_STORAGE_KEY);
+      if (rawPrefs) {
+        const parsed = JSON.parse(rawPrefs);
+        if (parsed && typeof parsed === "object") {
+          if (parsed.petVacation === true) return true;
+          if (parsed.petVacation === false) return false;
+        }
+      }
+    } catch (error) {
+      console.warn("Unable to read initial vacation state", error);
+    }
+
+    return false;
+  }
 });
