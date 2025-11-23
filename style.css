@@ -1573,6 +1573,20 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
+.settings-layout__field--pet-name .pet-name-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.pet-name-save-btn {
+  white-space: nowrap;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  min-width: 80px;
+}
+
 .settings-layout__field {
   display: grid;
   gap: 0.35rem;

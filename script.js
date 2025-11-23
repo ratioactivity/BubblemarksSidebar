@@ -147,6 +147,7 @@ const DEFAULT_CATEGORY_SETTINGS = [
   { key: DEFAULT_CATEGORY_SLUG, label: DEFAULT_CATEGORY_LABEL, color: "#f7ddff" }, // Unsorted
 ];
 const PREFERENCES_STORAGE_KEY = "bubblemarks.preferences.v1";
+const DEFAULT_PET_NAME = "BubblePet";
 const LAYOUT_MIN_COUNT = 1;
 const LAYOUT_MAX_COUNT = 10;
 const DEFAULT_CARDS_PER_ROW = 3;
@@ -378,6 +379,8 @@ let settingsForm;
 let settingsDialog;
 let toggleHeadingInput;
 let toggleAxolotlInput;
+let petNameInput;
+let petNameSaveBtn;
 let togglePetVacationInput;
 let scrollLockToggleInput;
 let cardSizeInput;
@@ -803,6 +806,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   toggleHeadingInput = document.getElementById("toggle-heading");
   toggleAxolotlInput = document.getElementById("toggle-axolotl");
+  petNameInput = document.getElementById("pet-name-input");
+  petNameSaveBtn = document.getElementById("pet-name-save");
   togglePetVacationInput = document.getElementById("toggle-vacation");
   cardSizeInput = document.getElementById("card-size");
   cardsPerRowInput = document.getElementById("cards-per-row");
@@ -827,6 +832,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (petWidgetFrame) {
     petWidgetFrame.addEventListener("load", () => {
       notifyPetWidgetVacation(preferences.petVacation === true);
+      updatePetWidgetName(preferences.petName);
     });
   }
 
@@ -1195,6 +1201,7 @@ function getDefaultPreferences() {
     cardsPerRow: DEFAULT_CARDS_PER_ROW,
     rowsPerPage: DEFAULT_ROWS_PER_PAGE,
     pageIndex: 0,
+    petName: DEFAULT_PET_NAME,
     petVacation: false,
   };
 }
@@ -1207,6 +1214,7 @@ function normalizePreferences(value) {
 
   const cardsPerRow = normalizeLayoutCount(value.cardsPerRow, defaults.cardsPerRow);
   const rowsPerPage = normalizeLayoutCount(value.rowsPerPage, defaults.rowsPerPage);
+  const petName = normalizePetName(value.petName);
 
   return {
     showHeading: value.showHeading !== false,
@@ -1216,8 +1224,19 @@ function normalizePreferences(value) {
     cardsPerRow,
     rowsPerPage,
     pageIndex: normalizePageIndex(value.pageIndex),
+    petName,
     petVacation: value.petVacation === true,
   };
+}
+
+function normalizePetName(value) {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed) {
+      return trimmed.slice(0, 64);
+    }
+  }
+  return DEFAULT_PET_NAME;
 }
 
 function loadPreferences() {
@@ -2124,6 +2143,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
   const showAxolotl = preferences.showAxolotl !== false;
   const scrollLocked = preferences.scrollLocked === true;
   const cardSize = normalizeCardSize(preferences.cardSize);
+  const petName = normalizePetName(preferences.petName);
   const petVacation = preferences.petVacation === true;
   const cardsPerRow = normalizeLayoutCount(preferences.cardsPerRow, DEFAULT_CARDS_PER_ROW);
   const rowsPerPage = normalizeLayoutCount(preferences.rowsPerPage, DEFAULT_ROWS_PER_PAGE);
@@ -2134,6 +2154,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
 
   preferences.cardSize = cardSize;
   preferences.scrollLocked = scrollLocked;
+  preferences.petName = petName;
   preferences.petVacation = petVacation;
 
   if (heroHeading) {
@@ -2146,6 +2167,9 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
     }
     if (toggleAxolotlInput) {
       toggleAxolotlInput.checked = showAxolotl;
+    }
+    if (petNameInput) {
+      petNameInput.value = petName;
     }
     if (togglePetVacationInput) {
       togglePetVacationInput.checked = petVacation;
@@ -2175,6 +2199,7 @@ function applyPreferences({ syncInputs = true, lazyAxolotl = false } = {}) {
   applyGridLayout(cardsPerRow, rowsPerPage);
   applyScrollLock(scrollLocked);
   applyPetVacationMode(petVacation);
+  updatePetWidgetName(petName);
 
   if (showAxolotl) {
     if (!lazyAxolotl) {
@@ -2213,6 +2238,40 @@ function notifyPetWidgetVacation(vacationEnabled) {
     }
   } catch (error) {
     console.warn("Unable to notify pet widget about vacation mode", error);
+  }
+}
+
+function updatePetWidgetName(nextName) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const petName = normalizePetName(nextName);
+
+  try {
+    const petDoc = petWidgetFrame?.contentDocument;
+    if (petDoc) {
+      petDoc.querySelectorAll(".pet-name").forEach((el) => {
+        el.textContent = petName;
+      });
+    }
+  } catch (error) {
+    console.warn("Unable to update pet name inside widget", error);
+  }
+
+  const payload = {
+    source: "bubblemarks",
+    type: "set-pet-name",
+    payload: { name: petName },
+  };
+
+  try {
+    const targetWindow = petWidgetFrame?.contentWindow;
+    if (targetWindow) {
+      targetWindow.postMessage(payload, window.location.origin || "*");
+    }
+  } catch (error) {
+    console.warn("Unable to notify pet widget about pet name", error);
   }
 }
 
@@ -2465,6 +2524,29 @@ function setupSettingsMenu() {
       preferences.showAxolotl = event.target.checked;
       savePreferences();
       applyPreferences({ syncInputs: false });
+    });
+  }
+
+  if (petNameInput) {
+    const commitPetNameUpdate = () => {
+      const nextName = normalizePetName(petNameInput.value);
+      preferences.petName = nextName;
+      petNameInput.value = nextName;
+      savePreferences();
+      updatePetWidgetName(nextName);
+    };
+
+    if (petNameSaveBtn) {
+      petNameSaveBtn.addEventListener("click", () => {
+        commitPetNameUpdate();
+      });
+    }
+
+    petNameInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitPetNameUpdate();
+      }
     });
   }
 
