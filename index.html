@@ -398,9 +398,12 @@
             <input type="checkbox" id="toggle-vacation" />
             <span>Vacation Mode</span>
           </label>
-          <label class="settings-layout__field" for="pet-name-input">
+          <label class="settings-layout__field settings-layout__field--pet-name" for="pet-name-input">
             <span>Pet Name</span>
-            <input type="text" id="pet-name-input" />
+            <div class="pet-name-control">
+              <input type="text" id="pet-name-input" />
+              <button type="button" id="pet-name-save" class="soft-btn pet-name-save-btn">Save</button>
+            </div>
           </label>
           <label class="settings-toggle">
             <input type="checkbox" id="toggle-pet-sounds" />

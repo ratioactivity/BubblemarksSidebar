@@ -380,6 +380,7 @@ let settingsDialog;
 let toggleHeadingInput;
 let toggleAxolotlInput;
 let petNameInput;
+let petNameSaveBtn;
 let togglePetVacationInput;
 let scrollLockToggleInput;
 let cardSizeInput;
@@ -806,6 +807,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   toggleHeadingInput = document.getElementById("toggle-heading");
   toggleAxolotlInput = document.getElementById("toggle-axolotl");
   petNameInput = document.getElementById("pet-name-input");
+  petNameSaveBtn = document.getElementById("pet-name-save");
   togglePetVacationInput = document.getElementById("toggle-vacation");
   cardSizeInput = document.getElementById("card-size");
   cardsPerRowInput = document.getElementById("cards-per-row");
@@ -2526,16 +2528,26 @@ function setupSettingsMenu() {
   }
 
   if (petNameInput) {
-    const updatePetNamePreference = (event) => {
-      const nextName = normalizePetName(event.target.value);
+    const commitPetNameUpdate = () => {
+      const nextName = normalizePetName(petNameInput.value);
       preferences.petName = nextName;
       petNameInput.value = nextName;
       savePreferences();
       updatePetWidgetName(nextName);
     };
 
-    petNameInput.addEventListener("input", updatePetNamePreference);
-    petNameInput.addEventListener("change", updatePetNamePreference);
+    if (petNameSaveBtn) {
+      petNameSaveBtn.addEventListener("click", () => {
+        commitPetNameUpdate();
+      });
+    }
+
+    petNameInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitPetNameUpdate();
+      }
+    });
   }
 
   if (togglePetVacationInput) {

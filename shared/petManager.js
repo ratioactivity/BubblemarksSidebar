@@ -941,13 +941,28 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function setProfile(details = {}) {
+    const previousName = petState.name;
+
     if (typeof details.name === "string" && details.name.trim()) {
       petState.name = details.name.trim();
     }
     if (Number.isFinite(details.level)) {
       petState.level = details.level;
     }
-    emitState();
+
+    const nameChanged = petState.name !== previousName;
+    const meta = {};
+
+    if (nameChanged && typeof petState.message === "string") {
+      const updatedMessage = petState.message.replaceAll(previousName, petState.name);
+      if (updatedMessage !== petState.message) {
+        petState.message = updatedMessage;
+        meta.message = updatedMessage;
+        meta.messageOnly = true;
+      }
+    }
+
+    emitState(meta);
   }
 
   vacationMode = initialVacationPreference;
