@@ -27,14 +27,9 @@
         <!-- HEADER -->
         <div class="pet-header">
           <span class="pet-level">Lv. 1</span>
-          <span class="pet-name">Pico</span>
-          <button
-            class="pet-header-settings"
-            type="button"
-            aria-label="Pet settings"
-          >
-            <img src="./assets/gear.png" alt="Settings" />
-          </button>
+          <div class="pet-name-wrap">
+            <span class="pet-name">Pico</span>
+          </div>
         </div>
 
         <!-- AQUARIUM -->
@@ -74,67 +69,6 @@
           <button data-action="rest">Rest</button>
           <button data-action="sleep">Sleep</button>
           <button data-action="roam">Roam</button>
-        </div>
-
-        <!-- Gear icon button -->
-        <button
-          type="button"
-          class="pet-settings"
-          aria-label="Pet settings"
-        >
-          <img src="./assets/gear.png" alt="" aria-hidden="true" />
-        </button>
-
-        <!-- Settings Modal Structure (initially hidden) -->
-        <div id="pet-settings-modal" class="pet-settings-modal" hidden>
-          <div class="pet-settings-modal__backdrop" data-settings-dismiss="true"></div>
-          <div class="pet-settings-modal__dialog">
-            <div class="pet-settings-header">
-              <h2>Pet Settings</h2>
-              <button
-                type="button"
-                class="pet-settings-close"
-                data-settings-dismiss="true"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
-            <div class="pet-settings-body">
-              <label class="settings-toggle">
-                <input type="checkbox" id="vacation-mode" />
-                <span>Vacation Mode</span>
-                <p class="settings-toggle__hint">Pause stat decay while you're away.</p>
-              </label>
-
-              <div class="settings-divider" aria-hidden="true"></div>
-
-              <div class="settings-field">
-                <div class="settings-field__header">
-                  <label for="pet-name-input">Pet Name</label>
-                  <span class="settings-field__hint">Give your buddy a new name.</span>
-                </div>
-                <div class="settings-field__row">
-                  <input
-                    type="text"
-                    id="pet-name-input"
-                    name="pet-name"
-                    maxlength="24"
-                    placeholder="Enter a name"
-                  />
-                  <button type="button" id="pet-name-save">Save</button>
-                </div>
-              </div>
-
-              <div class="settings-divider" aria-hidden="true"></div>
-
-              <label class="settings-toggle">
-                <input type="checkbox" id="pet-sound-toggle" checked />
-                <span>Sound Effects</span>
-                <p class="settings-toggle__hint">Toggle squeaks and splashes.</p>
-              </label>
-            </div>
-          </div>
         </div>
 
         <!-- ★ STAR DECORATIONS (keep these at the very end) ★ -->
