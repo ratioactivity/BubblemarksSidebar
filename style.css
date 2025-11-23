@@ -1444,6 +1444,8 @@ body {
   border: 2px solid rgba(255, 255, 255, 0.75);
   box-shadow: 0 25px 60px rgba(140, 160, 220, 0.35);
   width: min(480px, 100%);
+  max-height: min(90vh, 820px);
+  overflow-y: auto;
   padding: clamp(1.5rem, 3vw, 2rem);
   display: grid;
   gap: 1.4rem;
