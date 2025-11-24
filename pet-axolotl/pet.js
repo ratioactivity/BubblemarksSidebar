@@ -12,6 +12,8 @@ function initPetWidget() {
   const levelEl = petContainer.querySelector(".pet-level");
   const nameEl = petContainer.querySelector(".pet-name");
   const overlayEl = petContainer.querySelector("#pet-overlay");
+  const musicPlayerEl = document.getElementById("music-player");
+  const musicSourceEl = document.getElementById("music-source");
   const statBars = Array.from(petContainer.querySelectorAll(".stat-bar"));
   const actionElements = Array.from(petContainer.querySelectorAll("[data-action]"));
   const roamButton = actionElements.find((btn) => btn.dataset.action === "roam");
@@ -36,6 +38,7 @@ function initPetWidget() {
   let lastKnownLevel = Number.isFinite(initialPetState?.level)
     ? initialPetState.level
     : 1;
+  let lastRewardedKey = null;
 
   function normalizePetName(name) {
     if (typeof name === "string") {
@@ -147,6 +150,27 @@ function initPetWidget() {
     } catch {
       // ignore audio errors
     }
+  }
+
+  function playDiscRewardAudio(rewardDetails) {
+    if (!rewardDetails?.sound || !soundsEnabled) return;
+
+    try {
+      if (musicSourceEl && musicPlayerEl) {
+        musicSourceEl.src = rewardDetails.sound;
+        musicPlayerEl.load();
+        musicPlayerEl.style.display = "block";
+        const playPromise = musicPlayerEl.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch(() => {});
+        }
+        return;
+      }
+    } catch {
+      // fall back to basic audio playback
+    }
+
+    playDiscSound(rewardDetails.sound);
   }
 
   function getDiscRewardDetails(name) {
@@ -626,6 +650,13 @@ function initPetWidget() {
     }
 
     const baseMessage = (meta.message ?? state.message ?? "").trim();
+    const rewardKey = `${selectedReward.type}-${selectedReward.level}`;
+    if (rewardKey && rewardKey === lastRewardedKey) {
+      return;
+    }
+    const finalizeReward = () => {
+      lastRewardedKey = rewardKey;
+    };
 
     if (selectedReward.type === "level100") {
       level100RewardGranted = true;
@@ -640,7 +671,12 @@ function initPetWidget() {
         : celebrationMessage;
       const combinedMessage = buildCombinedMessage(baseMessage, rewardLine);
       renderDiscRewardMessage(discReward, combinedMessage);
-      playLevel100CelebrationSound();
+      if (discReward) {
+        playDiscRewardAudio(discReward);
+      } else {
+        playLevel100CelebrationSound();
+      }
+      finalizeReward();
       return;
     }
 
@@ -652,9 +688,10 @@ function initPetWidget() {
         : "🌟 Level 50 reached! Pico earns a legendary reward!";
       const combinedMessage = buildCombinedMessage(baseMessage, rewardLine);
       renderDiscRewardMessage(discReward, combinedMessage);
-      if (discReward?.sound) {
-        playDiscSound(discReward.sound);
+      if (discReward) {
+        playDiscRewardAudio(discReward);
       }
+      finalizeReward();
       return;
     }
 
@@ -666,9 +703,10 @@ function initPetWidget() {
         : "🎁 Level 20 reward unlocked! Enjoy a special treat for Pico!";
       const combinedMessage = buildCombinedMessage(baseMessage, rewardLine);
       renderDiscRewardMessage(discReward, combinedMessage);
-      if (discReward?.sound) {
-        playDiscSound(discReward.sound);
+      if (discReward) {
+        playDiscRewardAudio(discReward);
       }
+      finalizeReward();
       return;
     }
 
@@ -681,9 +719,10 @@ function initPetWidget() {
     const rewardLine = `✨ Level ${selectedReward.level} reward! Pico discovered the ${randomDiscName} music disc!`;
     const combinedMessage = buildCombinedMessage(baseMessage, rewardLine);
     renderDiscRewardMessage(randomDiscReward, combinedMessage);
-    if (randomDiscReward?.sound) {
-      playDiscSound(randomDiscReward.sound);
+    if (randomDiscReward) {
+      playDiscRewardAudio(randomDiscReward);
     }
+    finalizeReward();
   }
 
   const CALLBACK_ACTIONS = new Set(["call-back", "callback"]);
