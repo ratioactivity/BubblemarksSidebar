@@ -33,6 +33,9 @@ function initPetWidget() {
   let vacationMode = false;
   let lastKnownMode = "idle";
   let lastIsDead = false;
+  let lastKnownLevel = Number.isFinite(initialPetState?.level)
+    ? initialPetState.level
+    : 1;
 
   function normalizePetName(name) {
     if (typeof name === "string") {
@@ -62,6 +65,17 @@ function initPetWidget() {
     "resting-sound",
     "swimming-sound",
   ];
+
+  const LEVEL_REWARDS = {
+    20: {
+      message: "🎁 Level 20 reward unlocked! Enjoy a special treat for Pico!",
+      sound: "happy-squeak",
+    },
+    50: {
+      message: "🌟 Level 50 reached! Pico earns a legendary reward!",
+      sound: "happy-squeak",
+    },
+  };
 
   const sounds = {};
   let soundsEnabled = initialPetState?.soundEnabled !== false;
@@ -419,6 +433,20 @@ function initPetWidget() {
     });
   }
 
+  function handleLevelRewards(level, meta = {}, state = {}) {
+    if (!Number.isFinite(level)) return;
+    const reward = LEVEL_REWARDS[level];
+    if (!reward) return;
+
+    const baseMessage = (meta.message ?? state.message ?? "").trim();
+    const combinedMessage = baseMessage ? `${baseMessage} ${reward.message}` : reward.message;
+    updateMessage(combinedMessage);
+
+    if (reward.sound) {
+      playSound(reward.sound);
+    }
+  }
+
   const CALLBACK_ACTIONS = new Set(["call-back", "callback"]);
   let lastReportedRoamState = null;
 
@@ -539,6 +567,8 @@ function initPetWidget() {
   function handleAnimationChange(animName, state, meta = {}) {
     soundsEnabled = state.soundEnabled !== false;
 
+    const currentLevel = Number.isFinite(state.level) ? state.level : lastKnownLevel;
+
     const isMessageOnly = Boolean(meta.messageOnly);
     if (!isMessageOnly) {
       const spriteSrc = meta.sprite || SPRITES[animName] || lastSpriteSrc;
@@ -562,6 +592,13 @@ function initPetWidget() {
     updateDeathState(isDead);
     updateVacationState(state.vacation);
     updateRoamState(state.mode, isDead);
+
+    const leveledUpNow = Boolean(meta.leveledUp) || currentLevel > lastKnownLevel;
+    if (leveledUpNow) {
+      handleLevelRewards(currentLevel, meta, state);
+    }
+
+    lastKnownLevel = currentLevel;
 
     const shouldMaintainSleepLoop = animName === "sleeping" && state.mode === "sleep" && !isDead;
     if (shouldMaintainSleepLoop) {
