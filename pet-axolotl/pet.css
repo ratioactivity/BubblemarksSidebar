@@ -251,6 +251,17 @@ body {
   user-select: none;
 }
 
+.pet-disc-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  display: inline-block;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.18));
+  vertical-align: middle;
+  pointer-events: none;
+  user-select: none;
+}
+
 .tank-window {
   position: relative;
   width: 90%;
