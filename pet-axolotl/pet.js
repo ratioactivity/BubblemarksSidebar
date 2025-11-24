@@ -535,6 +535,18 @@ function initPetWidget() {
 
   setPetName(petName);
 
+  function setPetLevel(level) {
+    const numericLevel = Number(level);
+    if (!Number.isFinite(numericLevel)) return;
+
+    const safeLevel = Math.max(1, Math.round(numericLevel));
+    lastKnownLevel = safeLevel;
+    updateLevel(safeLevel);
+    if (typeof petManager.setProfile === "function") {
+      petManager.setProfile({ level: safeLevel });
+    }
+  }
+
   function updateVacationState(isVacation) {
     vacationMode = Boolean(isVacation);
     if (petContainer) {
@@ -679,6 +691,12 @@ function initPetWidget() {
     if (data.type === "set-pet-name") {
       const nextName = typeof data.payload?.name === "string" ? data.payload.name : "";
       setPetName(nextName);
+    }
+
+    if (data.type === "set-pet-level") {
+      const payloadLevel = data.payload?.level;
+      setPetLevel(payloadLevel);
+      return;
     }
   };
 
