@@ -490,16 +490,73 @@ function initPetWidget() {
     }
   }
 
-  function handleLevelRewards(level, meta = {}, state = {}) {
+  function handleLevelRewards(level, meta = {}, state = {}, previousLevel = lastKnownLevel) {
     if (!Number.isFinite(level)) return;
 
-    if (level === 100) {
-      createLevel100Icon();
+    const currentLevel = level;
+    const priorLevel = Number.isFinite(previousLevel) ? previousLevel : 0;
+    const ascendingLevels = currentLevel > priorLevel ? currentLevel - priorLevel : 0;
+    const levelsToInspect = ascendingLevels > 0 ? ascendingLevels : 1;
 
-      if (level100RewardGranted) {
-        return;
+    let level100Reached = false;
+    let selectedReward = null;
+
+    const rewardPriority = {
+      level100: 3,
+      level50: 2,
+      level20: 1,
+      generic: 0,
+    };
+
+    const considerReward = (levelValue, rewardInfo) => {
+      if (!rewardInfo) return;
+      const priority = rewardPriority[rewardInfo.type] ?? -1;
+      const currentPriority = selectedReward ? selectedReward.priority : -1;
+      if (priority > currentPriority || (priority === currentPriority && levelValue > selectedReward.level)) {
+        selectedReward = {
+          ...rewardInfo,
+          level: levelValue,
+          priority,
+        };
+      }
+    };
+
+    for (let offset = 0; offset < levelsToInspect; offset += 1) {
+      const candidateLevel = ascendingLevels > 0 ? priorLevel + offset + 1 : currentLevel;
+
+      if (candidateLevel === 100) {
+        level100Reached = true;
+        if (!level100RewardGranted) {
+          considerReward(candidateLevel, { type: "level100" });
+        }
+        continue;
       }
 
+      if (candidateLevel === 50) {
+        considerReward(candidateLevel, { type: "level50" });
+        continue;
+      }
+
+      if (candidateLevel === 20) {
+        considerReward(candidateLevel, { type: "level20" });
+        continue;
+      }
+
+      const eligibleForFiveLevelReward = candidateLevel > 0 && candidateLevel % 5 === 0;
+      if (eligibleForFiveLevelReward) {
+        considerReward(candidateLevel, { type: "generic" });
+      }
+    }
+
+    if (level100Reached) {
+      createLevel100Icon();
+    }
+
+    if (!selectedReward) {
+      return;
+    }
+
+    if (selectedReward.type === "level100") {
       level100RewardGranted = true;
       persistLevel100RewardFlag();
 
@@ -514,7 +571,7 @@ function initPetWidget() {
       return;
     }
 
-    if (level === 50) {
+    if (selectedReward.type === "level50") {
       const reward = LEVEL_REWARDS[50];
       if (reward) {
         const baseMessage = (meta.message ?? state.message ?? "").trim();
@@ -528,7 +585,7 @@ function initPetWidget() {
       return;
     }
 
-    if (level === 20) {
+    if (selectedReward.type === "level20") {
       const reward = LEVEL_REWARDS[20];
       if (reward) {
         const baseMessage = (meta.message ?? state.message ?? "").trim();
@@ -539,11 +596,6 @@ function initPetWidget() {
           playSound(reward.sound);
         }
       }
-      return;
-    }
-
-    const eligibleForFiveLevelReward = level > 0 && level % 5 === 0;
-    if (!eligibleForFiveLevelReward) {
       return;
     }
 
@@ -727,7 +779,7 @@ function initPetWidget() {
 
     const leveledUpNow = Boolean(meta.leveledUp) || currentLevel > lastKnownLevel;
     if (leveledUpNow || currentLevel === 100) {
-      handleLevelRewards(currentLevel, meta, state);
+      handleLevelRewards(currentLevel, meta, state, lastKnownLevel);
     }
 
     lastKnownLevel = currentLevel;
