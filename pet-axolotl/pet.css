@@ -239,6 +239,18 @@ body {
     0 3px 8px rgba(70, 40, 110, 0.35);
 }
 
+.pet-level-100-icon {
+  position: absolute;
+  right: 10px;
+  top: -14px;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+  pointer-events: none;
+  user-select: none;
+}
+
 .tank-window {
   position: relative;
   width: 90%;

@@ -66,6 +66,15 @@ function initPetWidget() {
     "swimming-sound",
   ];
 
+  const LEVEL_100_REWARD_KEY = "bubblepetAxolotlLevel100RewardGranted";
+
+  let level100RewardGranted = false;
+  try {
+    level100RewardGranted = localStorage.getItem(LEVEL_100_REWARD_KEY) === "true";
+  } catch {
+    level100RewardGranted = false;
+  }
+
   const LEVEL_REWARDS = {
     20: {
       message: "🎁 Level 20 reward unlocked! Enjoy a special treat for Pico!",
@@ -433,8 +442,62 @@ function initPetWidget() {
     });
   }
 
+  function persistLevel100RewardFlag() {
+    try {
+      localStorage.setItem(LEVEL_100_REWARD_KEY, "true");
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  function createLevel100Icon() {
+    const existing = petContainer.querySelector(".pet-level-100-icon");
+    if (existing) return existing;
+
+    const icon = document.createElement("img");
+    icon.src = "./assets/icon-Axolotl.png";
+    icon.alt = "Level 100 Axolotl reward";
+    icon.className = "pet-level-100-icon";
+
+    const header = petContainer.querySelector(".pet-header");
+    (header || petContainer).appendChild(icon);
+    return icon;
+  }
+
+  function playLevel100CelebrationSound() {
+    if (!soundsEnabled) return;
+    try {
+      const celebrationAudio = new Audio("./sounds/Axolotl.mp3");
+      celebrationAudio.volume = 0.6;
+      celebrationAudio.play().catch(() => {});
+    } catch {
+      // ignore audio errors
+    }
+  }
+
   function handleLevelRewards(level, meta = {}, state = {}) {
     if (!Number.isFinite(level)) return;
+
+    if (level === 100) {
+      createLevel100Icon();
+
+      if (level100RewardGranted) {
+        return;
+      }
+
+      level100RewardGranted = true;
+      persistLevel100RewardFlag();
+
+      const baseMessage = (meta.message ?? state.message ?? "").trim();
+      const celebrationMessage =
+        "🐾 Legendary milestone! Pico evolved into a Mythic Axolotl at Level 100!";
+      const combinedMessage = baseMessage
+        ? `${baseMessage} ${celebrationMessage}`
+        : celebrationMessage;
+      updateMessage(combinedMessage);
+      playLevel100CelebrationSound();
+      return;
+    }
     const reward = LEVEL_REWARDS[level];
     if (!reward) return;
 
@@ -606,7 +669,7 @@ function initPetWidget() {
     updateRoamState(state.mode, isDead);
 
     const leveledUpNow = Boolean(meta.leveledUp) || currentLevel > lastKnownLevel;
-    if (leveledUpNow) {
+    if (leveledUpNow || currentLevel === 100) {
       handleLevelRewards(currentLevel, meta, state);
     }
 
