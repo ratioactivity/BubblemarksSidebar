@@ -86,6 +86,21 @@ function initPetWidget() {
     },
   };
 
+  const GENERIC_FIVE_LEVEL_REWARDS = [
+    {
+      message: "✨ Level milestone bonus! Pico found a sparkling bubble charm!",
+      sound: "happy-squeak",
+    },
+    {
+      message: "🎉 Pico uncovered a rare treasure while leveling up!",
+      sound: "float-squeak",
+    },
+    {
+      message: "🌊 A wave of luck! Pico earned an extra aquatic trinket!",
+      sound: "fastswim-squeak",
+    },
+  ];
+
   const sounds = {};
   let soundsEnabled = initialPetState?.soundEnabled !== false;
   SOUND_FILES.forEach((name) => {
@@ -498,8 +513,50 @@ function initPetWidget() {
       playLevel100CelebrationSound();
       return;
     }
-    const reward = LEVEL_REWARDS[level];
-    if (!reward) return;
+
+    if (level === 50) {
+      const reward = LEVEL_REWARDS[50];
+      if (reward) {
+        const baseMessage = (meta.message ?? state.message ?? "").trim();
+        const combinedMessage = baseMessage ? `${baseMessage} ${reward.message}` : reward.message;
+        updateMessage(combinedMessage);
+
+        if (reward.sound) {
+          playSound(reward.sound);
+        }
+      }
+      return;
+    }
+
+    if (level === 20) {
+      const reward = LEVEL_REWARDS[20];
+      if (reward) {
+        const baseMessage = (meta.message ?? state.message ?? "").trim();
+        const combinedMessage = baseMessage ? `${baseMessage} ${reward.message}` : reward.message;
+        updateMessage(combinedMessage);
+
+        if (reward.sound) {
+          playSound(reward.sound);
+        }
+      }
+      return;
+    }
+
+    const eligibleForFiveLevelReward = level > 0 && level % 5 === 0;
+    if (!eligibleForFiveLevelReward) {
+      return;
+    }
+
+    const rewardPoolSize = GENERIC_FIVE_LEVEL_REWARDS.length;
+    if (rewardPoolSize === 0) {
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * rewardPoolSize);
+    const reward = GENERIC_FIVE_LEVEL_REWARDS[randomIndex];
+    if (!reward) {
+      return;
+    }
 
     const baseMessage = (meta.message ?? state.message ?? "").trim();
     const combinedMessage = baseMessage ? `${baseMessage} ${reward.message}` : reward.message;
