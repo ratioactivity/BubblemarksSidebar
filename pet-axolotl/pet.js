@@ -7,6 +7,14 @@ function ensurePetLevelUpPlaceholder() {
     window.petLevelUp = function () {
       console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
     };
+
+    if (typeof window.resetPetLevel === "function") {
+      return;
+    }
+
+    window.resetPetLevel = function () {
+      console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
+    };
   };
 
   if (document.readyState !== "loading") {
@@ -79,6 +87,7 @@ function initPetWidget() {
   let petXP = 0;
   let petLevel = lastKnownLevel;
   let discAudio = null;
+  let rewardAudio = null;
   let LEVEL_DISC_REWARDS = {};
   let GENERIC_DISC_POOL = [];
 
@@ -241,6 +250,21 @@ function initPetWidget() {
     }
   }
 
+  function setActiveRewardAudio(audioEl) {
+    if (!audioEl) return;
+
+    if (rewardAudio && rewardAudio !== audioEl) {
+      try {
+        rewardAudio.pause();
+        rewardAudio.currentTime = 0;
+      } catch {
+        // ignore audio errors
+      }
+    }
+
+    rewardAudio = audioEl;
+  }
+
   function playDiscRewardAudio(rewardDetails) {
     if (!rewardDetails?.sound || !soundsEnabled) return;
 
@@ -249,6 +273,7 @@ function initPetWidget() {
         musicSourceEl.src = rewardDetails.sound;
         musicPlayerEl.load();
         musicPlayerEl.style.display = "block";
+        setActiveRewardAudio(musicPlayerEl);
         const playPromise = musicPlayerEl.play();
         if (playPromise && typeof playPromise.catch === "function") {
           playPromise.catch(() => {});
@@ -258,8 +283,15 @@ function initPetWidget() {
     } catch {
       // fall back to basic audio playback
     }
-
-    playDiscSound(rewardDetails.sound);
+    try {
+      const rewardTrack = new Audio(rewardDetails.sound);
+      rewardTrack.volume = 0.6;
+      setActiveRewardAudio(rewardTrack);
+      rewardTrack.play().catch(() => {});
+    } catch {
+      rewardAudio = null;
+      playDiscSound(rewardDetails.sound);
+    }
   }
 
   function getDiscRewardDetails(name) {
@@ -651,6 +683,7 @@ function initPetWidget() {
     if (level % 5 === 0) {
       try {
         const ax = new Audio("sounds/Axolotl.mp3");
+        setActiveRewardAudio(ax);
         ax.play().catch(() => {});
       } catch {
         // ignore audio errors
@@ -753,6 +786,21 @@ function initPetWidget() {
       discAudio.pause();
       discAudio.currentTime = 0;
     }
+
+    if (rewardAudio) {
+      try {
+        rewardAudio.pause();
+        rewardAudio.currentTime = 0;
+      } catch {
+        // ignore audio errors
+      }
+      rewardAudio = null;
+    }
+
+    if (musicPlayerEl) {
+      musicPlayerEl.pause();
+      musicPlayerEl.currentTime = 0;
+    }
     currentDisc = null;
     try {
       localStorage.removeItem("currentDisc");
@@ -840,11 +888,19 @@ function initPetWidget() {
     return icon;
   }
 
+  function clearLevel100Icon() {
+    const existing = petContainer.querySelector(".pet-level-100-icon");
+    if (existing && existing.parentElement) {
+      existing.parentElement.removeChild(existing);
+    }
+  }
+
   function playLevel100CelebrationSound() {
     if (!soundsEnabled) return;
     try {
       const celebrationAudio = new Audio("./sounds/Axolotl.mp3");
       celebrationAudio.volume = 0.6;
+      setActiveRewardAudio(celebrationAudio);
       celebrationAudio.play().catch(() => {});
     } catch {
       // ignore audio errors
@@ -1320,19 +1376,64 @@ function initPetWidget() {
 
   window.addEventListener("message", handleConfigMessage);
 
+  const resetPetProgress = () => {
+    stopMusic();
+
+    petXP = 0;
+    petLevel = 1;
+    lastKnownLevel = 1;
+    lastRewardedKey = null;
+    level100RewardGranted = false;
+
+    clearLevel100Icon();
+    hideRewardIcon();
+    ownedDiscs = [];
+    currentDisc = null;
+
+    renderDiscList();
+    updateLevel(petLevel);
+
+    try {
+      localStorage.setItem("petXP", petXP);
+      localStorage.setItem("petLevel", petLevel);
+      localStorage.setItem("ownedDiscs", JSON.stringify(ownedDiscs));
+      localStorage.removeItem("currentDisc");
+      localStorage.removeItem(LEVEL_100_REWARD_KEY);
+    } catch {
+      // ignore storage errors
+    }
+
+    if (typeof petManager.setProfile === "function") {
+      petManager.setProfile({ level: petLevel });
+    }
+
+    console.log("[BubblePet] Pet level reset to 1 and disc rewards cleared.");
+  };
+
   // ===============================
   // DEBUG: Manual Level-Up Command
   // ===============================
   window.petLevelUp = function (amount = 1) {
-    for (let i = 0; i < amount; i++) {
-      petLevel++;
-      localStorage.setItem("petLevel", petLevel);
+    const increments = Number.isFinite(amount) ? Math.max(1, Math.floor(amount)) : 1;
+    let previousLevel = petLevel;
 
+    for (let i = 0; i < increments; i++) {
+      petLevel += 1;
+      persistProgress();
+      updateLevel(petLevel);
+      handleLevelRewards(petLevel, {}, {}, previousLevel);
+      if (typeof petManager.setProfile === "function") {
+        petManager.setProfile({ level: petLevel });
+      }
       console.log(`DEBUG: Level is now ${petLevel}`);
-
-      // Trigger all the normal reward logic
-      handleDiscRewards(petLevel);
+      previousLevel = petLevel;
     }
+
+    lastKnownLevel = petLevel;
+  };
+
+  window.resetPetLevel = function () {
+    resetPetProgress();
   };
 
 }
