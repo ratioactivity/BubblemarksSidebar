@@ -828,35 +828,28 @@ window.addEventListener("DOMContentLoaded", async () => {
   window.petLevelUp = petLevelUpProxy;
 
   const resetPetLevelProxy = () => {
-    const petWindow = petWidgetFrame?.contentWindow;
-
-    if (!petWindow || typeof petWindow.resetPetLevel !== "function") {
-      pendingResetInvocation = true;
-      console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
+    if (!petWidgetFrame) {
+      console.warn("resetPetLevel is unavailable: pet widget iframe is missing.");
       return;
     }
 
-    pendingResetInvocation = false;
-    petWindow.resetPetLevel();
+    const petWindow = petWidgetFrame.contentWindow;
+
+    if (!petWindow) {
+      console.warn("resetPetLevel will run after the pet widget finishes loading.");
+      petWidgetFrame.addEventListener("load", resetPetLevelProxy, { once: true });
+      return;
+    }
+
+    if (typeof petWindow.resetPetLevel === "function") {
+      petWindow.resetPetLevel();
+      return;
+    }
+
+    petWindow.postMessage({ type: "bubblepet:reset-level" }, "*");
   };
 
-  const attachResetProxy = () => {
-    window.resetPetLevel = resetPetLevelProxy;
-
-    if (pendingResetInvocation) {
-      resetPetLevelProxy();
-    }
-  };
-
-  if (petWidgetFrame?.contentWindow) {
-    if (typeof petWidgetFrame.contentWindow.resetPetLevel === "function") {
-      attachResetProxy();
-    } else {
-      petWidgetFrame.addEventListener("load", attachResetProxy, { once: true });
-    }
-  } else {
-    attachResetProxy();
-  }
+  window.resetPetLevel = resetPetLevelProxy;
 
   toggleHeadingInput = document.getElementById("toggle-heading");
   toggleAxolotlInput = document.getElementById("toggle-axolotl");
