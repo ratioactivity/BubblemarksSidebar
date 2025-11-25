@@ -1425,16 +1425,11 @@ function initPetWidget() {
       localStorage.setItem("petLevel", petLevel);
       localStorage.setItem("ownedDiscs", JSON.stringify(ownedDiscs));
       localStorage.removeItem("currentDisc");
-      localStorage.removeItem(LEVEL_100_REWARD_KEY);
-    } catch {
-      // ignore storage errors
+    } catch (err) {
+      console.warn("resetPetProgress: failed to update localStorage", err);
     }
 
-    if (typeof petManager.setProfile === "function") {
-      petManager.setProfile({ level: petLevel });
-    }
-
-    console.log("[BubblePet] Pet level reset to 1 and disc rewards cleared.");
+    console.log("🐾 Pet progress fully reset!");
   };
 
   // ===============================
