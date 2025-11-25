@@ -818,6 +818,30 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   window.petLevelUp = petLevelUpProxy;
 
+  const resetPetLevelProxy = () => {
+    if (!petWidgetFrame) {
+      console.warn("resetPetLevel is unavailable: pet widget iframe is missing.");
+      return;
+    }
+
+    const petWindow = petWidgetFrame.contentWindow;
+
+    if (!petWindow) {
+      console.warn("resetPetLevel will run after the pet widget finishes loading.");
+      petWidgetFrame.addEventListener("load", resetPetLevelProxy, { once: true });
+      return;
+    }
+
+    if (typeof petWindow.resetPetLevel === "function") {
+      petWindow.resetPetLevel();
+      return;
+    }
+
+    petWindow.postMessage({ type: "bubblepet:reset-level" }, "*");
+  };
+
+  window.resetPetLevel = resetPetLevelProxy;
+
   toggleHeadingInput = document.getElementById("toggle-heading");
   toggleAxolotlInput = document.getElementById("toggle-axolotl");
   petNameInput = document.getElementById("pet-name-input");
