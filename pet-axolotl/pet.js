@@ -1211,20 +1211,34 @@ function initPetWidget() {
     actionContainer.addEventListener("click", delegatedClickHandler);
   }
 
-  if (discPlayerButton && discModalEl) {
-    discPlayerButton.addEventListener("click", () => {
-      discModalEl.classList.remove("hidden");
-    });
-  }
+  const setupDiscModalListeners = () => {
+    if (discPlayerButton && discModalEl) {
+      discPlayerButton.addEventListener("click", () => {
+        const wasHidden = discModalEl.classList.contains("hidden");
+        discModalEl.classList.toggle("hidden");
+        if (wasHidden) {
+          renderDiscList();
+        }
+      });
+    }
 
-  if (discModalCloseEl && discModalEl) {
-    discModalCloseEl.addEventListener("click", () => {
-      discModalEl.classList.add("hidden");
-    });
-  }
+    if (discModalCloseEl && discModalEl) {
+      discModalCloseEl.addEventListener("click", () => {
+        discModalEl.classList.add("hidden");
+      });
+    }
 
-  if (stopMusicBtn) {
-    stopMusicBtn.addEventListener("click", () => stopMusic());
+    if (stopMusicBtn) {
+      stopMusicBtn.addEventListener("click", () => {
+        stopMusic();
+      });
+    }
+  };
+
+  if (document.readyState !== "loading") {
+    setupDiscModalListeners();
+  } else {
+    window.addEventListener("DOMContentLoaded", setupDiscModalListeners, { once: true });
   }
 
   document.addEventListener("click", (e) => {
