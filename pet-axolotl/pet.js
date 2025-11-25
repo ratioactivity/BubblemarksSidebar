@@ -1,5 +1,25 @@
 let pendingResetLevel = false;
 
+function registerResetCommand(target, handler) {
+  if (!target || typeof target !== "object") return;
+
+  try {
+    target.resetPetLevel = handler;
+  } catch (error) {
+    console.warn("[BubblePet] Unable to expose resetPetLevel on target", error);
+  }
+}
+
+function exposeResetCommand(handler) {
+  const targets = new Set([window, globalThis]);
+
+  if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+    targets.add(window.parent);
+  }
+
+  targets.forEach((target) => registerResetCommand(target, handler));
+}
+
 function ensurePetLevelUpPlaceholder() {
   const definePlaceholder = () => {
     if (typeof window.petLevelUp !== "function") {
@@ -14,10 +34,9 @@ function ensurePetLevelUpPlaceholder() {
         console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
       };
 
-      window.resetPetLevel = placeholderReset;
-      globalThis.resetPetLevel = placeholderReset;
+      exposeResetCommand(placeholderReset);
     } else {
-      globalThis.resetPetLevel = window.resetPetLevel;
+      exposeResetCommand(window.resetPetLevel);
     }
   };
 
@@ -1441,8 +1460,7 @@ function initPetWidget() {
     resetPetProgress();
   };
 
-  window.resetPetLevel = readyResetPetLevel;
-  globalThis.resetPetLevel = readyResetPetLevel;
+  exposeResetCommand(readyResetPetLevel);
 
   if (pendingResetLevel) {
     pendingResetLevel = false;
@@ -1496,9 +1514,8 @@ runAfterDomReady(() => {
       console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
     };
 
-    window.resetPetLevel = placeholderReset;
-    globalThis.resetPetLevel = placeholderReset;
+    exposeResetCommand(placeholderReset);
   } else {
-    globalThis.resetPetLevel = window.resetPetLevel;
+    exposeResetCommand(window.resetPetLevel);
   }
 });
