@@ -9,10 +9,15 @@ function ensurePetLevelUpPlaceholder() {
     }
 
     if (typeof window.resetPetLevel !== "function") {
-      window.resetPetLevel = function () {
+      const placeholderReset = function () {
         pendingResetLevel = true;
         console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
       };
+
+      window.resetPetLevel = placeholderReset;
+      globalThis.resetPetLevel = placeholderReset;
+    } else {
+      globalThis.resetPetLevel = window.resetPetLevel;
     }
   };
 
@@ -23,7 +28,7 @@ function ensurePetLevelUpPlaceholder() {
   }
 }
 
-ensurePetLevelUpPlaceholder();
+window.addEventListener("DOMContentLoaded", ensurePetLevelUpPlaceholder, { once: true });
 
 function initPetWidget() {
   console.log("✅ script validated");
@@ -1431,10 +1436,13 @@ function initPetWidget() {
     lastKnownLevel = petLevel;
   };
 
-  window.resetPetLevel = function () {
+  const readyResetPetLevel = function () {
     pendingResetLevel = false;
     resetPetProgress();
   };
+
+  window.resetPetLevel = readyResetPetLevel;
+  globalThis.resetPetLevel = readyResetPetLevel;
 
   if (pendingResetLevel) {
     pendingResetLevel = false;
@@ -1483,9 +1491,14 @@ runAfterDomReady(() => {
   }
 
   if (typeof window.resetPetLevel !== "function") {
-    window.resetPetLevel = function () {
+    const placeholderReset = function () {
       pendingResetLevel = true;
       console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
     };
+
+    window.resetPetLevel = placeholderReset;
+    globalThis.resetPetLevel = placeholderReset;
+  } else {
+    globalThis.resetPetLevel = window.resetPetLevel;
   }
 });
