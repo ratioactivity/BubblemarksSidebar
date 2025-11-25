@@ -79,6 +79,7 @@ function initPetWidget() {
   let petXP = 0;
   let petLevel = lastKnownLevel;
   let discAudio = null;
+  let rewardAudio = null;
   let LEVEL_DISC_REWARDS = {};
   let GENERIC_DISC_POOL = [];
 
@@ -249,6 +250,7 @@ function initPetWidget() {
         musicSourceEl.src = rewardDetails.sound;
         musicPlayerEl.load();
         musicPlayerEl.style.display = "block";
+        rewardAudio = musicPlayerEl;
         const playPromise = musicPlayerEl.play();
         if (playPromise && typeof playPromise.catch === "function") {
           playPromise.catch(() => {});
@@ -259,7 +261,14 @@ function initPetWidget() {
       // fall back to basic audio playback
     }
 
-    playDiscSound(rewardDetails.sound);
+    try {
+      rewardAudio = new Audio(rewardDetails.sound);
+      rewardAudio.volume = 0.6;
+      rewardAudio.play().catch(() => {});
+    } catch {
+      rewardAudio = null;
+      playDiscSound(rewardDetails.sound);
+    }
   }
 
   function getDiscRewardDetails(name) {
@@ -752,6 +761,21 @@ function initPetWidget() {
     if (discAudio) {
       discAudio.pause();
       discAudio.currentTime = 0;
+    }
+
+    if (rewardAudio) {
+      try {
+        rewardAudio.pause();
+        rewardAudio.currentTime = 0;
+      } catch {
+        // ignore audio errors
+      }
+      rewardAudio = null;
+    }
+
+    if (musicPlayerEl) {
+      musicPlayerEl.pause();
+      musicPlayerEl.currentTime = 0;
     }
     currentDisc = null;
     try {
