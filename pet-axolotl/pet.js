@@ -7,6 +7,14 @@ function ensurePetLevelUpPlaceholder() {
     window.petLevelUp = function () {
       console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
     };
+
+    if (typeof window.resetPetLevel === "function") {
+      return;
+    }
+
+    window.resetPetLevel = function () {
+      console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
+    };
   };
 
   if (document.readyState !== "loading") {
@@ -880,6 +888,13 @@ function initPetWidget() {
     return icon;
   }
 
+  function clearLevel100Icon() {
+    const existing = petContainer.querySelector(".pet-level-100-icon");
+    if (existing && existing.parentElement) {
+      existing.parentElement.removeChild(existing);
+    }
+  }
+
   function playLevel100CelebrationSound() {
     if (!soundsEnabled) return;
     try {
@@ -1361,6 +1376,40 @@ function initPetWidget() {
 
   window.addEventListener("message", handleConfigMessage);
 
+  const resetPetProgress = () => {
+    stopMusic();
+
+    petXP = 0;
+    petLevel = 1;
+    lastKnownLevel = 1;
+    lastRewardedKey = null;
+    level100RewardGranted = false;
+
+    clearLevel100Icon();
+    hideRewardIcon();
+    ownedDiscs = [];
+    currentDisc = null;
+
+    renderDiscList();
+    updateLevel(petLevel);
+
+    try {
+      localStorage.setItem("petXP", petXP);
+      localStorage.setItem("petLevel", petLevel);
+      localStorage.setItem("ownedDiscs", JSON.stringify(ownedDiscs));
+      localStorage.removeItem("currentDisc");
+      localStorage.removeItem(LEVEL_100_REWARD_KEY);
+    } catch {
+      // ignore storage errors
+    }
+
+    if (typeof petManager.setProfile === "function") {
+      petManager.setProfile({ level: petLevel });
+    }
+
+    console.log("[BubblePet] Pet level reset to 1 and disc rewards cleared.");
+  };
+
   // ===============================
   // DEBUG: Manual Level-Up Command
   // ===============================
@@ -1381,6 +1430,10 @@ function initPetWidget() {
     }
 
     lastKnownLevel = petLevel;
+  };
+
+  window.resetPetLevel = function () {
+    resetPetProgress();
   };
 
 }
