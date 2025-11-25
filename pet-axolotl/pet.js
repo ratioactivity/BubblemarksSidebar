@@ -1,5 +1,25 @@
 let pendingResetLevel = false;
 
+function registerResetCommand(target, handler) {
+  if (!target || typeof target !== "object") return;
+
+  try {
+    target.resetPetLevel = handler;
+  } catch (error) {
+    console.warn("[BubblePet] Unable to expose resetPetLevel on target", error);
+  }
+}
+
+function exposeResetCommand(handler) {
+  const targets = new Set([window, globalThis]);
+
+  if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+    targets.add(window.parent);
+  }
+
+  targets.forEach((target) => registerResetCommand(target, handler));
+}
+
 function ensurePetLevelUpPlaceholder() {
   const definePlaceholder = () => {
     if (typeof window.petLevelUp !== "function") {
@@ -9,10 +29,14 @@ function ensurePetLevelUpPlaceholder() {
     }
 
     if (typeof window.resetPetLevel !== "function") {
-      window.resetPetLevel = function () {
+      const placeholderReset = function () {
         pendingResetLevel = true;
         console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
       };
+
+      exposeResetCommand(placeholderReset);
+    } else {
+      exposeResetCommand(window.resetPetLevel);
     }
   };
 
@@ -23,7 +47,11 @@ function ensurePetLevelUpPlaceholder() {
   }
 }
 
-ensurePetLevelUpPlaceholder();
+if (document.readyState !== "loading") {
+  ensurePetLevelUpPlaceholder();
+} else {
+  window.addEventListener("DOMContentLoaded", ensurePetLevelUpPlaceholder, { once: true });
+}
 
 function initPetWidget() {
   console.log("✅ script validated");
@@ -1397,16 +1425,11 @@ function initPetWidget() {
       localStorage.setItem("petLevel", petLevel);
       localStorage.setItem("ownedDiscs", JSON.stringify(ownedDiscs));
       localStorage.removeItem("currentDisc");
-      localStorage.removeItem(LEVEL_100_REWARD_KEY);
-    } catch {
-      // ignore storage errors
+    } catch (err) {
+      console.warn("resetPetProgress: failed to update localStorage", err);
     }
 
-    if (typeof petManager.setProfile === "function") {
-      petManager.setProfile({ level: petLevel });
-    }
-
-    console.log("[BubblePet] Pet level reset to 1 and disc rewards cleared.");
+    console.log("🐾 Pet progress fully reset!");
   };
 
   // ===============================
@@ -1431,15 +1454,23 @@ function initPetWidget() {
     lastKnownLevel = petLevel;
   };
 
-  window.resetPetLevel = function () {
+  const readyResetPetLevel = function () {
     pendingResetLevel = false;
     resetPetProgress();
   };
+
+  window.resetPetLevel = readyResetPetLevel;
+  exposeResetCommand(readyResetPetLevel);
 
   if (pendingResetLevel) {
     pendingResetLevel = false;
     resetPetProgress();
   }
+
+  window.debugReset = function () {
+    console.log("🐾 DEBUG: Hard reset triggered");
+    resetPetProgress();
+  };
 
 }
 
@@ -1483,9 +1514,13 @@ runAfterDomReady(() => {
   }
 
   if (typeof window.resetPetLevel !== "function") {
-    window.resetPetLevel = function () {
+    const placeholderReset = function () {
       pendingResetLevel = true;
       console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
     };
+
+    exposeResetCommand(placeholderReset);
+  } else {
+    exposeResetCommand(window.resetPetLevel);
   }
 });
