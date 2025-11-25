@@ -262,6 +262,19 @@ body {
   user-select: none;
 }
 
+.disc-player-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: clamp(26px, 4vw, 34px);
+  height: auto;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.18));
+  cursor: pointer;
+  z-index: 4;
+}
+
 .disc-reward-slot {
   display: flex;
   justify-content: center;
