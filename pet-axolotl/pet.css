@@ -262,6 +262,14 @@ body {
   user-select: none;
 }
 
+.disc-reward-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 12px;
+  margin: 4px 0;
+}
+
 .tank-window {
   position: relative;
   width: 90%;

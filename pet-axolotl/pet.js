@@ -12,6 +12,7 @@ function initPetWidget() {
   const levelEl = petContainer.querySelector(".pet-level");
   const nameEl = petContainer.querySelector(".pet-name");
   const overlayEl = petContainer.querySelector("#pet-overlay");
+  const rewardIconEl = document.getElementById("disc-reward-icon");
   const musicPlayerEl = document.getElementById("music-player");
   const musicSourceEl = document.getElementById("music-source");
   const statBars = Array.from(petContainer.querySelectorAll(".stat-bar"));
@@ -180,23 +181,38 @@ function initPetWidget() {
     return { ...details, name };
   }
 
-  function renderDiscRewardMessage(rewardDetails, messageText) {
-    if (!messageEl || !rewardDetails?.icon) {
-      updateMessage(messageText);
+  function hideRewardIcon() {
+    if (!rewardIconEl) return;
+    rewardIconEl.style.display = "none";
+    rewardIconEl.removeAttribute("src");
+    rewardIconEl.removeAttribute("alt");
+  }
+
+  function showRewardIcon(iconPath, altText = "Music disc reward") {
+    if (!rewardIconEl || !iconPath) {
+      hideRewardIcon();
       return;
     }
 
-    messageEl.innerHTML = "";
+    rewardIconEl.src = iconPath;
+    rewardIconEl.alt = altText;
+    rewardIconEl.style.display = "inline-block";
+  }
 
-    const icon = document.createElement("img");
-    icon.src = rewardDetails.icon;
-    icon.alt = `${rewardDetails.name} music disc`;
-    icon.className = "pet-disc-icon";
-    messageEl.appendChild(icon);
+  function renderDiscRewardMessage(rewardDetails, messageText) {
+    const safeMessage = typeof messageText === "string" ? messageText : "";
+    if (!messageEl) return;
 
-    const textNode = document.createElement("span");
-    textNode.textContent = ` ${messageText}`;
-    messageEl.appendChild(textNode);
+    if (rewardDetails?.icon) {
+      const altText = rewardDetails.name
+        ? `${rewardDetails.name} music disc`
+        : "Music disc reward icon";
+      showRewardIcon(rewardDetails.icon, altText);
+    } else {
+      hideRewardIcon();
+    }
+
+    messageEl.textContent = safeMessage;
   }
 
   function selectRandomDiscName() {
@@ -526,6 +542,7 @@ function initPetWidget() {
 
   function updateMessage(text) {
     if (!messageEl || typeof text !== "string") return;
+    hideRewardIcon();
     messageEl.textContent = text;
   }
 
