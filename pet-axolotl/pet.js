@@ -1,20 +1,16 @@
 function ensurePetLevelUpPlaceholder() {
   const definePlaceholder = () => {
-    if (typeof window.petLevelUp === "function") {
-      return;
+    if (typeof window.petLevelUp !== "function") {
+      window.petLevelUp = function () {
+        console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
+      };
     }
 
-    window.petLevelUp = function () {
-      console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
-    };
-
-    if (typeof window.resetPetLevel === "function") {
-      return;
+    if (typeof window.resetPetLevel !== "function") {
+      window.resetPetLevel = function () {
+        console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
+      };
     }
-
-    window.resetPetLevel = function () {
-      console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
-    };
   };
 
   if (document.readyState !== "loading") {
@@ -1471,11 +1467,15 @@ runAfterDomReady(() => attemptInit());
 
 // Ensure the debug helper is always defined, even if the widget fails early.
 runAfterDomReady(() => {
-  if (typeof window.petLevelUp === "function") {
-    return;
+  if (typeof window.petLevelUp !== "function") {
+    window.petLevelUp = function () {
+      console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
+    };
   }
 
-  window.petLevelUp = function () {
-    console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
-  };
+  if (typeof window.resetPetLevel !== "function") {
+    window.resetPetLevel = function () {
+      console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
+    };
+  }
 });
