@@ -1,3 +1,23 @@
+function ensurePetLevelUpPlaceholder() {
+  const definePlaceholder = () => {
+    if (typeof window.petLevelUp === "function") {
+      return;
+    }
+
+    window.petLevelUp = function () {
+      console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
+    };
+  };
+
+  if (document.readyState !== "loading") {
+    definePlaceholder();
+  } else {
+    window.addEventListener("DOMContentLoaded", definePlaceholder, { once: true });
+  }
+}
+
+ensurePetLevelUpPlaceholder();
+
 function initPetWidget() {
   console.log("✅ script validated");
 
