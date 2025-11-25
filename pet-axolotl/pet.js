@@ -50,61 +50,85 @@ function initPetWidget() {
   let sleepiness = 0;
   let overstimulation = 0;
 
-  const DISC_POOL = [
-    "11",
-    "13",
-    "Cat",
-    "Mellohi",
-    "Strad",
-    "Mall",
-    "Stal",
-    "Far",
-    "Blocks",
-    "Chirp",
-    "Ward",
-    "Wait",
-  ];
-
-  const DISC_LVL_20 = "Pigstep";
-  const DISC_LVL_50 = "Infinite Amethyst";
-  const DISC_LVL_100 = "Axolotl";
-
+  let DISC_POOL = [];
+  let DISC_LVL_20 = "Pigstep";
+  let DISC_LVL_50 = "Infinite Amethyst";
+  let DISC_LVL_100 = "Axolotl";
   let ownedDiscs = [];
   let currentDisc = null;
   let petXP = 0;
   let petLevel = lastKnownLevel;
+  let discAudio = null;
+  let LEVEL_DISC_REWARDS = {};
+  let GENERIC_DISC_POOL = [];
 
-  try {
-    ownedDiscs = JSON.parse(localStorage.getItem("ownedDiscs")) || [];
-  } catch {
-    ownedDiscs = [];
-  }
+  const initializeDiscState = () => {
+    DISC_POOL = [
+      "11",
+      "13",
+      "Cat",
+      "Mellohi",
+      "Strad",
+      "Mall",
+      "Stal",
+      "Far",
+      "Blocks",
+      "Chirp",
+      "Ward",
+      "Wait",
+    ];
 
-  try {
-    currentDisc = localStorage.getItem("currentDisc");
-  } catch {
-    currentDisc = null;
-  }
+    DISC_LVL_20 = "Pigstep";
+    DISC_LVL_50 = "Infinite Amethyst";
+    DISC_LVL_100 = "Axolotl";
 
-  try {
-    const storedXP = Number(localStorage.getItem("petXP"));
-    petXP = Number.isFinite(storedXP) ? storedXP : 0;
-  } catch {
-    petXP = 0;
-  }
+    LEVEL_DISC_REWARDS = {
+      20: DISC_LVL_20,
+      50: DISC_LVL_50,
+      100: DISC_LVL_100,
+    };
 
-  try {
-    const storedLevel = Number(localStorage.getItem("petLevel"));
-    if (Number.isFinite(storedLevel) && storedLevel > 0) {
-      petLevel = storedLevel;
-      lastKnownLevel = storedLevel;
+    GENERIC_DISC_POOL = [...DISC_POOL];
+
+    try {
+      ownedDiscs = JSON.parse(localStorage.getItem("ownedDiscs")) || [];
+    } catch {
+      ownedDiscs = [];
     }
-  } catch {
-    petLevel = lastKnownLevel;
-  }
 
-  const audioPlayer = new Audio();
-  audioPlayer.loop = true;
+    try {
+      currentDisc = localStorage.getItem("currentDisc");
+    } catch {
+      currentDisc = null;
+    }
+
+    try {
+      const storedXP = Number(localStorage.getItem("petXP"));
+      petXP = Number.isFinite(storedXP) ? storedXP : 0;
+    } catch {
+      petXP = 0;
+    }
+
+    try {
+      const storedLevel = Number(localStorage.getItem("petLevel"));
+      if (Number.isFinite(storedLevel) && storedLevel > 0) {
+        petLevel = storedLevel;
+        lastKnownLevel = storedLevel;
+      }
+    } catch {
+      petLevel = lastKnownLevel;
+    }
+
+    if (!discAudio) {
+      discAudio = new Audio();
+      discAudio.loop = true;
+    }
+  };
+
+  window.addEventListener("DOMContentLoaded", initializeDiscState, { once: true });
+  if (document.readyState !== "loading") {
+    initializeDiscState();
+  }
 
   function normalizePetName(name) {
     if (typeof name === "string") {
@@ -143,27 +167,6 @@ function initPetWidget() {
   } catch {
     level100RewardGranted = false;
   }
-
-  const LEVEL_DISC_REWARDS = {
-    20: "Pigstep",
-    50: "Infinite Amethyst",
-    100: "Axolotl",
-  };
-
-  const GENERIC_DISC_POOL = [
-    "11",
-    "13",
-    "Cat",
-    "Mellohi",
-    "Strad",
-    "Mall",
-    "Stal",
-    "Far",
-    "Blocks",
-    "Chirp",
-    "Ward",
-    "Wait",
-  ];
 
   const DISC_ASSETS = {
     Pigstep: { icon: "./assets/icon-pigstep.png", sound: "./sounds/Pigstep.mp3" },
@@ -696,7 +699,7 @@ function initPetWidget() {
   }
 
   function playDisc(name) {
-    if (!name) return;
+    if (!name || !discAudio) return;
     currentDisc = name;
     try {
       localStorage.setItem("currentDisc", name);
@@ -704,13 +707,15 @@ function initPetWidget() {
       // ignore storage errors
     }
 
-    audioPlayer.src = `sounds/${name}.mp3`;
-    audioPlayer.play().catch(() => {});
+    discAudio.src = `sounds/${name}.mp3`;
+    discAudio.play().catch(() => {});
   }
 
   function stopMusic() {
-    audioPlayer.pause();
-    audioPlayer.currentTime = 0;
+    if (discAudio) {
+      discAudio.pause();
+      discAudio.currentTime = 0;
+    }
     currentDisc = null;
     try {
       localStorage.removeItem("currentDisc");
@@ -1254,6 +1259,21 @@ function initPetWidget() {
   };
 
   window.addEventListener("message", handleConfigMessage);
+
+  // ===============================
+  // DEBUG: Manual Level-Up Command
+  // ===============================
+  window.petLevelUp = function (amount = 1) {
+    for (let i = 0; i < amount; i++) {
+      petLevel++;
+      localStorage.setItem("petLevel", petLevel);
+
+      console.log(`DEBUG: Level is now ${petLevel}`);
+
+      // Trigger all the normal reward logic
+      handleDiscRewards(petLevel);
+    }
+  };
 
 }
 
