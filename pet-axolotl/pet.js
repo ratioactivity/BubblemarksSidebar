@@ -1467,6 +1467,11 @@ function initPetWidget() {
     resetPetProgress();
   }
 
+  window.debugReset = function () {
+    console.log("🐾 DEBUG: Hard reset triggered");
+    resetPetProgress();
+  };
+
 }
 
 const MAX_ATTEMPTS = 10;
