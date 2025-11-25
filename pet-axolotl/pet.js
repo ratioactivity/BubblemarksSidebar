@@ -47,7 +47,11 @@ function ensurePetLevelUpPlaceholder() {
   }
 }
 
-window.addEventListener("DOMContentLoaded", ensurePetLevelUpPlaceholder, { once: true });
+if (document.readyState !== "loading") {
+  ensurePetLevelUpPlaceholder();
+} else {
+  window.addEventListener("DOMContentLoaded", ensurePetLevelUpPlaceholder, { once: true });
+}
 
 function initPetWidget() {
   console.log("✅ script validated");
@@ -1460,6 +1464,7 @@ function initPetWidget() {
     resetPetProgress();
   };
 
+  window.resetPetLevel = readyResetPetLevel;
   exposeResetCommand(readyResetPetLevel);
 
   if (pendingResetLevel) {
