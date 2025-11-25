@@ -1297,19 +1297,24 @@ function attemptInit(attempt = 1) {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => attemptInit(), { once: true });
+function runAfterDomReady(callback) {
+  if (document.readyState !== "loading") {
+    callback();
+    return;
+  }
+
+  window.addEventListener("DOMContentLoaded", callback, { once: true });
+}
+
+runAfterDomReady(() => attemptInit());
 
 // Ensure the debug helper is always defined, even if the widget fails early.
-window.addEventListener(
-  "DOMContentLoaded",
-  () => {
-    if (typeof window.petLevelUp === "function") {
-      return;
-    }
+runAfterDomReady(() => {
+  if (typeof window.petLevelUp === "function") {
+    return;
+  }
 
-    window.petLevelUp = function () {
-      console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
-    };
-  },
-  { once: true }
-);
+  window.petLevelUp = function () {
+    console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
+  };
+});
