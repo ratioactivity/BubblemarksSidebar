@@ -1,3 +1,5 @@
+let pendingResetLevel = false;
+
 function ensurePetLevelUpPlaceholder() {
   const definePlaceholder = () => {
     if (typeof window.petLevelUp !== "function") {
@@ -8,6 +10,7 @@ function ensurePetLevelUpPlaceholder() {
 
     if (typeof window.resetPetLevel !== "function") {
       window.resetPetLevel = function () {
+        pendingResetLevel = true;
         console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
       };
     }
@@ -1429,8 +1432,14 @@ function initPetWidget() {
   };
 
   window.resetPetLevel = function () {
+    pendingResetLevel = false;
     resetPetProgress();
   };
+
+  if (pendingResetLevel) {
+    pendingResetLevel = false;
+    resetPetProgress();
+  }
 
 }
 
@@ -1475,6 +1484,7 @@ runAfterDomReady(() => {
 
   if (typeof window.resetPetLevel !== "function") {
     window.resetPetLevel = function () {
+      pendingResetLevel = true;
       console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
     };
   }
