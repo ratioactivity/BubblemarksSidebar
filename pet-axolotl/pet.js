@@ -1,5 +1,25 @@
 let pendingResetLevel = false;
 
+function registerResetCommand(target, handler) {
+  if (!target || typeof target !== "object") return;
+
+  try {
+    target.resetPetLevel = handler;
+  } catch (error) {
+    console.warn("[BubblePet] Unable to expose resetPetLevel on target", error);
+  }
+}
+
+function exposeResetCommand(handler) {
+  const targets = new Set([window, globalThis]);
+
+  if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+    targets.add(window.parent);
+  }
+
+  targets.forEach((target) => registerResetCommand(target, handler));
+}
+
 function ensurePetLevelUpPlaceholder() {
   const definePlaceholder = () => {
     if (typeof window.petLevelUp !== "function") {
@@ -9,10 +29,14 @@ function ensurePetLevelUpPlaceholder() {
     }
 
     if (typeof window.resetPetLevel !== "function") {
-      window.resetPetLevel = function () {
+      const placeholderReset = function () {
         pendingResetLevel = true;
         console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
       };
+
+      exposeResetCommand(placeholderReset);
+    } else {
+      exposeResetCommand(window.resetPetLevel);
     }
   };
 
@@ -23,7 +47,7 @@ function ensurePetLevelUpPlaceholder() {
   }
 }
 
-ensurePetLevelUpPlaceholder();
+window.addEventListener("DOMContentLoaded", ensurePetLevelUpPlaceholder, { once: true });
 
 function initPetWidget() {
   console.log("✅ script validated");
@@ -1431,10 +1455,12 @@ function initPetWidget() {
     lastKnownLevel = petLevel;
   };
 
-  window.resetPetLevel = function () {
+  const readyResetPetLevel = function () {
     pendingResetLevel = false;
     resetPetProgress();
   };
+
+  exposeResetCommand(readyResetPetLevel);
 
   if (pendingResetLevel) {
     pendingResetLevel = false;
@@ -1483,9 +1509,13 @@ runAfterDomReady(() => {
   }
 
   if (typeof window.resetPetLevel !== "function") {
-    window.resetPetLevel = function () {
+    const placeholderReset = function () {
       pendingResetLevel = true;
       console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
     };
+
+    exposeResetCommand(placeholderReset);
+  } else {
+    exposeResetCommand(window.resetPetLevel);
   }
 });
