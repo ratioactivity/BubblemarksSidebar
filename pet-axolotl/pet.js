@@ -192,7 +192,7 @@ function initPetWidget() {
     Pigstep: { icon: "./assets/icon-pigstep.png", sound: "./sounds/Pigstep.mp3" },
     "Infinite Amethyst": {
       icon: "./assets/icon-infinite-amethyst.png",
-      sound: "./sounds/Infinite Amethyst.mp3",
+      sound: "./sounds/Infinite-Amethyst.mp3",
     },
     Axolotl: { icon: "./assets/icon-Axolotl.png", sound: "./sounds/Axolotl.mp3" },
     11: { icon: "./assets/icon-11.png", sound: "./sounds/11.mp3" },
@@ -727,8 +727,25 @@ function initPetWidget() {
       // ignore storage errors
     }
 
-    discAudio.src = `sounds/${name}.mp3`;
+    const discSoundPath = getDiscSoundPath(name);
+    if (discSoundPath) {
+      discAudio.src = discSoundPath;
+    }
     discAudio.play().catch(() => {});
+  }
+
+  function getDiscSoundPath(discName) {
+    const assetSound = DISC_ASSETS?.[discName]?.sound;
+    if (assetSound) {
+      return assetSound;
+    }
+
+    if (typeof discName !== "string" || !discName) {
+      return null;
+    }
+
+    const safeDiscName = discName.trim().replace(/\s+/g, "-");
+    return `./sounds/${safeDiscName}.mp3`;
   }
 
   function stopMusic() {
