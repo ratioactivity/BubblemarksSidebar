@@ -22,6 +22,15 @@ if (typeof window !== "undefined") {
 
   let desktopLoadHandlerRegistered = false;
 
+  let pendingResetInvocation = false;
+
+  const resetPetLevelPlaceholder = () => {
+    pendingResetInvocation = true;
+    console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
+  };
+
+  window.resetPetLevel = resetPetLevelPlaceholder;
+
   function initializeBubblemarks() {
     console.log("✅ script validated");
 
@@ -822,14 +831,32 @@ window.addEventListener("DOMContentLoaded", async () => {
     const petWindow = petWidgetFrame?.contentWindow;
 
     if (!petWindow || typeof petWindow.resetPetLevel !== "function") {
+      pendingResetInvocation = true;
       console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
       return;
     }
 
+    pendingResetInvocation = false;
     petWindow.resetPetLevel();
   };
 
-  window.resetPetLevel = resetPetLevelProxy;
+  const attachResetProxy = () => {
+    window.resetPetLevel = resetPetLevelProxy;
+
+    if (pendingResetInvocation) {
+      resetPetLevelProxy();
+    }
+  };
+
+  if (petWidgetFrame?.contentWindow) {
+    if (typeof petWidgetFrame.contentWindow.resetPetLevel === "function") {
+      attachResetProxy();
+    } else {
+      petWidgetFrame.addEventListener("load", attachResetProxy, { once: true });
+    }
+  } else {
+    attachResetProxy();
+  }
 
   toggleHeadingInput = document.getElementById("toggle-heading");
   toggleAxolotlInput = document.getElementById("toggle-axolotl");
