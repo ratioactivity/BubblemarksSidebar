@@ -269,7 +269,7 @@ body {
   margin-left: 8px;
   opacity: 0.8;
   transition: opacity 0.15s ease;
-  display: none;
+  display: inline-block;
 }
 
 .disc-player-icon:hover {
