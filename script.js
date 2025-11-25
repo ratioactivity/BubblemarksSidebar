@@ -22,6 +22,15 @@ if (typeof window !== "undefined") {
 
   let desktopLoadHandlerRegistered = false;
 
+  let pendingResetInvocation = false;
+
+  const resetPetLevelPlaceholder = () => {
+    pendingResetInvocation = true;
+    console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
+  };
+
+  window.resetPetLevel = resetPetLevelPlaceholder;
+
   function initializeBubblemarks() {
     console.log("✅ script validated");
 
