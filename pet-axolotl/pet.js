@@ -1260,6 +1260,21 @@ function initPetWidget() {
 
   window.addEventListener("message", handleConfigMessage);
 
+  // ===============================
+  // DEBUG: Manual Level-Up Command
+  // ===============================
+  window.petLevelUp = function (amount = 1) {
+    for (let i = 0; i < amount; i++) {
+      petLevel++;
+      localStorage.setItem("petLevel", petLevel);
+
+      console.log(`DEBUG: Level is now ${petLevel}`);
+
+      // Trigger all the normal reward logic
+      handleDiscRewards(petLevel);
+    }
+  };
+
 }
 
 const MAX_ATTEMPTS = 10;
