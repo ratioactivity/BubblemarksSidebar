@@ -192,7 +192,7 @@ function initPetWidget() {
     Pigstep: { icon: "./assets/icon-pigstep.png", sound: "./sounds/Pigstep.mp3" },
     "Infinite Amethyst": {
       icon: "./assets/icon-infinite-amethyst.png",
-      sound: "./sounds/Infinite Amethyst.mp3",
+      sound: "./sounds/Infinite-Amethyst.mp3",
     },
     Axolotl: { icon: "./assets/icon-Axolotl.png", sound: "./sounds/Axolotl.mp3" },
     11: { icon: "./assets/icon-11.png", sound: "./sounds/11.mp3" },
@@ -727,7 +727,8 @@ function initPetWidget() {
       // ignore storage errors
     }
 
-    discAudio.src = `sounds/${name}.mp3`;
+    const src = DISC_ASSETS[name]?.sound || `./sounds/${name}.mp3`;
+    discAudio.src = src;
     discAudio.play().catch(() => {});
   }
 
@@ -746,18 +747,25 @@ function initPetWidget() {
 
   function renderDiscList() {
     if (!discListEl) return;
-    discListEl.innerHTML = "";
 
-    ownedDiscs.forEach((disc) => {
-      const row = document.createElement("div");
-      row.className = "disc-entry";
-      row.innerHTML = `
-        <img src="assets/icon-${disc}.png" alt="${disc} disc icon" />
-        <span>${disc}</span>
-        <button class="disc-play-btn" data-disc="${disc}">▶️</button>
+    const renderDiscEntry = (discName) => {
+      const assets = DISC_ASSETS[discName];
+      const iconSrc = assets?.icon || "./assets/icon-player.png";
+      const altText = `${discName} disc icon`;
+
+      return `
+        <div class="disc-entry">
+          <img src="${iconSrc}" alt="${altText}" />
+          <div class="disc-meta">
+            <div class="disc-title">${discName}</div>
+            <div class="disc-subtitle">Minecraft music disc</div>
+          </div>
+          <button class="disc-play-btn" type="button" data-disc="${discName}">▶️ Play</button>
+        </div>
       `;
-      discListEl.appendChild(row);
-    });
+    };
+
+    discListEl.innerHTML = ownedDiscs.map((disc) => renderDiscEntry(disc)).join("");
   }
 
   function updateLevel(level) {
@@ -1241,13 +1249,15 @@ function initPetWidget() {
     window.addEventListener("DOMContentLoaded", setupDiscModalListeners, { once: true });
   }
 
-  document.addEventListener("click", (e) => {
-    if (e.target && e.target.matches(".disc-play-btn")) {
-      const discName = e.target.dataset.disc;
+  document.addEventListener("click", (event) => {
+    const playTrigger = event.target.closest?.(".disc-play-btn");
+    if (playTrigger) {
+      const discName = playTrigger.dataset.disc;
       playDisc(discName);
+      return;
     }
 
-    if (e.target && e.target.id === "stop-music") {
+    if (event.target && event.target.id === "stop-music") {
       stopMusic();
     }
   });
