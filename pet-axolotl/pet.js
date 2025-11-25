@@ -22,6 +22,11 @@ function initPetWidget() {
     document.querySelectorAll('[data-action="call-back"], [data-action="callback"], [data-action="callBack"]')
   ).filter((btn) => !actionElements.includes(btn));
   const buttons = Array.from(new Set([...actionElements, ...callbackButtons]));
+  const discModalEl = document.getElementById("disc-player-modal");
+  const discModalCloseEl = document.getElementById("disc-modal-close");
+  const discPlayerButton = document.getElementById("disc-player-button");
+  const discListEl = document.getElementById("disc-list");
+  const stopMusicBtn = document.getElementById("stop-music");
 
   const petManager = window.petManager;
   if (!petManager || typeof petManager.subscribeToAnimationChange !== "function") {
@@ -40,6 +45,66 @@ function initPetWidget() {
     ? initialPetState.level
     : 1;
   let lastRewardedKey = null;
+  let happiness = 0;
+  let hunger = 0;
+  let sleepiness = 0;
+  let overstimulation = 0;
+
+  const DISC_POOL = [
+    "11",
+    "13",
+    "Cat",
+    "Mellohi",
+    "Strad",
+    "Mall",
+    "Stal",
+    "Far",
+    "Blocks",
+    "Chirp",
+    "Ward",
+    "Wait",
+  ];
+
+  const DISC_LVL_20 = "Pigstep";
+  const DISC_LVL_50 = "Infinite Amethyst";
+  const DISC_LVL_100 = "Axolotl";
+
+  let ownedDiscs = [];
+  let currentDisc = null;
+  let petXP = 0;
+  let petLevel = lastKnownLevel;
+
+  try {
+    ownedDiscs = JSON.parse(localStorage.getItem("ownedDiscs")) || [];
+  } catch {
+    ownedDiscs = [];
+  }
+
+  try {
+    currentDisc = localStorage.getItem("currentDisc");
+  } catch {
+    currentDisc = null;
+  }
+
+  try {
+    const storedXP = Number(localStorage.getItem("petXP"));
+    petXP = Number.isFinite(storedXP) ? storedXP : 0;
+  } catch {
+    petXP = 0;
+  }
+
+  try {
+    const storedLevel = Number(localStorage.getItem("petLevel"));
+    if (Number.isFinite(storedLevel) && storedLevel > 0) {
+      petLevel = storedLevel;
+      lastKnownLevel = storedLevel;
+    }
+  } catch {
+    petLevel = lastKnownLevel;
+  }
+
+  const audioPlayer = new Audio();
+  audioPlayer.loop = true;
 
   function normalizePetName(name) {
     if (typeof name === "string") {
@@ -546,6 +611,130 @@ function initPetWidget() {
     messageEl.textContent = text;
   }
 
+  function xpNeeded(level) {
+    return Math.floor(30 * Math.pow(level, 1.4));
+  }
+
+  function persistProgress() {
+    try {
+      localStorage.setItem("petXP", petXP);
+      localStorage.setItem("petLevel", petLevel);
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  function handleDiscRewards(level) {
+    if (level % 5 === 0) {
+      try {
+        const ax = new Audio("sounds/Axolotl.mp3");
+        ax.play().catch(() => {});
+      } catch {
+        // ignore audio errors
+      }
+    }
+
+    let rewardDisc = null;
+
+    if (level === 20) rewardDisc = DISC_LVL_20;
+    else if (level === 50) rewardDisc = DISC_LVL_50;
+    else if (level === 100) rewardDisc = DISC_LVL_100;
+    else if (level % 5 === 0) rewardDisc = null;
+    else {
+      const remaining = DISC_POOL.filter((d) => !ownedDiscs.includes(d));
+      if (remaining.length > 0) {
+        rewardDisc = remaining[Math.floor(Math.random() * remaining.length)];
+      }
+    }
+
+    if (rewardDisc) {
+      ownedDiscs.push(rewardDisc);
+      try {
+        localStorage.setItem("ownedDiscs", JSON.stringify(ownedDiscs));
+      } catch {
+        // ignore storage errors
+      }
+      renderDiscList();
+    }
+  }
+
+  function checkLevelUp() {
+    let needed = xpNeeded(petLevel);
+    let leveled = false;
+    while (petXP >= needed) {
+      petXP -= needed;
+      petLevel += 1;
+      leveled = true;
+      persistProgress();
+      handleDiscRewards(petLevel);
+      needed = xpNeeded(petLevel);
+    }
+
+    if (leveled) {
+      updateLevel(petLevel);
+      lastKnownLevel = petLevel;
+      if (typeof petManager.setProfile === "function") {
+        petManager.setProfile({ level: petLevel });
+      }
+    }
+  }
+
+  function gainXP(amount) {
+    if (!Number.isFinite(amount)) return;
+
+    if (happiness < -15) return;
+    if (hunger === 10 || sleepiness === 10) return;
+
+    let awarded = amount;
+    if (overstimulation > 8) {
+      awarded = amount / 2;
+    }
+
+    petXP += awarded;
+    persistProgress();
+    checkLevelUp();
+  }
+
+  function playDisc(name) {
+    if (!name) return;
+    currentDisc = name;
+    try {
+      localStorage.setItem("currentDisc", name);
+    } catch {
+      // ignore storage errors
+    }
+
+    audioPlayer.src = `sounds/${name}.mp3`;
+    audioPlayer.play().catch(() => {});
+  }
+
+  function stopMusic() {
+    audioPlayer.pause();
+    audioPlayer.currentTime = 0;
+    currentDisc = null;
+    try {
+      localStorage.removeItem("currentDisc");
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  function renderDiscList() {
+    if (!discListEl) return;
+    discListEl.innerHTML = "";
+
+    ownedDiscs.forEach((disc) => {
+      const row = document.createElement("div");
+      row.className = "disc-entry";
+      row.innerHTML = `
+        <img src="assets/icon-${disc}.png" alt="${disc} disc icon" />
+        <span>${disc}</span>
+        <button class="disc-play-btn" data-disc="${disc}">▶️</button>
+      `;
+      discListEl.appendChild(row);
+    });
+  }
+
   function updateLevel(level) {
     if (!levelEl) return;
     const safeLevel = Number.isFinite(level) ? level : 1;
@@ -565,6 +754,19 @@ function initPetWidget() {
         fill.style.width = `${width}%`;
       }
     });
+
+    if (typeof stats?.affection === "number") {
+      happiness = stats.affection;
+    }
+    if (typeof stats?.hunger === "number") {
+      hunger = stats.hunger;
+    }
+    if (typeof stats?.sleepiness === "number") {
+      sleepiness = stats.sleepiness;
+    }
+    if (typeof stats?.overstimulation === "number") {
+      overstimulation = stats.overstimulation;
+    }
   }
 
   function persistLevel100RewardFlag() {
@@ -745,6 +947,15 @@ function initPetWidget() {
   const CALLBACK_ACTIONS = new Set(["call-back", "callback"]);
   let lastReportedRoamState = null;
 
+  const ACTION_XP_MAP = {
+    feed: 5,
+    sleep: 5,
+    swim: 5,
+    rest: 5,
+    pet: 3,
+    roam: 2,
+  };
+
   function notifyParentAboutRoamState(isRoaming) {
     if (lastReportedRoamState === isRoaming) {
       return;
@@ -829,6 +1040,11 @@ function initPetWidget() {
   }
 
   setPetName(petName);
+  setPetLevel(petLevel);
+  renderDiscList();
+  if (currentDisc) {
+    playDisc(currentDisc);
+  }
 
   function setPetLevel(level) {
     const numericLevel = Number(level);
@@ -896,6 +1112,10 @@ function initPetWidget() {
     lastIsDead = isDead;
     updateLevel(state.level);
     updateStats(state.stats);
+    if (Number.isFinite(currentLevel)) {
+      petLevel = currentLevel;
+      persistProgress();
+    }
     updateDeathState(isDead);
     updateVacationState(state.vacation);
     updateRoamState(state.mode, isDead);
@@ -936,6 +1156,10 @@ function initPetWidget() {
 
   const handleActionTrigger = (actionName) => {
     if (!actionName) return;
+    const normalized = (actionName || "").toLowerCase();
+    if (ACTION_XP_MAP[normalized]) {
+      gainXP(ACTION_XP_MAP[normalized]);
+    }
     if (petManager.actions && typeof petManager.actions[actionName] === "function") {
       petManager.actions[actionName]();
       return;
@@ -961,6 +1185,40 @@ function initPetWidget() {
   if (actionContainer) {
     actionContainer.addEventListener("click", delegatedClickHandler);
   }
+
+  if (discPlayerButton && discModalEl) {
+    discPlayerButton.addEventListener("click", () => {
+      discModalEl.classList.remove("hidden");
+    });
+  }
+
+  if (discModalCloseEl && discModalEl) {
+    discModalCloseEl.addEventListener("click", () => {
+      discModalEl.classList.add("hidden");
+    });
+  }
+
+  if (stopMusicBtn) {
+    stopMusicBtn.addEventListener("click", () => stopMusic());
+  }
+
+  document.addEventListener("click", (e) => {
+    if (e.target && e.target.matches(".disc-play-btn")) {
+      const discName = e.target.dataset.disc;
+      playDisc(discName);
+    }
+
+    if (e.target && e.target.id === "stop-music") {
+      stopMusic();
+    }
+  });
+
+  const HOURLY_XP_INTERVAL_MS = 60 * 60 * 1000;
+  setInterval(() => {
+    if (happiness > 0) {
+      gainXP(2);
+    }
+  }, HOURLY_XP_INTERVAL_MS);
 
   const handleConfigMessage = (event) => {
     const data = event.data;
