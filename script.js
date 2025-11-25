@@ -805,6 +805,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   settingsDialog = document.querySelector(".settings-modal__dialog");
   petWidgetFrame = document.querySelector("#pet-widget iframe");
 
+  const petLevelUpProxy = (amount = 1) => {
+    const petWindow = petWidgetFrame?.contentWindow;
+
+    if (!petWindow || typeof petWindow.petLevelUp !== "function") {
+      console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
+      return;
+    }
+
+    petWindow.petLevelUp(amount);
+  };
+
+  window.petLevelUp = petLevelUpProxy;
+
   toggleHeadingInput = document.getElementById("toggle-heading");
   toggleAxolotlInput = document.getElementById("toggle-axolotl");
   petNameInput = document.getElementById("pet-name-input");
