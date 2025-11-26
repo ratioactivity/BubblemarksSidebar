@@ -210,10 +210,7 @@ function initPetWidget() {
     }
   };
 
-  window.addEventListener("DOMContentLoaded", initializeDiscState, { once: true });
-  if (document.readyState !== "loading") {
-    initializeDiscState();
-  }
+  runAfterDomReady(initializeDiscState);
 
   function normalizePetName(name) {
     if (typeof name === "string") {
@@ -1532,12 +1529,19 @@ function attemptInit(attempt = 1) {
 }
 
 function runAfterDomReady(callback) {
-  if (document.readyState !== "loading") {
-    callback();
+  if (typeof callback !== "function") {
     return;
   }
 
-  window.addEventListener("DOMContentLoaded", callback, { once: true });
+  const invoke = () => {
+    callback();
+  };
+
+  window.addEventListener("DOMContentLoaded", invoke, { once: true });
+
+  if (document.readyState !== "loading") {
+    invoke();
+  }
 }
 
 runAfterDomReady(() => attemptInit());
