@@ -1458,6 +1458,12 @@ function initPetWidget() {
       console.warn("resetPetProgress: failed to update localStorage", err);
     }
 
+    if (petManager && typeof petManager.resetPet === "function") {
+      petManager.resetPet();
+    } else if (petManager && typeof petManager.setProfile === "function") {
+      petManager.setProfile({ level: 1 });
+    }
+
     console.log("🐾 Pet progress fully reset!");
   };
 
