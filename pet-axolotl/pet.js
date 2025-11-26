@@ -1789,27 +1789,36 @@ function setupAchievementModalTriggers() {
   const achievementModal = document.getElementById("achievement-modal");
   const achievementCloseButton = document.getElementById("ach-close");
 
-  if (achievementButton && achievementModal) {
-    achievementButton.addEventListener("click", () => {
-      const wasHidden = achievementModal.classList.contains("hidden");
-      achievementModal.classList.toggle("hidden");
+  const toggleAchievementModal = (show) => {
+    if (!achievementModal) return;
 
-      if (wasHidden && typeof window.renderAchievements === "function") {
+    if (show) {
+      achievementModal.classList.remove("hidden");
+      if (typeof window.renderAchievements === "function") {
         window.renderAchievements();
       }
+    } else {
+      achievementModal.classList.add("hidden");
+    }
+  };
+
+  if (achievementButton) {
+    achievementButton.addEventListener("click", () => {
+      const shouldShow = achievementModal?.classList.contains("hidden");
+      toggleAchievementModal(Boolean(shouldShow));
     });
   }
 
-  if (achievementCloseButton && achievementModal) {
+  if (achievementCloseButton) {
     achievementCloseButton.addEventListener("click", () => {
-      achievementModal.classList.add("hidden");
+      toggleAchievementModal(false);
     });
   }
 
   if (achievementModal) {
     achievementModal.addEventListener("click", (event) => {
       if (event.target === achievementModal) {
-        achievementModal.classList.add("hidden");
+        toggleAchievementModal(false);
       }
     });
   }
@@ -1831,7 +1840,7 @@ function runAfterDomReady(callback) {
   }
 }
 
-runAfterDomReady(() => {
+window.addEventListener("DOMContentLoaded", () => {
   setupAchievementModalTriggers();
   attemptInit();
 });
