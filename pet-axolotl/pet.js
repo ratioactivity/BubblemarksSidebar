@@ -96,6 +96,8 @@ function initPetWidget() {
   const levelEl = petContainer.querySelector(".pet-level");
   const nameEl = petContainer.querySelector(".pet-name");
   const overlayEl = petContainer.querySelector("#pet-overlay");
+  let xpBarFillEl = null;
+  let xpTextEl = null;
   const rewardIconEl = document.getElementById("disc-reward-icon");
   const musicPlayerEl = document.getElementById("music-player");
   const musicSourceEl = document.getElementById("music-source");
@@ -211,6 +213,7 @@ function initPetWidget() {
   };
 
   runAfterDomReady(initializeDiscState);
+  ensureXPElements();
 
   function normalizePetName(name) {
     if (typeof name === "string") {
@@ -719,6 +722,40 @@ function initPetWidget() {
     messageEl.textContent = text;
   }
 
+  function ensureXPElements() {
+    const metaRow = petContainer.querySelector(".pet-meta-row");
+
+    const xpContainers = Array.from(petContainer.querySelectorAll(".xp-bar-container"));
+    const xpTexts = Array.from(petContainer.querySelectorAll("#xp-text"));
+    const xpFills = Array.from(petContainer.querySelectorAll("#xp-bar-fill"));
+
+    const primaryContainer = metaRow?.querySelector(".xp-bar-container") || xpContainers[0] || null;
+    const primaryText = metaRow?.querySelector("#xp-text") || xpTexts[0] || null;
+    const primaryFill =
+      (primaryContainer ? primaryContainer.querySelector("#xp-bar-fill") : null) || xpFills[0] || null;
+
+    xpContainers.forEach((node) => {
+      if (node !== primaryContainer) {
+        node.remove();
+      }
+    });
+
+    xpTexts.forEach((node) => {
+      if (node !== primaryText) {
+        node.remove();
+      }
+    });
+
+    xpFills.forEach((node) => {
+      if (node !== primaryFill) {
+        node.remove();
+      }
+    });
+
+    xpBarFillEl = primaryFill;
+    xpTextEl = primaryText;
+  }
+
   function xpNeeded(level) {
     return Math.floor(30 * Math.pow(level, 1.4));
   }
@@ -727,8 +764,17 @@ function initPetWidget() {
     const needed = xpNeeded(petLevel);
     const percent = Math.min(100, (petXP / needed) * 100);
 
-    document.getElementById("xp-bar-fill").style.width = `${percent}%`;
-    document.getElementById("xp-text").textContent = `${petXP} / ${needed} XP`;
+    if (!xpBarFillEl || !xpTextEl) {
+      ensureXPElements();
+    }
+
+    if (xpBarFillEl) {
+      xpBarFillEl.style.width = `${percent}%`;
+    }
+
+    if (xpTextEl) {
+      xpTextEl.textContent = `${petXP} / ${needed} XP`;
+    }
   }
 
   function persistProgress() {
