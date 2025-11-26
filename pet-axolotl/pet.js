@@ -1784,6 +1784,37 @@ function attemptInit(attempt = 1) {
   }
 }
 
+function setupAchievementModalTriggers() {
+  const achievementButton = document.getElementById("achievement-button");
+  const achievementModal = document.getElementById("achievement-modal");
+  const achievementCloseButton = document.getElementById("ach-close");
+
+  if (achievementButton && achievementModal) {
+    achievementButton.addEventListener("click", () => {
+      const wasHidden = achievementModal.classList.contains("hidden");
+      achievementModal.classList.toggle("hidden");
+
+      if (wasHidden && typeof window.renderAchievements === "function") {
+        window.renderAchievements();
+      }
+    });
+  }
+
+  if (achievementCloseButton && achievementModal) {
+    achievementCloseButton.addEventListener("click", () => {
+      achievementModal.classList.add("hidden");
+    });
+  }
+
+  if (achievementModal) {
+    achievementModal.addEventListener("click", (event) => {
+      if (event.target === achievementModal) {
+        achievementModal.classList.add("hidden");
+      }
+    });
+  }
+}
+
 function runAfterDomReady(callback) {
   if (typeof callback !== "function") {
     return;
@@ -1800,7 +1831,10 @@ function runAfterDomReady(callback) {
   }
 }
 
-runAfterDomReady(() => attemptInit());
+runAfterDomReady(() => {
+  setupAchievementModalTriggers();
+  attemptInit();
+});
 
 // Ensure the debug helper is always defined, even if the widget fails early.
 runAfterDomReady(() => {
