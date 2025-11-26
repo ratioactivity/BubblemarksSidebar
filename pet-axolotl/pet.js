@@ -1570,32 +1570,6 @@ function initPetWidget() {
     actionContainer.addEventListener("click", delegatedClickHandler);
   }
 
-  const setupAchievementModalListeners = () => {
-    if (achievementButton && achievementModal) {
-      achievementButton.addEventListener("click", () => {
-        const wasHidden = achievementModal.classList.contains("hidden");
-        achievementModal.classList.toggle("hidden");
-        if (wasHidden) {
-          renderAchievements();
-        }
-      });
-    }
-
-    if (achievementCloseButton && achievementModal) {
-      achievementCloseButton.addEventListener("click", () => {
-        achievementModal.classList.add("hidden");
-      });
-    }
-
-    if (achievementModal) {
-      achievementModal.addEventListener("click", (event) => {
-        if (event.target === achievementModal) {
-          achievementModal.classList.add("hidden");
-        }
-      });
-    }
-  };
-
   const setupDiscModalListeners = () => {
     if (discPlayerButton && discModalEl) {
       discPlayerButton.addEventListener("click", () => {
@@ -1619,12 +1593,6 @@ function initPetWidget() {
       });
     }
   };
-
-  if (document.readyState !== "loading") {
-    setupAchievementModalListeners();
-  } else {
-    window.addEventListener("DOMContentLoaded", setupAchievementModalListeners, { once: true });
-  }
 
   if (document.readyState !== "loading") {
     setupDiscModalListeners();
