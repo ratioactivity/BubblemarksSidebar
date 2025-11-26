@@ -205,6 +205,7 @@ function initPetWidget() {
   let DISC_LVL_100 = "Axolotl";
   let ownedDiscs = [];
   let currentDisc = null;
+  let callBackCount = Number(localStorage.getItem("callBackCount")) || 0;
   let petXP = 0;
   let petLevel = lastKnownLevel;
   let discAudio = null;
@@ -906,6 +907,9 @@ function initPetWidget() {
     if (leveled) {
       updateLevel(petLevel);
       lastKnownLevel = petLevel;
+      if (petLevel >= 10) unlockAchievement("level10");
+      if (petLevel >= 25) unlockAchievement("level25");
+      if (petLevel >= 100) unlockAchievement("level100");
       if (typeof petManager.setProfile === "function") {
         petManager.setProfile({ level: petLevel });
       }
@@ -939,6 +943,10 @@ function initPetWidget() {
 
     discAudio.src = discSoundPath;
     currentDisc = name;
+
+    if (ownedDiscs.length >= 1 && currentDisc) {
+      unlockAchievement("firstDisc");
+    }
 
     try {
       localStorage.setItem("currentDisc", name);
@@ -1526,14 +1534,9 @@ function initPetWidget() {
   function attachActionHandler(button) {
     const action = button.dataset.action;
     if (!action) return;
-    button.addEventListener("click", () => {
-      if (petManager.actions && typeof petManager.actions[action] === "function") {
-        petManager.actions[action]();
-        return;
-      }
-      if (typeof petManager.triggerAction === "function") {
-        petManager.triggerAction(action);
-      }
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      handleActionTrigger(action);
     });
   }
   buttons.forEach((btn) => attachActionHandler(btn));
@@ -1543,6 +1546,13 @@ function initPetWidget() {
   const handleActionTrigger = (actionName) => {
     if (!actionName) return;
     const normalized = (actionName || "").toLowerCase();
+    if (CALLBACK_ACTIONS.has(normalized)) {
+      callBackCount += 1;
+      if (callBackCount >= 20) {
+        unlockAchievement("callBack20");
+      }
+      localStorage.setItem("callBackCount", callBackCount);
+    }
     if (ACTION_XP_MAP[normalized]) {
       gainXP(ACTION_XP_MAP[normalized]);
     }
