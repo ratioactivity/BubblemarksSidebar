@@ -127,7 +127,7 @@ function initPetWidget() {
   let lastIsDead = false;
   let lastKnownLevel = Number.isFinite(initialPetState?.level)
     ? initialPetState.level
-    : 1;
+    : 0;
   let lastRewardedKey = null;
   let happiness = 0;
   let hunger = 0;
@@ -890,7 +890,7 @@ function initPetWidget() {
 
   function updateLevel(level) {
     if (!levelEl) return;
-    const safeLevel = Number.isFinite(level) ? level : 1;
+    const safeLevel = Number.isFinite(level) ? level : 0;
     levelEl.textContent = `Lv. ${safeLevel}`;
   }
 
@@ -1211,7 +1211,7 @@ function initPetWidget() {
     const numericLevel = Number(level);
     if (!Number.isFinite(numericLevel)) return;
 
-    const safeLevel = Math.max(1, Math.round(numericLevel));
+    const safeLevel = Math.max(0, Math.round(numericLevel));
     lastKnownLevel = safeLevel;
     updateLevel(safeLevel);
     if (typeof petManager.setProfile === "function") {
@@ -1436,8 +1436,8 @@ function initPetWidget() {
     stopMusic();
 
     petXP = 0;
-    petLevel = 1;
-    lastKnownLevel = 1;
+    petLevel = 0;
+    lastKnownLevel = 0;
     lastRewardedKey = null;
     level100RewardGranted = false;
 
@@ -1461,7 +1461,7 @@ function initPetWidget() {
     if (petManager && typeof petManager.resetPet === "function") {
       petManager.resetPet();
     } else if (petManager && typeof petManager.setProfile === "function") {
-      petManager.setProfile({ level: 1 });
+      petManager.setProfile({ level: 0 });
     }
 
     console.log("🐾 Pet progress fully reset!");

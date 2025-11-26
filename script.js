@@ -392,6 +392,7 @@ let petNameInput;
 let petNameSaveBtn;
 let togglePetVacationInput;
 let togglePetSoundsInput;
+let resetPetProgressBtn;
 let scrollLockToggleInput;
 let cardSizeInput;
 let customizeCategoriesBtn;
@@ -857,6 +858,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   petNameSaveBtn = document.getElementById("pet-name-save");
   togglePetVacationInput = document.getElementById("toggle-vacation");
   togglePetSoundsInput = document.getElementById("toggle-pet-sounds");
+  resetPetProgressBtn = document.getElementById("reset-pet-progress");
   cardSizeInput = document.getElementById("card-size");
   cardsPerRowInput = document.getElementById("cards-per-row");
   rowsPerPageInput = document.getElementById("rows-per-page");
@@ -2646,6 +2648,20 @@ function setupSettingsMenu() {
       preferences.petSoundEnabled = !event.target.checked;
       savePreferences();
       applyPetSoundPreference(preferences.petSoundEnabled);
+    });
+  }
+
+  if (resetPetProgressBtn) {
+    resetPetProgressBtn.addEventListener("click", () => {
+      if (!confirm("Reset BubblePet level to 0 and clear unlocked discs?")) {
+        return;
+      }
+
+      try {
+        resetPetLevel();
+      } catch (error) {
+        console.error("[Bubblemarks] Failed to reset pet progress:", error);
+      }
     });
   }
 
