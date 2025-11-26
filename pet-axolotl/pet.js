@@ -43,6 +43,36 @@ if (document.readyState !== "loading") {
 let queuedResetRequests = 0;
 let performResetCallback = null;
 
+const ACHIEVEMENTS = {
+  firstDisc: { unlocked: false, reward: "background-teal.png", label: "First Disc" },
+  level10: { unlocked: false, reward: "background-twilight.png", label: "Reach Level 10" },
+  level25: { unlocked: false, reward: "background-dusk.png", label: "Reach Level 25" },
+  callBack20: { unlocked: false, reward: "background-whimsy.png", label: "Call Back 20 Times" },
+  level100: { unlocked: false, reward: "background-meadow.png", label: "Reach Level 100" },
+  swim2h: { unlocked: false, reward: "background-wildwest.png", label: "2 Hours Swimming" },
+  allDiscs: { unlocked: false, reward: "background-winter.gif", label: "Play All Discs" },
+  widget100h: { unlocked: false, reward: "background-sunset.gif", label: "100 Hours With BubblePet" },
+};
+
+let achievements = JSON.parse(localStorage.getItem("achievements")) || ACHIEVEMENTS;
+
+function saveAchievements() {
+  localStorage.setItem("achievements", JSON.stringify(achievements));
+}
+
+function unlockAchievement(key) {
+  if (!achievements[key].unlocked) {
+    achievements[key].unlocked = true;
+    saveAchievements();
+    if (typeof showAchievementPopup === "function") {
+      showAchievementPopup(achievements[key].label);
+    }
+    if (typeof renderAchievements === "function") {
+      renderAchievements();
+    }
+  }
+}
+
 const handleResetRequest = () => {
   if (typeof performResetCallback === "function") {
     performResetCallback();
@@ -113,6 +143,9 @@ function initPetWidget() {
   const discPlayerButton = document.getElementById("disc-player-button");
   const discListEl = document.getElementById("disc-list");
   const stopMusicBtn = document.getElementById("stop-music");
+  const achievementButton = document.getElementById("achievement-button");
+  const achievementModal = document.getElementById("achievement-modal");
+  const achievementCloseButton = document.getElementById("ach-close");
 
   const petManager = window.petManager;
   if (!petManager || typeof petManager.subscribeToAnimationChange !== "function") {
@@ -1406,6 +1439,28 @@ function initPetWidget() {
     actionContainer.addEventListener("click", delegatedClickHandler);
   }
 
+  const setupAchievementModalListeners = () => {
+    if (achievementButton && achievementModal) {
+      achievementButton.addEventListener("click", () => {
+        achievementModal.classList.toggle("hidden");
+      });
+    }
+
+    if (achievementCloseButton && achievementModal) {
+      achievementCloseButton.addEventListener("click", () => {
+        achievementModal.classList.add("hidden");
+      });
+    }
+
+    if (achievementModal) {
+      achievementModal.addEventListener("click", (event) => {
+        if (event.target === achievementModal) {
+          achievementModal.classList.add("hidden");
+        }
+      });
+    }
+  };
+
   const setupDiscModalListeners = () => {
     if (discPlayerButton && discModalEl) {
       discPlayerButton.addEventListener("click", () => {
@@ -1429,6 +1484,12 @@ function initPetWidget() {
       });
     }
   };
+
+  if (document.readyState !== "loading") {
+    setupAchievementModalListeners();
+  } else {
+    window.addEventListener("DOMContentLoaded", setupAchievementModalListeners, { once: true });
+  }
 
   if (document.readyState !== "loading") {
     setupDiscModalListeners();
