@@ -171,6 +171,7 @@ function initPetWidget() {
   const discListEl = document.getElementById("disc-list");
   const stopMusicBtn = document.getElementById("stop-music");
   const nowPlayingEl = document.getElementById("now-playing");
+  const randomToggleEl = document.getElementById("randomize-music");
   const achievementButton = document.getElementById("achievement-button");
   const achievementModal = document.getElementById("achievement-modal");
   const achievementCloseButton = document.getElementById("ach-close");
@@ -217,12 +218,48 @@ function initPetWidget() {
   let LEVEL_DISC_REWARDS = {};
   let GENERIC_DISC_POOL = [];
   let selectedBackgroundReward = null;
+  let randomMode = false;
 
   try {
     selectedBackgroundReward = localStorage.getItem("selectedBackgroundReward");
   } catch {
     selectedBackgroundReward = null;
   }
+
+  const loadRandomMode = () => {
+    try {
+      const stored = localStorage.getItem("randomMode");
+      randomMode = stored ? Boolean(JSON.parse(stored)) : false;
+    } catch {
+      randomMode = false;
+    }
+  };
+
+  const persistRandomMode = () => {
+    try {
+      localStorage.setItem("randomMode", JSON.stringify(randomMode));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const updatePlaybackLoop = () => {
+    if (discAudio) {
+      discAudio.loop = !randomMode;
+    }
+  };
+
+  const handleDiscEnded = () => {
+    if (!randomMode) {
+      return;
+    }
+
+    const possible = ownedDiscs.filter((disc) => disc !== currentDisc);
+    if (possible.length > 0) {
+      const next = possible[Math.floor(Math.random() * possible.length)];
+      playDisc(next);
+    }
+  };
 
   const initializeDiscState = () => {
     DISC_POOL = [
@@ -271,6 +308,8 @@ function initPetWidget() {
       currentDisc = null;
     }
 
+    loadRandomMode();
+
     try {
       const storedXP = Number(localStorage.getItem("petXP"));
       petXP = Number.isFinite(storedXP) ? storedXP : 0;
@@ -290,7 +329,8 @@ function initPetWidget() {
 
     if (!discAudio) {
       discAudio = new Audio();
-      discAudio.loop = true;
+      discAudio.onended = handleDiscEnded;
+      updatePlaybackLoop();
     }
   };
 
@@ -982,6 +1022,8 @@ function initPetWidget() {
 
     discAudio.src = discSoundPath;
     currentDisc = name;
+
+    updatePlaybackLoop();
 
     if (nowPlayingEl) {
       nowPlayingEl.textContent = `Now Playing: ${name}`;
@@ -1678,6 +1720,25 @@ function initPetWidget() {
     setupDiscModalListeners();
   } else {
     window.addEventListener("DOMContentLoaded", setupDiscModalListeners, { once: true });
+  }
+
+  const setupRandomToggle = () => {
+    if (!randomToggleEl) {
+      return;
+    }
+
+    randomToggleEl.checked = randomMode;
+    randomToggleEl.addEventListener("change", (event) => {
+      randomMode = event.target.checked;
+      persistRandomMode();
+      updatePlaybackLoop();
+    });
+  };
+
+  if (document.readyState !== "loading") {
+    setupRandomToggle();
+  } else {
+    window.addEventListener("DOMContentLoaded", setupRandomToggle, { once: true });
   }
 
   document.addEventListener("click", (event) => {
