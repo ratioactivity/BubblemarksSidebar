@@ -777,8 +777,8 @@ function initPetWidget() {
       petXP -= needed;
       petLevel += 1;
       leveled = true;
-      persistProgress();
       handleDiscRewards(petLevel);
+      persistProgress();
       needed = xpNeeded(petLevel);
     }
 
