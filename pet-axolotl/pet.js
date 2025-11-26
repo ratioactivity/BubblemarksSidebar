@@ -206,6 +206,9 @@ function initPetWidget() {
   let ownedDiscs = [];
   let currentDisc = null;
   let callBackCount = Number(localStorage.getItem("callBackCount")) || 0;
+  let swimSeconds = Number(localStorage.getItem("swimSeconds")) || 0;
+  let widgetHours = Number(localStorage.getItem("widgetHours")) || 0;
+  let ALL_DISCS = [];
   let petXP = 0;
   let petLevel = lastKnownLevel;
   let discAudio = null;
@@ -247,6 +250,13 @@ function initPetWidget() {
     };
 
     GENERIC_DISC_POOL = [...DISC_POOL];
+
+    ALL_DISCS = [
+      ...DISC_POOL,
+      DISC_LVL_20,
+      DISC_LVL_50,
+      DISC_LVL_100,
+    ].filter(Boolean);
 
     try {
       ownedDiscs = JSON.parse(localStorage.getItem("ownedDiscs")) || [];
@@ -954,6 +964,11 @@ function initPetWidget() {
       // ignore storage errors
     }
 
+    const allOwned = ALL_DISCS.every((discName) => ownedDiscs.includes(discName));
+    if (allOwned) {
+      unlockAchievement("allDiscs");
+    }
+
     discAudio.play().catch(() => {});
   }
 
@@ -1553,6 +1568,13 @@ function initPetWidget() {
       }
       localStorage.setItem("callBackCount", callBackCount);
     }
+    if (normalized === "swim") {
+      swimSeconds += 5;
+      if (swimSeconds >= 7200) {
+        unlockAchievement("swim2h");
+      }
+      localStorage.setItem("swimSeconds", swimSeconds);
+    }
     if (ACTION_XP_MAP[normalized]) {
       gainXP(ACTION_XP_MAP[normalized]);
     }
@@ -1627,6 +1649,11 @@ function initPetWidget() {
 
   const HOURLY_XP_INTERVAL_MS = 60 * 60 * 1000;
   setInterval(() => {
+    widgetHours += 1;
+    if (widgetHours >= 100) {
+      unlockAchievement("widget100h");
+    }
+    localStorage.setItem("widgetHours", widgetHours);
     if (happiness > 0) {
       gainXP(2);
     }
