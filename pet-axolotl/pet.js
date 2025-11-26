@@ -56,6 +56,21 @@ const ACHIEVEMENTS = {
 
 const cloneAchievements = (data) => JSON.parse(JSON.stringify(data));
 
+function showAchievementPopup(text) {
+  const popup = document.getElementById("achievement-popup");
+  if (!popup) return;
+
+  popup.classList.remove("hidden");
+
+  setTimeout(() => {
+    popup.classList.add("hidden");
+  }, 2500);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  window.showAchievementPopup = showAchievementPopup;
+});
+
 let achievements = (() => {
   try {
     const stored = JSON.parse(localStorage.getItem("achievements"));
@@ -160,7 +175,6 @@ function initPetWidget() {
   const achievementCloseButton = document.getElementById("ach-close");
   const achievementListEl = document.getElementById("achievement-list");
   const backgroundListEl = document.getElementById("background-list");
-  const achievementPopupEl = document.getElementById("achievement-popup");
   const aquariumBgImage = petContainer.querySelector(".aquarium-bg");
 
   const petManager = window.petManager;
@@ -191,6 +205,10 @@ function initPetWidget() {
   let DISC_LVL_100 = "Axolotl";
   let ownedDiscs = [];
   let currentDisc = null;
+  let callBackCount = Number(localStorage.getItem("callBackCount")) || 0;
+  let swimSeconds = Number(localStorage.getItem("swimSeconds")) || 0;
+  let widgetHours = Number(localStorage.getItem("widgetHours")) || 0;
+  let ALL_DISCS = [];
   let petXP = 0;
   let petLevel = lastKnownLevel;
   let discAudio = null;
@@ -232,6 +250,13 @@ function initPetWidget() {
     };
 
     GENERIC_DISC_POOL = [...DISC_POOL];
+
+    ALL_DISCS = [
+      ...DISC_POOL,
+      DISC_LVL_20,
+      DISC_LVL_50,
+      DISC_LVL_100,
+    ].filter(Boolean);
 
     try {
       ownedDiscs = JSON.parse(localStorage.getItem("ownedDiscs")) || [];
@@ -892,6 +917,9 @@ function initPetWidget() {
     if (leveled) {
       updateLevel(petLevel);
       lastKnownLevel = petLevel;
+      if (petLevel >= 10) unlockAchievement("level10");
+      if (petLevel >= 25) unlockAchievement("level25");
+      if (petLevel >= 100) unlockAchievement("level100");
       if (typeof petManager.setProfile === "function") {
         petManager.setProfile({ level: petLevel });
       }
@@ -926,10 +954,19 @@ function initPetWidget() {
     discAudio.src = discSoundPath;
     currentDisc = name;
 
+    if (ownedDiscs.length >= 1 && currentDisc) {
+      unlockAchievement("firstDisc");
+    }
+
     try {
       localStorage.setItem("currentDisc", name);
     } catch {
       // ignore storage errors
+    }
+
+    const allOwned = ALL_DISCS.every((discName) => ownedDiscs.includes(discName));
+    if (allOwned) {
+      unlockAchievement("allDiscs");
     }
 
     discAudio.play().catch(() => {});
@@ -1087,19 +1124,7 @@ function initPetWidget() {
     renderBackgroundRewards();
   }
 
-  function showAchievementPopup(label) {
-    if (!achievementPopupEl) return;
-
-    achievementPopupEl.classList.remove("hidden");
-    achievementPopupEl.setAttribute("aria-label", label || "Achievement unlocked");
-
-    setTimeout(() => {
-      achievementPopupEl.classList.add("hidden");
-    }, 1600);
-  }
-
   window.renderAchievements = renderAchievements;
-  window.showAchievementPopup = showAchievementPopup;
 
   const initialBackground =
     selectedBackgroundReward || aquariumBgImage?.getAttribute("src") || "./assets/background.png";
@@ -1524,14 +1549,9 @@ function initPetWidget() {
   function attachActionHandler(button) {
     const action = button.dataset.action;
     if (!action) return;
-    button.addEventListener("click", () => {
-      if (petManager.actions && typeof petManager.actions[action] === "function") {
-        petManager.actions[action]();
-        return;
-      }
-      if (typeof petManager.triggerAction === "function") {
-        petManager.triggerAction(action);
-      }
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      handleActionTrigger(action);
     });
   }
   buttons.forEach((btn) => attachActionHandler(btn));
@@ -1541,6 +1561,20 @@ function initPetWidget() {
   const handleActionTrigger = (actionName) => {
     if (!actionName) return;
     const normalized = (actionName || "").toLowerCase();
+    if (CALLBACK_ACTIONS.has(normalized)) {
+      callBackCount += 1;
+      if (callBackCount >= 20) {
+        unlockAchievement("callBack20");
+      }
+      localStorage.setItem("callBackCount", callBackCount);
+    }
+    if (normalized === "swim") {
+      swimSeconds += 5;
+      if (swimSeconds >= 7200) {
+        unlockAchievement("swim2h");
+      }
+      localStorage.setItem("swimSeconds", swimSeconds);
+    }
     if (ACTION_XP_MAP[normalized]) {
       gainXP(ACTION_XP_MAP[normalized]);
     }
@@ -1570,32 +1604,6 @@ function initPetWidget() {
     actionContainer.addEventListener("click", delegatedClickHandler);
   }
 
-  const setupAchievementModalListeners = () => {
-    if (achievementButton && achievementModal) {
-      achievementButton.addEventListener("click", () => {
-        const wasHidden = achievementModal.classList.contains("hidden");
-        achievementModal.classList.toggle("hidden");
-        if (wasHidden) {
-          renderAchievements();
-        }
-      });
-    }
-
-    if (achievementCloseButton && achievementModal) {
-      achievementCloseButton.addEventListener("click", () => {
-        achievementModal.classList.add("hidden");
-      });
-    }
-
-    if (achievementModal) {
-      achievementModal.addEventListener("click", (event) => {
-        if (event.target === achievementModal) {
-          achievementModal.classList.add("hidden");
-        }
-      });
-    }
-  };
-
   const setupDiscModalListeners = () => {
     if (discPlayerButton && discModalEl) {
       discPlayerButton.addEventListener("click", () => {
@@ -1621,12 +1629,6 @@ function initPetWidget() {
   };
 
   if (document.readyState !== "loading") {
-    setupAchievementModalListeners();
-  } else {
-    window.addEventListener("DOMContentLoaded", setupAchievementModalListeners, { once: true });
-  }
-
-  if (document.readyState !== "loading") {
     setupDiscModalListeners();
   } else {
     window.addEventListener("DOMContentLoaded", setupDiscModalListeners, { once: true });
@@ -1647,6 +1649,11 @@ function initPetWidget() {
 
   const HOURLY_XP_INTERVAL_MS = 60 * 60 * 1000;
   setInterval(() => {
+    widgetHours += 1;
+    if (widgetHours >= 100) {
+      unlockAchievement("widget100h");
+    }
+    localStorage.setItem("widgetHours", widgetHours);
     if (happiness > 0) {
       gainXP(2);
     }
@@ -1840,7 +1847,7 @@ function runAfterDomReady(callback) {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+runAfterDomReady(() => {
   setupAchievementModalTriggers();
   attemptInit();
 });
