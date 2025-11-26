@@ -43,6 +43,36 @@ if (document.readyState !== "loading") {
 let queuedResetRequests = 0;
 let performResetCallback = null;
 
+const ACHIEVEMENTS = {
+  firstDisc: { unlocked: false, reward: "background-teal.png", label: "First Disc" },
+  level10: { unlocked: false, reward: "background-twilight.png", label: "Reach Level 10" },
+  level25: { unlocked: false, reward: "background-dusk.png", label: "Reach Level 25" },
+  callBack20: { unlocked: false, reward: "background-whimsy.png", label: "Call Back 20 Times" },
+  level100: { unlocked: false, reward: "background-meadow.png", label: "Reach Level 100" },
+  swim2h: { unlocked: false, reward: "background-wildwest.png", label: "2 Hours Swimming" },
+  allDiscs: { unlocked: false, reward: "background-winter.gif", label: "Play All Discs" },
+  widget100h: { unlocked: false, reward: "background-sunset.gif", label: "100 Hours With BubblePet" },
+};
+
+let achievements = JSON.parse(localStorage.getItem("achievements")) || ACHIEVEMENTS;
+
+function saveAchievements() {
+  localStorage.setItem("achievements", JSON.stringify(achievements));
+}
+
+function unlockAchievement(key) {
+  if (!achievements[key].unlocked) {
+    achievements[key].unlocked = true;
+    saveAchievements();
+    if (typeof showAchievementPopup === "function") {
+      showAchievementPopup(achievements[key].label);
+    }
+    if (typeof renderAchievements === "function") {
+      renderAchievements();
+    }
+  }
+}
+
 const handleResetRequest = () => {
   if (typeof performResetCallback === "function") {
     performResetCallback();
