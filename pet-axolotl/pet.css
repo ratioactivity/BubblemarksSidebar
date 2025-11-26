@@ -734,6 +734,18 @@ body {
   color: #4c3b6b;
 }
 
+.now-playing {
+  margin-bottom: 8px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.random-toggle {
+  margin-bottom: 10px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
 .disc-close-btn {
   display: inline-flex;
   align-items: center;

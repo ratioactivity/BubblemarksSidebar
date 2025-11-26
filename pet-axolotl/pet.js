@@ -170,6 +170,7 @@ function initPetWidget() {
   const discPlayerButton = document.getElementById("disc-player-button");
   const discListEl = document.getElementById("disc-list");
   const stopMusicBtn = document.getElementById("stop-music");
+  const nowPlayingEl = document.getElementById("now-playing");
   const achievementButton = document.getElementById("achievement-button");
   const achievementModal = document.getElementById("achievement-modal");
   const achievementCloseButton = document.getElementById("ach-close");
@@ -982,6 +983,10 @@ function initPetWidget() {
     discAudio.src = discSoundPath;
     currentDisc = name;
 
+    if (nowPlayingEl) {
+      nowPlayingEl.textContent = `Now Playing: ${name}`;
+    }
+
     if (ownedDiscs.length >= 1 && currentDisc) {
       unlockAchievement("firstDisc");
     }
@@ -1035,6 +1040,11 @@ function initPetWidget() {
       musicPlayerEl.currentTime = 0;
     }
     currentDisc = null;
+
+    if (nowPlayingEl) {
+      nowPlayingEl.textContent = "Now Playing: None";
+    }
+
     try {
       localStorage.removeItem("currentDisc");
     } catch {
