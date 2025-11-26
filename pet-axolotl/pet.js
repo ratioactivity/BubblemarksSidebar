@@ -1808,7 +1808,7 @@ function runAfterDomReady(callback) {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+runAfterDomReady(() => {
   setupAchievementModalTriggers();
   attemptInit();
 });
