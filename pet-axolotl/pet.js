@@ -1895,3 +1895,25 @@ runAfterDomReady(() => {
     clearInterval(playbackInterval);
   }, MAX_ATTEMPTS * RETRY_DELAY_MS);
 });
+
+runAfterDomReady(() => {
+  let currentBackground = localStorage.getItem("petBackground") || "background.png";
+
+  const setBackground = (file) => {
+    const backgroundFile = file || "background.png";
+    currentBackground = backgroundFile;
+    const tankWindow = document.querySelector(".tank-window");
+    if (tankWindow) {
+      tankWindow.style.backgroundImage = `url(assets/${backgroundFile})`;
+    }
+    try {
+      localStorage.setItem("petBackground", backgroundFile);
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  window.setBackground = setBackground;
+
+  setBackground(currentBackground);
+});
