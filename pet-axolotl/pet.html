@@ -44,6 +44,13 @@
 
         <!-- AQUARIUM -->
         <div class="tank-window">
+          <img id="achievement-popup" src="assets/sparkles.gif" class="hidden popup-sparkles" />
+          <img
+            id="achievement-button"
+            class="achievement-icon"
+            src="assets/achievement.gif"
+            alt="Achievements"
+          />
           <img
             id="disc-player-button"
             src="./assets/icon-player.png"
@@ -114,6 +121,22 @@
 
       </div> <!-- end .pet-container -->
     </div> <!-- end .aquarium-container -->
+
+    <div id="achievement-modal" class="ach-modal hidden">
+      <div class="ach-modal-content">
+        <div class="ach-modal-header">
+          <span class="ach-modal-title">Achievements</span>
+          <button id="ach-close" class="ach-close-btn">✕</button>
+        </div>
+
+        <div id="achievement-list" class="achievement-list"></div>
+
+        <div class="ach-footer">
+          <span>Select a background reward below:</span>
+          <div id="background-list" class="background-list"></div>
+        </div>
+      </div>
+    </div>
 
     <div id="disc-player-modal" class="disc-modal hidden">
       <div class="disc-modal-content">

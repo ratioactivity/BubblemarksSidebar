@@ -43,6 +43,48 @@ if (document.readyState !== "loading") {
 let queuedResetRequests = 0;
 let performResetCallback = null;
 
+const ACHIEVEMENTS = {
+  firstDisc: { unlocked: false, reward: "background-teal.png", label: "First Disc" },
+  level10: { unlocked: false, reward: "background-twilight.png", label: "Reach Level 10" },
+  level25: { unlocked: false, reward: "background-dusk.png", label: "Reach Level 25" },
+  callBack20: { unlocked: false, reward: "background-whimsy.png", label: "Call Back 20 Times" },
+  level100: { unlocked: false, reward: "background-meadow.png", label: "Reach Level 100" },
+  swim2h: { unlocked: false, reward: "background-wildwest.png", label: "2 Hours Swimming" },
+  allDiscs: { unlocked: false, reward: "background-winter.gif", label: "Play All Discs" },
+  widget100h: { unlocked: false, reward: "background-sunset.gif", label: "100 Hours With BubblePet" },
+};
+
+const cloneAchievements = (data) => JSON.parse(JSON.stringify(data));
+
+let achievements = (() => {
+  try {
+    const stored = JSON.parse(localStorage.getItem("achievements"));
+    if (stored && typeof stored === "object") {
+      return { ...cloneAchievements(ACHIEVEMENTS), ...stored };
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return cloneAchievements(ACHIEVEMENTS);
+})();
+
+function saveAchievements() {
+  localStorage.setItem("achievements", JSON.stringify(achievements));
+}
+
+function unlockAchievement(key) {
+  if (!achievements[key].unlocked) {
+    achievements[key].unlocked = true;
+    saveAchievements();
+    if (typeof showAchievementPopup === "function") {
+      showAchievementPopup(achievements[key].label);
+    }
+    if (typeof renderAchievements === "function") {
+      renderAchievements();
+    }
+  }
+}
+
 const handleResetRequest = () => {
   if (typeof performResetCallback === "function") {
     performResetCallback();
@@ -113,6 +155,13 @@ function initPetWidget() {
   const discPlayerButton = document.getElementById("disc-player-button");
   const discListEl = document.getElementById("disc-list");
   const stopMusicBtn = document.getElementById("stop-music");
+  const achievementButton = document.getElementById("achievement-button");
+  const achievementModal = document.getElementById("achievement-modal");
+  const achievementCloseButton = document.getElementById("ach-close");
+  const achievementListEl = document.getElementById("achievement-list");
+  const backgroundListEl = document.getElementById("background-list");
+  const achievementPopupEl = document.getElementById("achievement-popup");
+  const aquariumBgImage = petContainer.querySelector(".aquarium-bg");
 
   const petManager = window.petManager;
   if (!petManager || typeof petManager.subscribeToAnimationChange !== "function") {
@@ -148,6 +197,13 @@ function initPetWidget() {
   let rewardAudio = null;
   let LEVEL_DISC_REWARDS = {};
   let GENERIC_DISC_POOL = [];
+  let selectedBackgroundReward = null;
+
+  try {
+    selectedBackgroundReward = localStorage.getItem("selectedBackgroundReward");
+  } catch {
+    selectedBackgroundReward = null;
+  }
 
   const initializeDiscState = () => {
     DISC_POOL = [
@@ -944,6 +1000,113 @@ function initPetWidget() {
     discListEl.innerHTML = ownedDiscs.map((disc) => renderDiscEntry(disc)).join("");
   }
 
+  function setBackgroundReward(rewardFile) {
+    if (!aquariumBgImage || typeof rewardFile !== "string" || !rewardFile) {
+      return;
+    }
+
+    const rewardEntry = Object.values(achievements).find((meta) => meta.reward === rewardFile);
+    if (rewardEntry && rewardEntry.unlocked === false) {
+      return;
+    }
+
+    const src = rewardFile.startsWith("./") ? rewardFile : `./assets/${rewardFile}`;
+    aquariumBgImage.src = src;
+
+    selectedBackgroundReward = rewardFile;
+
+    try {
+      localStorage.setItem("selectedBackgroundReward", rewardFile);
+    } catch {
+      // ignore storage errors
+    }
+
+    if (!backgroundListEl) return;
+    backgroundListEl.querySelectorAll(".background-thumb").forEach((thumb) => {
+      thumb.classList.toggle("active", thumb.dataset.reward === rewardFile);
+    });
+  }
+
+  function renderBackgroundRewards() {
+    if (!backgroundListEl) return;
+
+    backgroundListEl.innerHTML = "";
+
+    Object.entries(achievements).forEach(([key, meta]) => {
+      const rewardFile = meta.reward;
+      const thumb = document.createElement("img");
+      thumb.src = rewardFile.startsWith("./") ? rewardFile : `./assets/${rewardFile}`;
+      thumb.alt = `${meta.label} background reward`;
+      thumb.className = "background-thumb";
+      thumb.dataset.key = key;
+      thumb.dataset.reward = rewardFile;
+
+      if (!meta.unlocked) {
+        thumb.classList.add("locked");
+        thumb.style.opacity = "0.4";
+        thumb.style.cursor = "not-allowed";
+      } else {
+        thumb.addEventListener("click", () => {
+          setBackgroundReward(rewardFile);
+        });
+      }
+
+      if (selectedBackgroundReward === rewardFile) {
+        thumb.classList.add("active");
+      }
+
+      backgroundListEl.appendChild(thumb);
+    });
+  }
+
+  function renderAchievements() {
+    if (achievementListEl) {
+      achievementListEl.innerHTML = "";
+
+      Object.values(achievements).forEach((entry) => {
+        const achievementRow = document.createElement("div");
+        achievementRow.className = "achievement-entry";
+
+        if (!entry.unlocked) {
+          achievementRow.classList.add("locked");
+        }
+
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = entry.label;
+
+        const statusSpan = document.createElement("span");
+        statusSpan.textContent = entry.unlocked ? "Unlocked" : "Locked";
+
+        achievementRow.appendChild(labelSpan);
+        achievementRow.appendChild(statusSpan);
+
+        achievementListEl.appendChild(achievementRow);
+      });
+    }
+
+    renderBackgroundRewards();
+  }
+
+  function showAchievementPopup(label) {
+    if (!achievementPopupEl) return;
+
+    achievementPopupEl.classList.remove("hidden");
+    achievementPopupEl.setAttribute("aria-label", label || "Achievement unlocked");
+
+    setTimeout(() => {
+      achievementPopupEl.classList.add("hidden");
+    }, 1600);
+  }
+
+  window.renderAchievements = renderAchievements;
+  window.showAchievementPopup = showAchievementPopup;
+
+  const initialBackground =
+    selectedBackgroundReward || aquariumBgImage?.getAttribute("src") || "./assets/background.png";
+  if (initialBackground) {
+    setBackgroundReward(initialBackground);
+  }
+
   function updateLevel(level) {
     if (!levelEl) return;
     const safeLevel = Number.isFinite(level) ? level : 0;
@@ -1259,6 +1422,7 @@ function initPetWidget() {
   setPetName(petName);
   setPetLevel(petLevel);
   renderDiscList();
+  renderAchievements();
 
   window.playStoredDisc = function () {
     if (currentDisc) {
@@ -1588,6 +1752,37 @@ function attemptInit(attempt = 1) {
   }
 }
 
+function setupAchievementModalTriggers() {
+  const achievementButton = document.getElementById("achievement-button");
+  const achievementModal = document.getElementById("achievement-modal");
+  const achievementCloseButton = document.getElementById("ach-close");
+
+  if (achievementButton && achievementModal) {
+    achievementButton.addEventListener("click", () => {
+      const wasHidden = achievementModal.classList.contains("hidden");
+      achievementModal.classList.toggle("hidden");
+
+      if (wasHidden && typeof window.renderAchievements === "function") {
+        window.renderAchievements();
+      }
+    });
+  }
+
+  if (achievementCloseButton && achievementModal) {
+    achievementCloseButton.addEventListener("click", () => {
+      achievementModal.classList.add("hidden");
+    });
+  }
+
+  if (achievementModal) {
+    achievementModal.addEventListener("click", (event) => {
+      if (event.target === achievementModal) {
+        achievementModal.classList.add("hidden");
+      }
+    });
+  }
+}
+
 function runAfterDomReady(callback) {
   if (typeof callback !== "function") {
     return;
@@ -1604,7 +1799,10 @@ function runAfterDomReady(callback) {
   }
 }
 
-runAfterDomReady(() => attemptInit());
+runAfterDomReady(() => {
+  setupAchievementModalTriggers();
+  attemptInit();
+});
 
 // Ensure the debug helper is always defined, even if the widget fails early.
 runAfterDomReady(() => {
