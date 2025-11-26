@@ -183,15 +183,15 @@ body {
 /* HEADER LAYOUT */
 .pet-header {
   position: relative;
-  display: grid;
-  grid-template-columns: auto 1fr; /* level | name */
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 
   /* a bit narrower than the card so it doesn’t feel huge */
   width: 88%;
   margin: 0 auto 2vh;
 
-  padding: 1vh 22px;
+  padding: 12px 22px 14px;
   border-radius: 18px;
 
   background: linear-gradient(180deg, #fbd5ec 0%, #d0ebff 100%);
@@ -203,6 +203,16 @@ body {
   font-family: "Papernotes", sans-serif;
   box-sizing: border-box;
   z-index: 3;
+  gap: 10px;
+}
+
+.pet-meta-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  min-height: 26px;
 }
 
 /* Left — level pill */
@@ -241,10 +251,11 @@ body {
 
 .xp-bar-container {
   flex-grow: 1;
+  width: 100%;
   height: 6px;
   background: rgba(255, 255, 255, 0.45);
   border-radius: 4px;
-  margin: 0 8px;
+  margin: 0;
   overflow: hidden;
 }
 
@@ -258,7 +269,11 @@ body {
 
 #xp-text {
   font-size: 12px;
-  opacity: 0.75;
+  line-height: 1;
+  opacity: 0.8;
+  color: #554579;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .pet-level-100-icon {
