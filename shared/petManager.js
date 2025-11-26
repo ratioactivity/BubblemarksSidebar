@@ -1005,6 +1005,7 @@ window.addEventListener("DOMContentLoaded", () => {
     triggerAction,
     actions: ACTIONS,
     setProfile,
+    resetPet,
   };
 
   function readInitialVacationPreference() {

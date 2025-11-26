@@ -1,5 +1,3 @@
-let pendingResetLevel = false;
-
 function registerResetCommand(target, handler) {
   if (!target || typeof target !== "object") return;
 
@@ -27,17 +25,6 @@ function ensurePetLevelUpPlaceholder() {
         console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
       };
     }
-
-    if (typeof window.resetPetLevel !== "function") {
-      const placeholderReset = function () {
-        pendingResetLevel = true;
-        console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
-      };
-
-      exposeResetCommand(placeholderReset);
-    } else {
-      exposeResetCommand(window.resetPetLevel);
-    }
   };
 
   if (document.readyState !== "loading") {
@@ -52,6 +39,48 @@ if (document.readyState !== "loading") {
 } else {
   window.addEventListener("DOMContentLoaded", ensurePetLevelUpPlaceholder, { once: true });
 }
+
+let queuedResetRequests = 0;
+let performResetCallback = null;
+
+const handleResetRequest = () => {
+  if (typeof performResetCallback === "function") {
+    performResetCallback();
+    return true;
+  }
+
+  queuedResetRequests += 1;
+  console.warn("[BubblePet] Reset request queued until the widget finishes initializing.");
+  return false;
+};
+
+const processQueuedResets = () => {
+  if (typeof performResetCallback !== "function" || queuedResetRequests === 0) {
+    return;
+  }
+
+  const pending = queuedResetRequests;
+  queuedResetRequests = 0;
+
+  for (let i = 0; i < pending; i += 1) {
+    performResetCallback();
+  }
+};
+
+window.addEventListener("DOMContentLoaded", () => {
+  window.addEventListener("message", (event) => {
+    const type = event?.data?.type;
+
+    if (type === "bubblepet:reset-level") {
+      handleResetRequest();
+    }
+  });
+
+  if (typeof window.resetPetLevel !== "function") {
+    window.resetPetLevel = handleResetRequest;
+    exposeResetCommand(window.resetPetLevel);
+  }
+});
 
 function initPetWidget() {
   console.log("✅ script validated");
@@ -1429,6 +1458,12 @@ function initPetWidget() {
       console.warn("resetPetProgress: failed to update localStorage", err);
     }
 
+    if (petManager && typeof petManager.resetPet === "function") {
+      petManager.resetPet();
+    } else if (petManager && typeof petManager.setProfile === "function") {
+      petManager.setProfile({ level: 1 });
+    }
+
     console.log("🐾 Pet progress fully reset!");
   };
 
@@ -1455,17 +1490,14 @@ function initPetWidget() {
   };
 
   const readyResetPetLevel = function () {
-    pendingResetLevel = false;
     resetPetProgress();
   };
 
+  performResetCallback = readyResetPetLevel;
   window.resetPetLevel = readyResetPetLevel;
   exposeResetCommand(readyResetPetLevel);
 
-  if (pendingResetLevel) {
-    pendingResetLevel = false;
-    resetPetProgress();
-  }
+  processQueuedResets();
 
   window.debugReset = function () {
     console.log("🐾 DEBUG: Hard reset triggered");
@@ -1511,16 +1543,5 @@ runAfterDomReady(() => {
     window.petLevelUp = function () {
       console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
     };
-  }
-
-  if (typeof window.resetPetLevel !== "function") {
-    const placeholderReset = function () {
-      pendingResetLevel = true;
-      console.warn("resetPetLevel is unavailable until the pet widget finishes initializing.");
-    };
-
-    exposeResetCommand(placeholderReset);
-  } else {
-    exposeResetCommand(window.resetPetLevel);
   }
 });
