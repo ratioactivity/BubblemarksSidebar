@@ -808,18 +808,20 @@ function initPetWidget() {
   }
 
   function playDisc(name) {
-    if (!name || !discAudio) return;
+    if (!discAudio || typeof name !== "string") return;
+
+    const discSoundPath = getDiscSoundPath(name);
+    if (!discSoundPath) return;
+
+    discAudio.src = discSoundPath;
     currentDisc = name;
+
     try {
       localStorage.setItem("currentDisc", name);
     } catch {
       // ignore storage errors
     }
 
-    const discSoundPath = getDiscSoundPath(name);
-    if (discSoundPath) {
-      discAudio.src = discSoundPath;
-    }
     discAudio.play().catch(() => {});
   }
 
@@ -1203,9 +1205,12 @@ function initPetWidget() {
   setPetName(petName);
   setPetLevel(petLevel);
   renderDiscList();
-  if (currentDisc) {
-    playDisc(currentDisc);
-  }
+
+  window.playStoredDisc = function () {
+    if (currentDisc) {
+      playDisc(currentDisc);
+    }
+  };
 
   function setPetLevel(level) {
     const numericLevel = Number(level);
@@ -1544,4 +1549,39 @@ runAfterDomReady(() => {
       console.warn("petLevelUp is unavailable until the pet widget finishes initializing.");
     };
   }
+});
+
+runAfterDomReady(() => {
+  let storedDiscName = null;
+  try {
+    storedDiscName = localStorage.getItem("currentDisc");
+  } catch {
+    storedDiscName = null;
+  }
+
+  if (!storedDiscName) {
+    return;
+  }
+
+  const tryPlayStoredDisc = () => {
+    if (typeof window.playStoredDisc === "function") {
+      window.playStoredDisc();
+      return true;
+    }
+    return false;
+  };
+
+  if (tryPlayStoredDisc()) {
+    return;
+  }
+
+  const playbackInterval = setInterval(() => {
+    if (tryPlayStoredDisc()) {
+      clearInterval(playbackInterval);
+    }
+  }, RETRY_DELAY_MS);
+
+  setTimeout(() => {
+    clearInterval(playbackInterval);
+  }, MAX_ATTEMPTS * RETRY_DELAY_MS);
 });
