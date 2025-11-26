@@ -170,6 +170,7 @@ function initPetWidget() {
   const discPlayerButton = document.getElementById("disc-player-button");
   const discListEl = document.getElementById("disc-list");
   const stopMusicBtn = document.getElementById("stop-music");
+  const nowPlayingEl = document.getElementById("now-playing");
   const achievementButton = document.getElementById("achievement-button");
   const achievementModal = document.getElementById("achievement-modal");
   const achievementCloseButton = document.getElementById("ach-close");
@@ -187,7 +188,7 @@ function initPetWidget() {
     typeof petManager.getPetState === "function" ? petManager.getPetState() : null;
 
   let petName = normalizePetName(nameEl ? nameEl.textContent : "");
-  let vacationMode = false;
+  let vacationMode = Boolean(initialPetState?.vacation);
   let lastKnownMode = "idle";
   let lastIsDead = false;
   let lastKnownLevel = Number.isFinite(initialPetState?.level)
@@ -803,6 +804,34 @@ function initPetWidget() {
     messageEl.textContent = text;
   }
 
+  const ARRIVAL_DIALOGUE = [
+    "Pico was reading up on the Geneva Conventions while you were gone.",
+    "Pico committed 3 felonies during your absence.",
+    "Pico was exposed to 5 mSv while you were away.",
+    "Pico joined a pyramid scheme while you were offline.",
+    "Pico found a loophole in maritime law.",
+    "Pico filed a noise complaint against YOU.",
+    "Pico saw God. He did not elaborate.",
+  ];
+
+  const VACATION_DIALOGUE = [
+    "Pico took a trip to Guantanamo Bay.",
+    "Pico just robbed an old lady.",
+    "Pico returned from a bender you wouldn’t survive.",
+    "Pico smuggled contraband across 3 borders.",
+    "Pico wrote a threatening letter to the UN.",
+    "Pico committed light tax fraud.",
+    "Pico bit a TSA agent.",
+  ];
+
+  function getRandomLine(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function setDialogue(text) {
+    updateMessage(text);
+  }
+
   function ensureXPElements() {
     const metaRow = petContainer.querySelector(".pet-meta-row");
 
@@ -954,6 +983,10 @@ function initPetWidget() {
     discAudio.src = discSoundPath;
     currentDisc = name;
 
+    if (nowPlayingEl) {
+      nowPlayingEl.textContent = `Now Playing: ${name}`;
+    }
+
     if (ownedDiscs.length >= 1 && currentDisc) {
       unlockAchievement("firstDisc");
     }
@@ -1007,6 +1040,11 @@ function initPetWidget() {
       musicPlayerEl.currentTime = 0;
     }
     currentDisc = null;
+
+    if (nowPlayingEl) {
+      nowPlayingEl.textContent = "Now Playing: None";
+    }
+
     try {
       localStorage.removeItem("currentDisc");
     } catch {
@@ -1449,6 +1487,10 @@ function initPetWidget() {
   renderDiscList();
   renderAchievements();
 
+  if (!vacationMode) {
+    setDialogue(getRandomLine(ARRIVAL_DIALOGUE));
+  }
+
   window.playStoredDisc = function () {
     if (currentDisc) {
       playDisc(currentDisc);
@@ -1468,11 +1510,15 @@ function initPetWidget() {
   }
 
   function updateVacationState(isVacation) {
+    const wasOnVacation = vacationMode;
     vacationMode = Boolean(isVacation);
     if (petContainer) {
       petContainer.classList.toggle("vacation-mode", vacationMode);
     }
     updateRoamState(lastKnownMode, lastIsDead);
+    if (wasOnVacation && !vacationMode) {
+      setDialogue(getRandomLine(VACATION_DIALOGUE));
+    }
   }
 
   function applyProfileFromDom() {
