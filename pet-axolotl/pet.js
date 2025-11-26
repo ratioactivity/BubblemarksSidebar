@@ -187,7 +187,7 @@ function initPetWidget() {
     typeof petManager.getPetState === "function" ? petManager.getPetState() : null;
 
   let petName = normalizePetName(nameEl ? nameEl.textContent : "");
-  let vacationMode = false;
+  let vacationMode = Boolean(initialPetState?.vacation);
   let lastKnownMode = "idle";
   let lastIsDead = false;
   let lastKnownLevel = Number.isFinite(initialPetState?.level)
@@ -801,6 +801,34 @@ function initPetWidget() {
     if (!messageEl || typeof text !== "string") return;
     hideRewardIcon();
     messageEl.textContent = text;
+  }
+
+  const ARRIVAL_DIALOGUE = [
+    "Pico was reading up on the Geneva Conventions while you were gone.",
+    "Pico committed 3 felonies during your absence.",
+    "Pico was exposed to 5 mSv while you were away.",
+    "Pico joined a pyramid scheme while you were offline.",
+    "Pico found a loophole in maritime law.",
+    "Pico filed a noise complaint against YOU.",
+    "Pico saw God. He did not elaborate.",
+  ];
+
+  const VACATION_DIALOGUE = [
+    "Pico took a trip to Guantanamo Bay.",
+    "Pico just robbed an old lady.",
+    "Pico returned from a bender you wouldn’t survive.",
+    "Pico smuggled contraband across 3 borders.",
+    "Pico wrote a threatening letter to the UN.",
+    "Pico committed light tax fraud.",
+    "Pico bit a TSA agent.",
+  ];
+
+  function getRandomLine(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function setDialogue(text) {
+    updateMessage(text);
   }
 
   function ensureXPElements() {
@@ -1449,6 +1477,10 @@ function initPetWidget() {
   renderDiscList();
   renderAchievements();
 
+  if (!vacationMode) {
+    setDialogue(getRandomLine(ARRIVAL_DIALOGUE));
+  }
+
   window.playStoredDisc = function () {
     if (currentDisc) {
       playDisc(currentDisc);
@@ -1468,11 +1500,15 @@ function initPetWidget() {
   }
 
   function updateVacationState(isVacation) {
+    const wasOnVacation = vacationMode;
     vacationMode = Boolean(isVacation);
     if (petContainer) {
       petContainer.classList.toggle("vacation-mode", vacationMode);
     }
     updateRoamState(lastKnownMode, lastIsDead);
+    if (wasOnVacation && !vacationMode) {
+      setDialogue(getRandomLine(VACATION_DIALOGUE));
+    }
   }
 
   function applyProfileFromDom() {
