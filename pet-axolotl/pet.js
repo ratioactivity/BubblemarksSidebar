@@ -723,6 +723,14 @@ function initPetWidget() {
     return Math.floor(30 * Math.pow(level, 1.4));
   }
 
+  function updateXPBar() {
+    const needed = xpNeeded(petLevel);
+    const percent = Math.min(100, (petXP / needed) * 100);
+
+    document.getElementById("xp-bar-fill").style.width = `${percent}%`;
+    document.getElementById("xp-text").textContent = `${petXP} / ${needed} XP`;
+  }
+
   function persistProgress() {
     try {
       localStorage.setItem("petXP", petXP);
@@ -786,6 +794,8 @@ function initPetWidget() {
         petManager.setProfile({ level: petLevel });
       }
     }
+
+    updateXPBar();
   }
 
   function gainXP(amount) {
@@ -802,6 +812,7 @@ function initPetWidget() {
     petXP += awarded;
     persistProgress();
     checkLevelUp();
+    updateXPBar();
   }
 
   function playDisc(name) {
@@ -1450,6 +1461,7 @@ function initPetWidget() {
 
     renderDiscList();
     updateLevel(petLevel);
+    updateXPBar();
 
     try {
       localStorage.setItem("petXP", petXP);
@@ -1500,6 +1512,8 @@ function initPetWidget() {
   exposeResetCommand(readyResetPetLevel);
 
   processQueuedResets();
+
+  updateXPBar();
 
   window.debugReset = function () {
     console.log("🐾 DEBUG: Hard reset triggered");
