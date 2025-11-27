@@ -52,7 +52,50 @@
           <div id="notes-list" class="notes-list" role="list"></div>
         </div>
       </div>
-      <div id="quicklaunch-widget"></div>
+      <div id="quicklaunch-widget" class="quicklaunch-card" aria-label="Quick launch bar">
+        <div class="quicklaunch-card__header">
+          <span class="quicklaunch-card__title">Quick Launch</span>
+          <span class="quicklaunch-card__hint">Tiny portals to your apps</span>
+        </div>
+        <div class="quicklaunch-bar" role="group" aria-label="Quick launch shortcuts">
+          <button
+            class="quicklaunch-button"
+            type="button"
+            data-quicklaunch-label="Snipping Tool"
+            data-quicklaunch-url="ms-screenclip:"
+          >
+            <span aria-hidden="true">✂️</span>
+            <span class="quicklaunch-button__label">Snipping Tool</span>
+          </button>
+          <button
+            class="quicklaunch-button"
+            type="button"
+            data-quicklaunch-label="Notepad"
+            data-quicklaunch-url="notepad:"
+          >
+            <span aria-hidden="true">📓</span>
+            <span class="quicklaunch-button__label">Notepad</span>
+          </button>
+          <button
+            class="quicklaunch-button"
+            type="button"
+            data-quicklaunch-label="Opera"
+            data-quicklaunch-url="opera:"
+          >
+            <span aria-hidden="true">🧭</span>
+            <span class="quicklaunch-button__label">Opera</span>
+          </button>
+          <button
+            class="quicklaunch-button"
+            type="button"
+            data-quicklaunch-label="Spotify"
+            data-quicklaunch-url="spotify:"
+          >
+            <span aria-hidden="true">🎵</span>
+            <span class="quicklaunch-button__label">Spotify</span>
+          </button>
+        </div>
+      </div>
     </aside>
     <main class="app-shell">
     <header class="hero">
