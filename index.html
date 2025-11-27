@@ -43,7 +43,19 @@
           <div class="clock-calendar" id="clock-calendar"></div>
         </div>
       </div>
-      <div id="notes-widget"></div>
+      <div id="notes-widget" class="notes-card">
+        <div class="notes-card__header">
+          <div class="notes-card__titles">
+            <h2 class="notes-card__title">Papernotes</h2>
+            <p class="notes-card__subtitle">Tiny thoughts to keep close</p>
+          </div>
+          <button id="notes-add" type="button" class="notes-card__add" aria-label="Add a new note">Add Note</button>
+        </div>
+        <div class="notes-card__body" role="region" aria-label="Saved notes">
+          <p id="notes-empty" class="notes-empty" aria-live="polite">No notes yet—start a fresh bubble!</p>
+          <div id="notes-list" class="notes-list" role="list"></div>
+        </div>
+      </div>
       <div id="quicklaunch-widget"></div>
     </aside>
     <main class="app-shell">
@@ -264,6 +276,38 @@
     </div>
   </div>
 
+  <div
+    id="notes-modal"
+    class="notes-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="notes-modal-title"
+    hidden
+  >
+    <div class="notes-modal__backdrop" data-notes-dismiss="true"></div>
+    <div class="notes-modal__dialog" tabindex="-1">
+      <div class="notes-modal__header">
+        <h2 id="notes-modal-title">Add Note</h2>
+        <button type="button" class="notes-modal__close" data-notes-dismiss="true" aria-label="Close notes modal">✕</button>
+      </div>
+      <form id="notes-form" class="notes-form">
+        <p id="notes-error" class="notes-form__hint" role="status" aria-live="polite"></p>
+        <label class="notes-form__field" for="note-title">
+          <span>Title</span>
+          <input id="note-title" name="title" type="text" required maxlength="80" />
+        </label>
+        <label class="notes-form__field" for="note-body">
+          <span>Body</span>
+          <textarea id="note-body" name="body" rows="5" required></textarea>
+        </label>
+        <div class="notes-form__actions">
+          <button type="button" class="soft-btn soft-btn--ghost" data-notes-dismiss="true">Cancel</button>
+          <button type="submit" class="soft-btn">Save Note</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <template id="category-item-template">
     <div class="category-setting" data-category-key="">
       <div class="category-setting__inputs">
@@ -282,6 +326,19 @@
         <button type="button" class="category-setting__remove" aria-label="Remove category">Remove</button>
       </div>
     </div>
+  </template>
+
+  <template id="note-item-template">
+    <article class="note-item" data-note-id="" role="listitem">
+      <div class="note-item__text">
+        <h3 class="note-item__title"></h3>
+        <p class="note-item__preview"></p>
+      </div>
+      <div class="note-item__actions">
+        <button type="button" class="note-item__btn note-item__btn--edit" data-note-action="edit" aria-label="Edit note">✎</button>
+        <button type="button" class="note-item__btn note-item__btn--delete" data-note-action="delete" aria-label="Delete note">🗑</button>
+      </div>
+    </article>
   </template>
 
   <div
