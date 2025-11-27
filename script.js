@@ -4680,11 +4680,11 @@ function setupDataTools() {
 
     const updateClock = () => {
       const now = new Date();
-      monthEl.textContent = now.toLocaleString(undefined, { month: "long", year: "numeric" });
+      monthEl.textContent = now.toLocaleDateString([], { month: "long", year: "numeric" });
       timeEl.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       dateEl.textContent = now.toLocaleDateString([], {
-        weekday: "long",
-        month: "long",
+        weekday: "short",
+        month: "short",
         day: "numeric",
       });
 
