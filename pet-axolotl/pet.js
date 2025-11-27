@@ -217,6 +217,7 @@ function initPetWidget() {
   let rewardAudio = null;
   let LEVEL_DISC_REWARDS = {};
   let GENERIC_DISC_POOL = [];
+  const DEFAULT_BACKGROUND = "background.png";
   let selectedBackgroundReward = null;
   let randomMode = false;
 
@@ -1125,29 +1126,40 @@ function initPetWidget() {
   }
 
   function setBackgroundReward(rewardFile) {
-    if (!aquariumBgImage || typeof rewardFile !== "string" || !rewardFile) {
+    if (!aquariumBgImage) {
       return;
     }
 
-    const rewardEntry = Object.values(achievements).find((meta) => meta.reward === rewardFile);
-    if (rewardEntry && rewardEntry.unlocked === false) {
-      return;
+    const normalizedReward =
+      typeof rewardFile === "string" ? rewardFile.replace(/^\.\/assets\//, "") : "";
+    const useDefault = !rewardFile || normalizedReward === DEFAULT_BACKGROUND;
+
+    if (!useDefault) {
+      const rewardEntry = Object.values(achievements).find((meta) => meta.reward === rewardFile);
+      if (rewardEntry && rewardEntry.unlocked === false) {
+        return;
+      }
     }
 
-    const src = rewardFile.startsWith("./") ? rewardFile : `./assets/${rewardFile}`;
+    const targetFile = useDefault ? DEFAULT_BACKGROUND : rewardFile;
+    const src = targetFile.startsWith("./") ? targetFile : `./assets/${targetFile}`;
     aquariumBgImage.src = src;
 
-    selectedBackgroundReward = rewardFile;
+    selectedBackgroundReward = useDefault ? null : targetFile;
 
     try {
-      localStorage.setItem("selectedBackgroundReward", rewardFile);
+      if (useDefault) {
+        localStorage.removeItem("selectedBackgroundReward");
+      } else {
+        localStorage.setItem("selectedBackgroundReward", targetFile);
+      }
     } catch {
       // ignore storage errors
     }
 
     if (!backgroundListEl) return;
     backgroundListEl.querySelectorAll(".background-thumb").forEach((thumb) => {
-      thumb.classList.toggle("active", thumb.dataset.reward === rewardFile);
+      thumb.classList.toggle("active", thumb.dataset.reward === targetFile && !useDefault);
     });
   }
 
@@ -1171,7 +1183,8 @@ function initPetWidget() {
         thumb.style.cursor = "not-allowed";
       } else {
         thumb.addEventListener("click", () => {
-          setBackgroundReward(rewardFile);
+          const isActive = thumb.classList.contains("active");
+          setBackgroundReward(isActive ? null : rewardFile);
         });
       }
 
