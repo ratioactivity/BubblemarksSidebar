@@ -4613,6 +4613,253 @@ function setupDataTools() {
   });
 
   window.addEventListener("DOMContentLoaded", () => {
+    const notesList = document.getElementById("notes-list");
+    const notesEmpty = document.getElementById("notes-empty");
+    const notesAddButton = document.getElementById("notes-add");
+    const notesModal = document.getElementById("notes-modal");
+    const notesDialog = notesModal?.querySelector(".notes-modal__dialog");
+    const notesForm = document.getElementById("notes-form");
+    const notesTitleInput = document.getElementById("note-title");
+    const notesBodyInput = document.getElementById("note-body");
+    const notesError = document.getElementById("notes-error");
+    const notesTemplate = document.getElementById("note-item-template");
+
+    if (
+      !notesList ||
+      !notesAddButton ||
+      !notesModal ||
+      !notesDialog ||
+      !notesForm ||
+      !notesTitleInput ||
+      !notesBodyInput ||
+      !notesTemplate ||
+      !notesEmpty ||
+      !notesError
+    ) {
+      console.warn("[Bubblemarks] Notes widget elements missing");
+      return;
+    }
+
+    const STORAGE_KEY = "bubblemarks.notes.v1";
+    let notes = [];
+    let editingId = null;
+    let lastFocus = null;
+
+    const getFocusableElements = () => {
+      const elements = notesDialog.querySelectorAll(
+        'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'
+      );
+      return Array.from(elements).filter((element) => !element.hasAttribute("disabled"));
+    };
+
+    const trapFocus = (event) => {
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusable = getFocusableElements();
+      if (!focusable.length) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey) {
+        if (document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    const persistNotes = (payload) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (error) {
+        console.warn("[Bubblemarks] Unable to save notes", error);
+      }
+    };
+
+    const loadNotes = () => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        notes = stored ? JSON.parse(stored) : [];
+      } catch (error) {
+        console.warn("[Bubblemarks] Unable to load notes", error);
+        notes = [];
+      }
+    };
+
+    const getPreview = (content) => {
+      if (!content) {
+        return "";
+      }
+      const normalized = content.replace(/\s+/g, " ").trim();
+      return normalized.length > 120 ? `${normalized.slice(0, 117)}...` : normalized;
+    };
+
+    const renderNotes = () => {
+      notesList.innerHTML = "";
+
+      if (!notes.length) {
+        notesEmpty.hidden = false;
+        return;
+      }
+
+      notesEmpty.hidden = true;
+
+      notes
+        .slice()
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .forEach((note) => {
+          const fragment = notesTemplate.content.cloneNode(true);
+          const item = fragment.querySelector(".note-item");
+          const title = fragment.querySelector(".note-item__title");
+          const preview = fragment.querySelector(".note-item__preview");
+
+          if (item) {
+            item.dataset.noteId = String(note.id);
+          }
+
+          if (title) {
+            title.textContent = note.title;
+          }
+
+          if (preview) {
+            preview.textContent = getPreview(note.body);
+          }
+
+          notesList.appendChild(fragment);
+        });
+    };
+
+    const closeNotesModal = () => {
+      notesModal.hidden = true;
+      notesForm.reset();
+      notesError.textContent = "";
+      editingId = null;
+      document.removeEventListener("keydown", trapFocus);
+      document.removeEventListener("keydown", handleEscapeClose, true);
+      if (lastFocus && typeof lastFocus.focus === "function") {
+        lastFocus.focus();
+      }
+    };
+
+    const handleEscapeClose = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeNotesModal();
+      }
+    };
+
+    const openNotesModal = (existingNote = null) => {
+      lastFocus = document.activeElement;
+      notesModal.hidden = false;
+      notesError.textContent = "";
+      editingId = existingNote?.id ?? null;
+
+      notesTitleInput.value = existingNote?.title || "";
+      notesBodyInput.value = existingNote?.body || "";
+
+      document.addEventListener("keydown", trapFocus);
+      document.addEventListener("keydown", handleEscapeClose, true);
+
+      window.setTimeout(() => {
+        notesDialog.focus();
+        notesTitleInput.focus();
+      }, 0);
+    };
+
+    const upsertNote = (payload) => {
+      const trimmedTitle = payload.title.trim();
+      const trimmedBody = payload.body.trim();
+
+      if (!trimmedTitle || !trimmedBody) {
+        notesError.textContent = "Please add both a title and body.";
+        (trimmedTitle ? notesBodyInput : notesTitleInput).focus();
+        return;
+      }
+
+      const timestamp = Date.now();
+      if (editingId !== null) {
+        notes = notes.map((note) =>
+          note.id === editingId ? { ...note, title: trimmedTitle, body: trimmedBody, updatedAt: timestamp } : note
+        );
+      } else {
+        notes.push({ id: timestamp, title: trimmedTitle, body: trimmedBody, updatedAt: timestamp });
+      }
+
+      persistNotes(notes);
+      renderNotes();
+      closeNotesModal();
+    };
+
+    notesAddButton.addEventListener("click", () => openNotesModal());
+
+    notesList.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const actionButton = target.closest("[data-note-action]");
+      const noteElement = target.closest("[data-note-id]");
+      if (!actionButton || !noteElement) {
+        return;
+      }
+
+      const noteId = Number(noteElement.getAttribute("data-note-id"));
+      const note = notes.find((entry) => entry.id === noteId);
+      if (!note) {
+        return;
+      }
+
+      const action = actionButton.getAttribute("data-note-action");
+      if (action === "edit") {
+        openNotesModal(note);
+        return;
+      }
+
+      if (action === "delete") {
+        notes = notes.filter((entry) => entry.id !== noteId);
+        persistNotes(notes);
+        renderNotes();
+      }
+    });
+
+    notesForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      upsertNote({
+        title: notesTitleInput.value,
+        body: notesBodyInput.value,
+      });
+    });
+
+    notesModal.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof Element && target.hasAttribute("data-notes-dismiss")) {
+        closeNotesModal();
+      }
+    });
+
+    notesDialog.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+      }
+    });
+
+    loadNotes();
+    renderNotes();
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
     console.log("✅ script validated");
 
     const monthEl = document.getElementById("clock-month");
