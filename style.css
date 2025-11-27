@@ -41,7 +41,6 @@ body.notion-embed .app-shell {
 
 .screenpad-layout {
   position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -49,6 +48,28 @@ body.notion-embed .app-shell {
   gap: clamp(1.5rem, 3vw, 3.5rem);
   width: min(100%, 3840px);
   margin: 0 auto;
+}
+
+#bubblemarks-left {
+  position: sticky;
+  top: clamp(1.5rem, 3vw, 3rem);
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 1.8vw, 1.5rem);
+  flex: 0 0 28%;
+  width: 28%;
+  min-width: 320px;
+  height: 100%;
+  min-height: 100vh;
+  padding: clamp(1rem, 2vw, 1.6rem);
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: calc(var(--soft-radius) * 1.1) 0 0 calc(var(--soft-radius) * 1.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-soft);
+  z-index: -1;
+  overflow: hidden;
 }
 
 .screenpad-layout .app-shell {
@@ -97,8 +118,15 @@ body.notion-embed .app-shell {
 
 @media (max-width: 1399px) {
   .screenpad-layout .app-shell,
+  #bubblemarks-left,
   .pet-widget {
     width: 100%;
+  }
+
+  #bubblemarks-left {
+    position: static;
+    min-height: auto;
+    border-radius: calc(var(--soft-radius) * 1.1);
   }
 }
 
