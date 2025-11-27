@@ -167,7 +167,7 @@ function initPetWidget() {
   const buttons = Array.from(new Set([...actionElements, ...callbackButtons]));
   const discModalEl = document.getElementById("disc-player-modal");
   const discModalCloseEl = document.getElementById("disc-modal-close");
-  const discPlayerButton = document.getElementById("disc-player-button");
+  const musicButton = document.getElementById("music-button");
   const discListEl = document.getElementById("disc-list");
   const stopMusicBtn = document.getElementById("stop-music");
   const nowPlayingEl = document.getElementById("now-playing");
@@ -968,6 +968,13 @@ function initPetWidget() {
         // ignore storage errors
       }
       renderDiscList();
+
+      if (musicButton) {
+        musicButton.classList.add("music-icon-glow");
+        setTimeout(() => {
+          musicButton.classList.remove("music-icon-glow");
+        }, 4000);
+      }
     }
   }
 
@@ -1693,8 +1700,8 @@ function initPetWidget() {
   }
 
   const setupDiscModalListeners = () => {
-    if (discPlayerButton && discModalEl) {
-      discPlayerButton.addEventListener("click", () => {
+    if (musicButton && discModalEl) {
+      musicButton.addEventListener("click", () => {
         const wasHidden = discModalEl.classList.contains("hidden");
         discModalEl.classList.toggle("hidden");
         if (wasHidden) {

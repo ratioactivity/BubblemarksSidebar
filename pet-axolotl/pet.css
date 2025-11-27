@@ -327,6 +327,21 @@ body {
   display: block;
 }
 
+.music-icon-glow {
+  animation: music-glow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes music-glow {
+  from {
+    filter: drop-shadow(0 0 3px #a3e7f7);
+    opacity: 1;
+  }
+  to {
+    filter: drop-shadow(0 0 8px #6adce3);
+    opacity: 0.8;
+  }
+}
+
 .achievement-icon {
   position: absolute;
   top: 12px;
