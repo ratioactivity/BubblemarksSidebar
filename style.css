@@ -56,12 +56,12 @@ body.notion-embed .app-shell {
   align-self: flex-start;
   display: flex;
   flex-direction: column;
-  gap: clamp(0.65rem, 1.45vw, 1.2rem);
+  gap: clamp(0.55rem, 1.2vw, 1.1rem);
   flex: 0 0 26%;
   width: 26%;
   min-width: 300px;
-  height: 100%;
-  min-height: 100vh;
+  height: auto;
+  min-height: auto;
   padding: clamp(0.85rem, 1.8vw, 1.4rem);
   background: rgba(255, 255, 255, 0.35);
   border-radius: calc(var(--soft-radius) * 1.1) 0 0 calc(var(--soft-radius) * 1.1);
@@ -80,8 +80,8 @@ body.notion-embed .app-shell {
 
 .quicklaunch-card {
   display: grid;
-  gap: 0.55rem;
-  padding: 0.8rem 0.9rem;
+  gap: 0.5rem;
+  padding: 0.72rem 0.82rem;
   background: linear-gradient(130deg, rgba(240, 246, 255, 0.9), rgba(255, 241, 252, 0.94));
   border-radius: calc(var(--soft-radius) * 0.9);
   border: 1px solid rgba(255, 255, 255, 0.85);
@@ -112,7 +112,7 @@ body.notion-embed .app-shell {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.45rem;
-  padding: 0.12rem 0.18rem;
+  padding: 0.08rem 0.16rem;
 }
 
 .quicklaunch-button {
@@ -120,8 +120,8 @@ body.notion-embed .app-shell {
   display: grid;
   place-items: center;
   gap: 0.3rem;
-  padding: 0.62rem;
-  min-height: 80px;
+  padding: 0.55rem;
+  min-height: 72px;
   aspect-ratio: 1;
   border: 1px solid rgba(255, 255, 255, 0.85);
   background: rgba(255, 255, 255, 0.95);
@@ -133,8 +133,8 @@ body.notion-embed .app-shell {
 }
 
 .quicklaunch-button__icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
 }
@@ -182,7 +182,7 @@ body.notion-embed .app-shell {
   position: relative;
   display: grid;
   gap: 0.9rem;
-  padding: 1rem;
+  padding: 0.92rem;
   border-radius: calc(var(--soft-radius) * 0.9);
   background: linear-gradient(145deg, rgba(255, 241, 252, 0.92), rgba(225, 240, 255, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.9);
@@ -227,12 +227,12 @@ body.notion-embed .app-shell {
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 0.6rem;
-  padding: 0.5rem 0.45rem 0.6rem;
+  padding: 0.45rem 0.4rem 0.55rem;
   background: rgba(255, 255, 255, 0.6);
   border-radius: calc(var(--soft-radius) * 0.7);
   border: 1px dashed rgba(255, 194, 220, 0.6);
-  min-height: 240px;
-  max-height: 340px;
+  min-height: 220px;
+  max-height: 310px;
   overflow: hidden;
 }
 
@@ -240,7 +240,7 @@ body.notion-embed .app-shell {
   display: grid;
   gap: 0.35rem;
   height: 100%;
-  max-height: 240px;
+  max-height: 220px;
   overflow: auto;
   padding: 0.35rem;
 }
@@ -530,7 +530,7 @@ body.notion-embed .app-shell {
   overflow: hidden;
   display: flex;
   align-items: stretch;
-  min-height: clamp(290px, 48vh, 560px);
+  min-height: clamp(250px, 42vh, 500px);
 }
 
 .pet-widget__frame {
@@ -554,6 +554,10 @@ body.notion-embed .app-shell {
   }
 
   .pet-widget {
+    align-self: stretch;
+  }
+
+  #bubblemarks-left {
     align-self: stretch;
   }
 }
