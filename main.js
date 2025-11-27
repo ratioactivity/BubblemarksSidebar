@@ -4,6 +4,11 @@ const { app, BrowserWindow, screen, shell } = require("electron");
 const ZENBOOK_WIDTH = 3840;
 const ZENBOOK_HEIGHT = 1110;
 const DIMENSION_TOLERANCE = 20;
+const APP_ID = "com.bubblemarks.sidebar";
+
+app.setAppUserModelId(APP_ID);
+
+console.log("✅ script validated");
 
 function displayMatchesZenbook(display) {
   const sizesToCheck = [display.size, display.workAreaSize];
@@ -51,7 +56,13 @@ function resolveTargetDisplay() {
 
 function createWindow() {
   const targetDisplay = resolveTargetDisplay();
-  const { bounds } = targetDisplay;
+  const { bounds, size, scaleFactor } = targetDisplay;
+  const targetSize = size || bounds;
+  const { width, height } = targetSize;
+
+  console.log(
+    `[Bubblemarks] targeting display ${targetDisplay.id} (${width}x${height}@${scaleFactor}x)`
+  );
 
   const mainWindow = new BrowserWindow({
     x: bounds.x,
