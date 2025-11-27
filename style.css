@@ -9,7 +9,8 @@
 
 html,
 body {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .bookmark-grid {
@@ -48,6 +49,7 @@ body.notion-embed .app-shell {
   gap: clamp(1.1rem, 2.6vw, 3rem);
   width: min(100%, 3840px);
   margin: 0 auto;
+  overflow-x: hidden;
 }
 
 #bubblemarks-left {
