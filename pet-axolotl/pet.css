@@ -327,6 +327,21 @@ body {
   display: block;
 }
 
+.music-icon-glow {
+  animation: music-glow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes music-glow {
+  from {
+    filter: drop-shadow(0 0 3px #a3e7f7);
+    opacity: 1;
+  }
+  to {
+    filter: drop-shadow(0 0 8px #6adce3);
+    opacity: 0.8;
+  }
+}
+
 .achievement-icon {
   position: absolute;
   top: 12px;
@@ -732,6 +747,18 @@ body {
   font-weight: 700;
   letter-spacing: 0.2px;
   color: #4c3b6b;
+}
+
+.now-playing {
+  margin-bottom: 8px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.random-toggle {
+  margin-bottom: 10px;
+  font-size: 13px;
+  opacity: 0.85;
 }
 
 .disc-close-btn {

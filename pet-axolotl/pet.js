@@ -167,9 +167,11 @@ function initPetWidget() {
   const buttons = Array.from(new Set([...actionElements, ...callbackButtons]));
   const discModalEl = document.getElementById("disc-player-modal");
   const discModalCloseEl = document.getElementById("disc-modal-close");
-  const discPlayerButton = document.getElementById("disc-player-button");
+  const musicButton = document.getElementById("music-button");
   const discListEl = document.getElementById("disc-list");
   const stopMusicBtn = document.getElementById("stop-music");
+  const nowPlayingEl = document.getElementById("now-playing");
+  const randomToggleEl = document.getElementById("randomize-music");
   const achievementButton = document.getElementById("achievement-button");
   const achievementModal = document.getElementById("achievement-modal");
   const achievementCloseButton = document.getElementById("ach-close");
@@ -187,7 +189,7 @@ function initPetWidget() {
     typeof petManager.getPetState === "function" ? petManager.getPetState() : null;
 
   let petName = normalizePetName(nameEl ? nameEl.textContent : "");
-  let vacationMode = false;
+  let vacationMode = Boolean(initialPetState?.vacation);
   let lastKnownMode = "idle";
   let lastIsDead = false;
   let lastKnownLevel = Number.isFinite(initialPetState?.level)
@@ -216,12 +218,48 @@ function initPetWidget() {
   let LEVEL_DISC_REWARDS = {};
   let GENERIC_DISC_POOL = [];
   let selectedBackgroundReward = null;
+  let randomMode = false;
 
   try {
     selectedBackgroundReward = localStorage.getItem("selectedBackgroundReward");
   } catch {
     selectedBackgroundReward = null;
   }
+
+  const loadRandomMode = () => {
+    try {
+      const stored = localStorage.getItem("randomMode");
+      randomMode = stored ? Boolean(JSON.parse(stored)) : false;
+    } catch {
+      randomMode = false;
+    }
+  };
+
+  const persistRandomMode = () => {
+    try {
+      localStorage.setItem("randomMode", JSON.stringify(randomMode));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const updatePlaybackLoop = () => {
+    if (discAudio) {
+      discAudio.loop = !randomMode;
+    }
+  };
+
+  const handleDiscEnded = () => {
+    if (!randomMode) {
+      return;
+    }
+
+    const possible = ownedDiscs.filter((disc) => disc !== currentDisc);
+    if (possible.length > 0) {
+      const next = possible[Math.floor(Math.random() * possible.length)];
+      playDisc(next);
+    }
+  };
 
   const initializeDiscState = () => {
     DISC_POOL = [
@@ -270,6 +308,8 @@ function initPetWidget() {
       currentDisc = null;
     }
 
+    loadRandomMode();
+
     try {
       const storedXP = Number(localStorage.getItem("petXP"));
       petXP = Number.isFinite(storedXP) ? storedXP : 0;
@@ -289,7 +329,8 @@ function initPetWidget() {
 
     if (!discAudio) {
       discAudio = new Audio();
-      discAudio.loop = true;
+      discAudio.onended = handleDiscEnded;
+      updatePlaybackLoop();
     }
   };
 
@@ -803,6 +844,34 @@ function initPetWidget() {
     messageEl.textContent = text;
   }
 
+  const ARRIVAL_DIALOGUE = [
+    "Pico was reading up on the Geneva Conventions while you were gone.",
+    "Pico committed 3 felonies during your absence.",
+    "Pico was exposed to 5 mSv while you were away.",
+    "Pico joined a pyramid scheme while you were offline.",
+    "Pico found a loophole in maritime law.",
+    "Pico filed a noise complaint against YOU.",
+    "Pico saw God. He did not elaborate.",
+  ];
+
+  const VACATION_DIALOGUE = [
+    "Pico took a trip to Guantanamo Bay.",
+    "Pico just robbed an old lady.",
+    "Pico returned from a bender you wouldn’t survive.",
+    "Pico smuggled contraband across 3 borders.",
+    "Pico wrote a threatening letter to the UN.",
+    "Pico committed light tax fraud.",
+    "Pico bit a TSA agent.",
+  ];
+
+  function getRandomLine(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function setDialogue(text) {
+    updateMessage(text);
+  }
+
   function ensureXPElements() {
     const metaRow = petContainer.querySelector(".pet-meta-row");
 
@@ -899,6 +968,13 @@ function initPetWidget() {
         // ignore storage errors
       }
       renderDiscList();
+
+      if (musicButton) {
+        musicButton.classList.add("music-icon-glow");
+        setTimeout(() => {
+          musicButton.classList.remove("music-icon-glow");
+        }, 4000);
+      }
     }
   }
 
@@ -954,6 +1030,12 @@ function initPetWidget() {
     discAudio.src = discSoundPath;
     currentDisc = name;
 
+    updatePlaybackLoop();
+
+    if (nowPlayingEl) {
+      nowPlayingEl.textContent = `Now Playing: ${name}`;
+    }
+
     if (ownedDiscs.length >= 1 && currentDisc) {
       unlockAchievement("firstDisc");
     }
@@ -1007,6 +1089,11 @@ function initPetWidget() {
       musicPlayerEl.currentTime = 0;
     }
     currentDisc = null;
+
+    if (nowPlayingEl) {
+      nowPlayingEl.textContent = "Now Playing: None";
+    }
+
     try {
       localStorage.removeItem("currentDisc");
     } catch {
@@ -1449,6 +1536,10 @@ function initPetWidget() {
   renderDiscList();
   renderAchievements();
 
+  if (!vacationMode) {
+    setDialogue(getRandomLine(ARRIVAL_DIALOGUE));
+  }
+
   window.playStoredDisc = function () {
     if (currentDisc) {
       playDisc(currentDisc);
@@ -1468,11 +1559,15 @@ function initPetWidget() {
   }
 
   function updateVacationState(isVacation) {
+    const wasOnVacation = vacationMode;
     vacationMode = Boolean(isVacation);
     if (petContainer) {
       petContainer.classList.toggle("vacation-mode", vacationMode);
     }
     updateRoamState(lastKnownMode, lastIsDead);
+    if (wasOnVacation && !vacationMode) {
+      setDialogue(getRandomLine(VACATION_DIALOGUE));
+    }
   }
 
   function applyProfileFromDom() {
@@ -1605,8 +1700,8 @@ function initPetWidget() {
   }
 
   const setupDiscModalListeners = () => {
-    if (discPlayerButton && discModalEl) {
-      discPlayerButton.addEventListener("click", () => {
+    if (musicButton && discModalEl) {
+      musicButton.addEventListener("click", () => {
         const wasHidden = discModalEl.classList.contains("hidden");
         discModalEl.classList.toggle("hidden");
         if (wasHidden) {
@@ -1632,6 +1727,25 @@ function initPetWidget() {
     setupDiscModalListeners();
   } else {
     window.addEventListener("DOMContentLoaded", setupDiscModalListeners, { once: true });
+  }
+
+  const setupRandomToggle = () => {
+    if (!randomToggleEl) {
+      return;
+    }
+
+    randomToggleEl.checked = randomMode;
+    randomToggleEl.addEventListener("change", (event) => {
+      randomMode = event.target.checked;
+      persistRandomMode();
+      updatePlaybackLoop();
+    });
+  };
+
+  if (document.readyState !== "loading") {
+    setupRandomToggle();
+  } else {
+    window.addEventListener("DOMContentLoaded", setupRandomToggle, { once: true });
   }
 
   document.addEventListener("click", (event) => {
