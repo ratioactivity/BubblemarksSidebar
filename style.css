@@ -68,7 +68,7 @@ body.notion-embed .app-shell {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--shadow-soft);
-  z-index: -1;
+  z-index: 1;
   overflow: hidden;
 }
 
@@ -94,28 +94,8 @@ body.notion-embed .app-shell {
 .notes-card__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.5rem;
-}
-
-.notes-card__titles {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.notes-card__title {
-  margin: 0;
-  font-family: "Bigbesty", "Papernotes", cursive;
-  font-size: 1.4rem;
-  color: #ff80c8;
-  letter-spacing: 0.02em;
-}
-
-.notes-card__subtitle {
-  margin: 0;
-  font-family: "Papernotes", "Segoe UI", sans-serif;
-  font-size: 0.95rem;
-  color: rgba(70, 60, 80, 0.7);
 }
 
 .notes-card__add {
