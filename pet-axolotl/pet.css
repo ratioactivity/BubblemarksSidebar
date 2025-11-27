@@ -5,14 +5,25 @@
 
 @font-face {
   font-family: "Papernotes";
-  src: url("./fonts/Papernotes.ttf") format("truetype");
+  src:
+    local("Papernotes"),
+    url("./fonts/Papernotes.woff2") format("woff2"),
+    url("./fonts/Papernotes.ttf") format("truetype");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Bigbesty";
-  src: url("./fonts/Bigbesty.ttf") format("truetype");
+  src:
+    local("Bigbesty"),
+    url("./fonts/Bigbesty.woff2") format("woff2"),
+    url("./fonts/Bigbesty.ttf") format("truetype");
   font-display: swap;
+}
+
+:root {
+  --font-body: "Papernotes", sans-serif;
+  --font-heading: "Bigbesty", "Papernotes", cursive;
 }
 
 * {
@@ -29,14 +40,14 @@ body {
 body,
 button,
 .stat-label {
-  font-family: "Papernotes", sans-serif;
+  font-family: var(--font-body);
 }
 
 h1,
 h2,
 .title,
 .pet-name {
-  font-family: "Bigbesty", sans-serif;
+  font-family: var(--font-heading);
 }
 
 body {
@@ -76,7 +87,7 @@ body {
   margin-top: 0;
   margin-bottom: 0;
   color: #514b69;
-  font-family: "Papernotes", sans-serif;
+  font-family: var(--font-body);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -201,7 +212,7 @@ body {
   backdrop-filter: blur(12px);
 
   color: #4b4275;
-  font-family: "Papernotes", sans-serif;
+  font-family: var(--font-body);
   box-sizing: border-box;
   z-index: 3;
   gap: 10px;
@@ -239,7 +250,7 @@ body {
 .pet-name {
   flex: 1 1 auto;
   text-align: center;
-  font-family: "Bigbesty", sans-serif;
+  font-family: var(--font-heading);
   font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 1;
   color: #fff;
@@ -484,7 +495,7 @@ body {
   bottom: 5%;
   left: 50%;
   transform: translateX(-50%);
-  font-family: "Papernotes", sans-serif;
+  font-family: var(--font-body);
   font-size: 3rem;
   color: rgba(255, 255, 255, 0.15);
   pointer-events: none;
@@ -588,7 +599,7 @@ body {
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  font-family: "Papernotes", sans-serif;
+  font-family: var(--font-body);
   font-size: clamp(0.7rem, 1vw, 0.9rem);
   color: #3a2f66;
   letter-spacing: 0.5px;
@@ -648,7 +659,7 @@ body {
 }
 
 .pet-actions button {
-  font-family: "Bigbesty", sans-serif;
+  font-family: var(--font-heading);
   border: none;
   border-radius: 22px;
   padding: 1.5vh 0;
