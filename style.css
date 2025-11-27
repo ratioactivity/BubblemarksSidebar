@@ -133,8 +133,8 @@ body.notion-embed .app-shell {
 }
 
 .quicklaunch-button__icon {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
 }
@@ -421,11 +421,8 @@ body.notion-embed .app-shell {
   font-size: clamp(2.15rem, 3.6vw, 2.7rem);
   line-height: 1.1;
   margin: 0.02rem 0;
-  background: linear-gradient(120deg, #ff9ad8 0%, #ff80c8 25%, #92a9ff 60%, #ffb86c 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: #ff389f;
-  text-shadow: 0 5px 12px rgba(255, 128, 200, 0.46), 0 12px 26px rgba(146, 169, 255, 0.48);
+  color: #ff80c8;
+  text-shadow: 0 4px 12px rgba(255, 128, 200, 0.3), 0 10px 20px rgba(146, 169, 255, 0.34);
   grid-area: time;
 }
 
