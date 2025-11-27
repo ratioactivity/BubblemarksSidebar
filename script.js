@@ -4611,4 +4611,87 @@ function setupDataTools() {
       console.error("[Bubblemarks] Initialization failed:", err);
     }
   });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    console.log("✅ script validated");
+
+    const monthEl = document.getElementById("clock-month");
+    const timeEl = document.getElementById("clock-time");
+    const dateEl = document.getElementById("clock-date");
+    const calendarEl = document.getElementById("clock-calendar");
+
+    if (!monthEl || !timeEl || !dateEl || !calendarEl) {
+      console.warn("[Bubblemarks] Clock widget missing required elements");
+      return;
+    }
+
+    const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const renderCalendar = (targetDate) => {
+      const year = targetDate.getFullYear();
+      const monthIndex = targetDate.getMonth();
+      const todayDate = targetDate.getDate();
+      const startDay = new Date(year, monthIndex, 1).getDay();
+      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+
+      const grid = document.createElement("div");
+      grid.className = "cal-grid";
+
+      const headerRow = document.createElement("div");
+      headerRow.className = "cal-row";
+      weekdayLabels.forEach((label) => {
+        const cell = document.createElement("div");
+        cell.className = "cal-cell";
+        cell.textContent = label;
+        headerRow.appendChild(cell);
+      });
+      grid.appendChild(headerRow);
+
+      let currentDay = 1 - startDay;
+      while (currentDay <= daysInMonth) {
+        const row = document.createElement("div");
+        row.className = "cal-row";
+
+        for (let i = 0; i < 7; i += 1) {
+          const cell = document.createElement("div");
+          cell.className = "cal-cell";
+
+          if (currentDay < 1 || currentDay > daysInMonth) {
+            cell.classList.add("cal-empty");
+            cell.setAttribute("aria-hidden", "true");
+          } else {
+            cell.textContent = currentDay;
+            if (currentDay === todayDate) {
+              cell.classList.add("cal-today");
+              cell.setAttribute("aria-label", "Today");
+            }
+          }
+
+          row.appendChild(cell);
+          currentDay += 1;
+        }
+
+        grid.appendChild(row);
+      }
+
+      calendarEl.innerHTML = "";
+      calendarEl.appendChild(grid);
+    };
+
+    const updateClock = () => {
+      const now = new Date();
+      monthEl.textContent = now.toLocaleDateString([], { month: "long", year: "numeric" });
+      timeEl.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      dateEl.textContent = now.toLocaleDateString([], {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+
+      renderCalendar(now);
+    };
+
+    updateClock();
+    window.setInterval(updateClock, 60000);
+  });
 }
