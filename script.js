@@ -4860,6 +4860,96 @@ function setupDataTools() {
   });
 
   window.addEventListener("DOMContentLoaded", () => {
+    const widget = document.getElementById("quicklaunch-widget");
+
+    if (!widget) {
+      console.warn("[Bubblemarks] Quicklaunch widget missing from DOM");
+      return;
+    }
+
+    const getToastStack = () => {
+      let stack = document.querySelector(".quicklaunch-toast-stack");
+      if (!stack) {
+        stack = document.createElement("div");
+        stack.className = "quicklaunch-toast-stack";
+        document.body.appendChild(stack);
+      }
+      return stack;
+    };
+
+    const showNotice = (message) => {
+      const stack = getToastStack();
+      const toast = document.createElement("div");
+      toast.className = "quicklaunch-toast";
+      toast.textContent = message;
+      stack.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.add("quicklaunch-toast--visible");
+      });
+
+      window.setTimeout(() => {
+        toast.classList.remove("quicklaunch-toast--visible");
+        toast.addEventListener(
+          "transitionend",
+          () => {
+            toast.remove();
+          },
+          { once: true }
+        );
+      }, 3400);
+    };
+
+    const handleLaunch = (deeplink, label) => {
+      if (!deeplink) {
+        showNotice(`${label} shortcut is missing its app path.`);
+        return;
+      }
+
+      try {
+        const openedWindow = window.open(deeplink);
+        if (!openedWindow) {
+          showNotice(
+            `Couldn't open ${label}. Allow app launches or configure your OS/app path to proceed.`
+          );
+        }
+      } catch (error) {
+        console.warn(`[Bubblemarks] Quicklaunch failed for ${label}:`, error);
+        showNotice(
+          `${label} didn't open. Check your OS/app path settings and try again when ready.`
+        );
+      }
+    };
+
+    const fallbackIconSrc = "assets/icon128.png";
+
+    widget.querySelectorAll(".quicklaunch-button__icon").forEach((icon) => {
+      icon.addEventListener("error", () => {
+        if (icon.dataset.fallbackApplied === "true") {
+          return;
+        }
+
+        icon.dataset.fallbackApplied = "true";
+        icon.src = fallbackIconSrc;
+        icon.classList.add("quicklaunch-button__icon--fallback");
+      });
+    });
+
+    widget.querySelectorAll("[data-quicklaunch-url]").forEach((button) => {
+      const label =
+        button.getAttribute("data-quicklaunch-label") ||
+        button.textContent?.trim() ||
+        "App";
+      const deeplink = button.getAttribute("data-quicklaunch-url");
+      button.setAttribute("aria-label", `Open ${label}`);
+
+      button.addEventListener("click", () => {
+        handleLaunch(deeplink, label);
+      });
+    });
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
     console.log("✅ script validated");
 
     const monthEl = document.getElementById("clock-month");
