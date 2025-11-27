@@ -45,7 +45,7 @@ body.notion-embed .app-shell {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: clamp(1.5rem, 3vw, 3.5rem);
+  gap: clamp(1.1rem, 2.6vw, 3rem);
   width: min(100%, 3840px);
   margin: 0 auto;
 }
@@ -56,7 +56,7 @@ body.notion-embed .app-shell {
   align-self: flex-start;
   display: flex;
   flex-direction: column;
-  gap: clamp(1rem, 1.8vw, 1.5rem);
+  gap: clamp(0.75rem, 1.6vw, 1.35rem);
   flex: 0 0 26%;
   width: 26%;
   min-width: 300px;
@@ -72,17 +72,117 @@ body.notion-embed .app-shell {
   overflow: hidden;
 }
 
-#notes-widget {
-  width: 94%;
-  max-width: 460px;
-  align-self: center;
+#notes-widget,
+#quicklaunch-widget {
+  width: 100%;
+  max-width: 520px;
+}
+
+.quicklaunch-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem 0.95rem;
+  background: linear-gradient(130deg, rgba(240, 246, 255, 0.9), rgba(255, 241, 252, 0.94));
+  border-radius: calc(var(--soft-radius) * 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 22px rgba(146, 169, 255, 0.15), 0 6px 16px rgba(255, 160, 200, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.quicklaunch-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.quicklaunch-card__title {
+  font-family: "Papernotes", "Segoe UI", sans-serif;
+  color: #ff80c8;
+  font-size: 1rem;
+}
+
+.quicklaunch-card__hint {
+  font-size: 0.85rem;
+  color: rgba(80, 70, 90, 0.75);
+}
+
+.quicklaunch-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.15rem 0.2rem;
+}
+
+.quicklaunch-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 0.3rem;
+  padding: 0.75rem;
+  min-height: 88px;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: calc(var(--soft-radius) * 0.7);
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 6px 14px rgba(146, 169, 255, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.quicklaunch-button__icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
+}
+
+.quicklaunch-button__icon--fallback {
+  opacity: 0.75;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6));
+}
+
+.quicklaunch-button:focus-visible {
+  outline: 2px solid rgba(146, 169, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.quicklaunch-button:hover,
+.quicklaunch-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 194, 220, 0.9);
+  box-shadow: 0 12px 22px rgba(255, 194, 220, 0.25), 0 10px 18px rgba(146, 169, 255, 0.16);
+}
+
+.quicklaunch-button__label {
+  display: inline-flex;
+  padding: 0.28rem 0.65rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  border: 1px solid rgba(146, 169, 255, 0.35);
+  font-family: "Papernotes", "Segoe UI", sans-serif;
+  font-size: 0.88rem;
+  color: rgba(70, 60, 80, 0.85);
+  box-shadow: 0 6px 14px rgba(146, 169, 255, 0.12);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.quicklaunch-button:hover .quicklaunch-button__label,
+.quicklaunch-button:focus-visible .quicklaunch-button__label {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .notes-card {
   position: relative;
   display: grid;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 0.9rem;
+  padding: 1.1rem;
   border-radius: calc(var(--soft-radius) * 0.9);
   background: linear-gradient(145deg, rgba(255, 241, 252, 0.92), rgba(225, 240, 255, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.9);
@@ -125,19 +225,24 @@ body.notion-embed .app-shell {
 
 .notes-card__body {
   display: grid;
-  gap: 0.5rem;
-  padding: 0.35rem;
+  grid-template-rows: auto 1fr;
+  gap: 0.6rem;
+  padding: 0.5rem 0.45rem 0.6rem;
   background: rgba(255, 255, 255, 0.6);
   border-radius: calc(var(--soft-radius) * 0.7);
   border: 1px dashed rgba(255, 194, 220, 0.6);
+  min-height: 260px;
+  max-height: 380px;
+  overflow: hidden;
 }
 
 .notes-list {
   display: grid;
   gap: 0.35rem;
-  max-height: 360px;
+  height: 100%;
+  max-height: 280px;
   overflow: auto;
-  padding: 0.2rem;
+  padding: 0.35rem;
 }
 
 .notes-empty {
@@ -231,7 +336,7 @@ body.notion-embed .app-shell {
   position: relative;
   width: 100%;
   max-width: 360px;
-  margin: 0 auto 1rem;
+  margin: 0 auto 0.35rem;
   padding: clamp(0.75rem, 1.3vw, 1.05rem);
   border-radius: calc(var(--soft-radius) * 0.95);
   background: linear-gradient(140deg, rgba(255, 255, 255, 0.88), rgba(255, 243, 252, 0.86)),
@@ -425,7 +530,7 @@ body.notion-embed .app-shell {
   overflow: hidden;
   display: flex;
   align-items: stretch;
-  min-height: clamp(320px, 60vh, 720px);
+  min-height: clamp(320px, 52vh, 660px);
 }
 
 .pet-widget__frame {
@@ -2351,4 +2456,32 @@ body.modal-open {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
+}
+
+.quicklaunch-toast-stack {
+  position: fixed;
+  bottom: 1.4rem;
+  left: 1.8rem;
+  display: grid;
+  gap: 0.6rem;
+  z-index: 20;
+  width: min(360px, 70vw);
+}
+
+.quicklaunch-toast {
+  padding: 0.75rem 0.9rem;
+  border-radius: calc(var(--soft-radius) * 0.8);
+  background: rgba(51, 36, 64, 0.92);
+  color: #fff;
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  font-family: "Papernotes", "Segoe UI", sans-serif;
+}
+
+.quicklaunch-toast--visible {
+  opacity: 1;
+  transform: translateY(0);
 }
