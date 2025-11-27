@@ -4921,6 +4921,20 @@ function setupDataTools() {
       }
     };
 
+    const fallbackIconSrc = "assets/icon128.png";
+
+    widget.querySelectorAll(".quicklaunch-button__icon").forEach((icon) => {
+      icon.addEventListener("error", () => {
+        if (icon.dataset.fallbackApplied === "true") {
+          return;
+        }
+
+        icon.dataset.fallbackApplied = "true";
+        icon.src = fallbackIconSrc;
+        icon.classList.add("quicklaunch-button__icon--fallback");
+      });
+    });
+
     widget.querySelectorAll("[data-quicklaunch-url]").forEach((button) => {
       const label =
         button.getAttribute("data-quicklaunch-label") ||
