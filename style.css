@@ -81,14 +81,14 @@ body.notion-embed .app-shell {
 .clock-card {
   position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 360px;
   margin: 0 auto 1rem;
-  padding: clamp(0.85rem, 1.4vw, 1.2rem);
+  padding: clamp(0.75rem, 1.3vw, 1.05rem);
   border-radius: calc(var(--soft-radius) * 0.95);
   background: linear-gradient(140deg, rgba(255, 255, 255, 0.88), rgba(255, 243, 252, 0.86)),
     linear-gradient(160deg, rgba(255, 229, 248, 0.35), rgba(223, 242, 255, 0.32));
   box-shadow: 0 14px 32px rgba(146, 169, 255, 0.24), 0 8px 22px rgba(255, 128, 200, 0.16);
-  overflow: hidden;
+  overflow: visible;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 2px solid rgba(255, 255, 255, 0.7);
@@ -96,40 +96,40 @@ body.notion-embed .app-shell {
 
 .clock-stars {
   position: absolute;
-  inset: 0;
+  inset: 4% 3%;
   pointer-events: none;
   opacity: 0.8;
 }
 
 .clock-star {
   position: absolute;
-  width: clamp(32px, 5vw, 52px);
+  width: clamp(30px, 4.2vw, 46px);
   filter: drop-shadow(0 8px 12px rgba(255, 194, 220, 0.4));
   animation: float-star 10s ease-in-out infinite;
 }
 
 .clock-star--one {
-  top: -12px;
-  left: 10%;
+  top: 0;
+  left: 8%;
 }
 
 .clock-star--two {
-  top: 18%;
-  right: 6%;
+  top: 14%;
+  right: 4%;
   animation-duration: 12s;
   animation-delay: -2s;
 }
 
 .clock-star--three {
-  bottom: 8%;
-  left: 12%;
+  bottom: 10%;
+  left: 10%;
   animation-duration: 14s;
   animation-delay: -4s;
 }
 
 .clock-star--four {
-  bottom: -6px;
-  right: 18%;
+  bottom: 4%;
+  right: 16%;
   animation-duration: 11s;
   animation-delay: -6s;
 }
@@ -138,7 +138,7 @@ body.notion-embed .app-shell {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.1fr);
   grid-template-areas:
     "heading calendar"
     "time calendar";
@@ -156,7 +156,7 @@ body.notion-embed .app-shell {
 
 .clock-month {
   font-family: "Bigbesty", "Papernotes", cursive;
-  font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
   letter-spacing: 0.06em;
   color: #ff80c8;
   text-shadow: 0 4px 12px rgba(255, 128, 200, 0.3);
@@ -164,9 +164,9 @@ body.notion-embed .app-shell {
 
 .clock-time {
   font-family: "Bigbesty", "Papernotes", cursive;
-  font-size: clamp(2.4rem, 4vw, 3.1rem);
+  font-size: clamp(2.15rem, 3.6vw, 2.7rem);
   line-height: 1.1;
-  margin: 0.05rem 0;
+  margin: 0.02rem 0;
   background: linear-gradient(120deg, #ff9ad8 0%, #ff80c8 25%, #92a9ff 60%, #ffb86c 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -177,14 +177,14 @@ body.notion-embed .app-shell {
 
 .clock-date {
   font-family: "Papernotes", "Segoe UI", sans-serif;
-  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+  font-size: clamp(0.85rem, 1.25vw, 0.98rem);
   color: rgba(85, 65, 95, 0.92);
   letter-spacing: 0.01em;
 }
 
 .clock-calendar {
   width: 100%;
-  padding: 0.55rem 0.4rem;
+  padding: 0.48rem 0.36rem;
   border-radius: calc(var(--soft-radius) * 0.5);
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(255, 243, 252, 0.82));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 4px 10px rgba(146, 169, 255, 0.14);
@@ -194,15 +194,15 @@ body.notion-embed .app-shell {
 .cal-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.28rem;
+  gap: 0.22rem;
 }
 
 .cal-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0.2rem;
+  gap: 0.16rem;
   font-family: "Papernotes", "Segoe UI", sans-serif;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: rgba(85, 65, 95, 0.9);
 }
 
@@ -210,8 +210,8 @@ body.notion-embed .app-shell {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem 0.18rem;
-  border-radius: 10px;
+  padding: 0.22rem 0.15rem;
+  border-radius: 9px;
   background: rgba(255, 255, 255, 0.55);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 6px rgba(179, 197, 255, 0.22);
 }
