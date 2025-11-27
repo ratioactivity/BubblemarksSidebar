@@ -72,13 +72,19 @@ body.notion-embed .app-shell {
   overflow: hidden;
 }
 
+#notes-widget {
+  width: 94%;
+  max-width: 460px;
+  align-self: center;
+}
+
 .screenpad-layout .app-shell {
   flex: 1 1 960px;
 }
 
 .pet-widget {
-  flex: 0 1 clamp(320px, 28vw, 560px);
-  width: min(100%, clamp(320px, 28vw, 580px));
+  flex: 0 1 clamp(360px, 32vw, 640px);
+  width: min(100%, clamp(360px, 32vw, 660px));
   max-width: 100%;
   background: var(--surface);
   backdrop-filter: blur(28px);
