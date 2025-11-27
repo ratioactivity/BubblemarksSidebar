@@ -4625,7 +4625,7 @@ function setupDataTools() {
       return;
     }
 
-    const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const weekdayLabels = ["S", "M", "T", "W", "Th", "F", "Sa"];
 
     const renderCalendar = (targetDate) => {
       const year = targetDate.getFullYear();
