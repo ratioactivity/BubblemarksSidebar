@@ -23,13 +23,18 @@
 }
 
 .music-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  padding: 0.55rem 0.65rem;
+  padding: 0.6rem 0.75rem;
+  min-height: 40px;
   border-radius: calc(var(--soft-radius, 16px) * 0.5);
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(230, 239, 255, 0.9));
-  color: #5e4f80;
+  color: #ff80c8;
   font-family: var(--font-heading, "Bigbesty", "Papernotes", cursive);
   font-size: 0.95rem;
+  line-height: 1.15;
   cursor: pointer;
   box-shadow: 0 8px 14px rgba(146, 169, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -42,7 +47,7 @@
 
 .music-tab.active {
   background: linear-gradient(150deg, rgba(255, 212, 238, 0.95), rgba(184, 209, 255, 0.95));
-  color: #7a6af7;
+  color: #ff80c8;
   box-shadow: 0 12px 20px rgba(255, 194, 220, 0.26), 0 12px 18px rgba(146, 169, 255, 0.18);
 }
 
