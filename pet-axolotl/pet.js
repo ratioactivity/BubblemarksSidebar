@@ -148,6 +148,22 @@ function initPetWidget() {
     return;
   }
 
+  const aquariumContainer = document.querySelector(".aquarium-container");
+
+  const updateScrollMode = (disabled) => {
+    const shouldDisable = disabled === true;
+
+    if (document.body) {
+      document.body.classList.toggle("pet-scroll-disabled", shouldDisable);
+    }
+
+    if (aquariumContainer) {
+      aquariumContainer.style.overflowY = shouldDisable ? "hidden" : "auto";
+    }
+  };
+
+  updateScrollMode(false);
+
   let spriteEl = petContainer.querySelector("#pet-sprite");
   const messageEl = petContainer.querySelector(".message-bar");
   const levelEl = petContainer.querySelector(".pet-level");
@@ -1810,6 +1826,12 @@ function initPetWidget() {
     if (data.type === "set-pet-name") {
       const nextName = typeof data.payload?.name === "string" ? data.payload.name : "";
       setPetName(nextName);
+    }
+
+    if (data.type === "set-pet-scroll") {
+      const scrollDisabled = data.payload?.disabled === true;
+      updateScrollMode(scrollDisabled);
+      return;
     }
 
     if (data.type === "set-pet-level") {
