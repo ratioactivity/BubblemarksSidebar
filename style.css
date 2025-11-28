@@ -518,8 +518,8 @@ body.notion-embed .app-shell {
 }
 
 .pet-widget {
-  flex: 0 1 clamp(320px, 24vw, 520px);
-  width: min(100%, clamp(320px, 24vw, 540px));
+  flex: 0 1 clamp(280px, 20vw, 440px);
+  width: min(100%, clamp(280px, 20vw, 460px));
   max-width: 100%;
   background: var(--surface);
   backdrop-filter: blur(28px);
