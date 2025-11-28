@@ -539,24 +539,24 @@ function initPetWidget() {
   }
 
   const SPRITES = {
-    resting: "assets/resting.gif",
-    restingBubble: "assets/restingbubble.gif",
-    restToFloat: "assets/rest-to-float.gif",
-    restToSwim: "assets/rest-to-swim.gif",
-    floatToRest: "assets/float-to-rest.gif",
-    restToSleep: "assets/rest-to-sleep.gif",
-    sleepToRest: "assets/sleep-to-rest.gif",
-    floatToSleep: "assets/float-to-sleep.gif",
-    sleepToFloat: "assets/sleep-to-float.gif",
-    floatToSwim: "assets/float-to-swim.gif",
-    swimToFloat: "assets/swim-to-float.gif",
-    swimToRest: "assets/swim-to-rest.gif",
-    floating: "assets/floating.gif",
-    sleeping: "assets/sleeping.gif",
-    swimming: "assets/swimming.gif",
-    fastSwim: "assets/fast-swim.gif",
-    munching: "assets/munching.gif",
-    petting: "assets/pet.gif",
+    resting: "./assets/resting.gif",
+    restingBubble: "./assets/restingbubble.gif",
+    restToFloat: "./assets/rest-to-float.gif",
+    restToSwim: "./assets/rest-to-swim.gif",
+    floatToRest: "./assets/float-to-rest.gif",
+    restToSleep: "./assets/rest-to-sleep.gif",
+    sleepToRest: "./assets/sleep-to-rest.gif",
+    floatToSleep: "./assets/float-to-sleep.gif",
+    sleepToFloat: "./assets/sleep-to-float.gif",
+    floatToSwim: "./assets/float-to-swim.gif",
+    swimToFloat: "./assets/swim-to-float.gif",
+    swimToRest: "./assets/swim-to-rest.gif",
+    floating: "./assets/floating.gif",
+    sleeping: "./assets/sleeping.gif",
+    swimming: "./assets/swimming.gif",
+    fastSwim: "./assets/fast-swim.gif",
+    munching: "./assets/munching.gif",
+    petting: "./assets/pet.gif",
   };
 
   const preloadedSpriteSources = new Set();
@@ -2031,7 +2031,7 @@ runAfterDomReady(() => {
     currentBackground = backgroundFile;
     const tankWindow = document.querySelector(".tank-window");
     if (tankWindow) {
-      tankWindow.style.backgroundImage = `url(assets/${backgroundFile})`;
+      tankWindow.style.backgroundImage = `url(./assets/${backgroundFile})`;
     }
     try {
       localStorage.setItem("petBackground", backgroundFile);
