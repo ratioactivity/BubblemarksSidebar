@@ -120,7 +120,7 @@ function createWindow() {
   });
 
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadURL("bubblemarks://index.html");
+  mainWindow.loadURL("bubblemarks://index");
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
