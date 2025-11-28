@@ -241,15 +241,19 @@ function initPetWidget() {
   let LEVEL_DISC_REWARDS = {};
   let GENERIC_DISC_POOL = [];
   const DEFAULT_BACKGROUND = "background.png";
+  const PET_ASSET_BASE = "bubblemarks://pet-axolotl/assets/";
   let selectedBackgroundReward = null;
   let randomMode = false;
 
   const resolveBackgroundPath = (file) => {
     const normalizedFile = typeof file === "string" && file.trim() ? file.trim() : DEFAULT_BACKGROUND;
-    if (normalizedFile.startsWith("./")) {
+
+    if (normalizedFile.startsWith("bubblemarks://")) {
       return normalizedFile;
     }
-    return `./assets/${normalizedFile}`;
+
+    const fileName = normalizedFile.replace(/^\.\/assets\//, "").replace(/^bubblemarks:\/\/pet-axolotl\/assets\//, "");
+    return `${PET_ASSET_BASE}${fileName || DEFAULT_BACKGROUND}`;
   };
 
   const applyTankBackground = (assetPath) => {
@@ -1174,7 +1178,11 @@ function initPetWidget() {
     }
 
     const normalizedReward =
-      typeof rewardFile === "string" ? rewardFile.replace(/^\.\/assets\//, "") : "";
+      typeof rewardFile === "string"
+        ? rewardFile
+            .replace(/^\.\/assets\//, "")
+            .replace(/^bubblemarks:\/\/pet-axolotl\/assets\//, "")
+        : "";
     const useDefault = !rewardFile || normalizedReward === DEFAULT_BACKGROUND;
 
     if (!useDefault) {
@@ -1214,7 +1222,7 @@ function initPetWidget() {
     Object.entries(achievements).forEach(([key, meta]) => {
       const rewardFile = meta.reward;
       const thumb = document.createElement("img");
-      thumb.src = rewardFile.startsWith("./") ? rewardFile : `./assets/${rewardFile}`;
+      thumb.src = resolveBackgroundPath(rewardFile);
       thumb.alt = `${meta.label} background reward`;
       thumb.className = "background-thumb";
       thumb.dataset.key = key;
