@@ -74,8 +74,11 @@ function registerBubblemarksProtocol() {
       const hostSegment = url.hostname ? url.hostname : "";
       const rawPath = decodeURIComponent(url.pathname);
       const trimmedPath = rawPath.startsWith("/") ? rawPath.slice(1) : rawPath;
-      const combinedPath = [hostSegment, trimmedPath].filter(Boolean).join("/");
-      const normalizedPath = combinedPath.replace(/\/+$/, "");
+
+      const normalizedPath = path
+        .posix
+        .normalize([hostSegment, trimmedPath].filter(Boolean).join("/"))
+        .replace(/^\/+|\/+$/g, "");
 
       const resolvedTarget = (() => {
         if (normalizedPath === "" || normalizedPath === "index") {
@@ -95,15 +98,15 @@ function registerBubblemarksProtocol() {
 
       const appBasePath = path.normalize(app.getAppPath() + path.sep);
       const resourceBasePath = path.normalize(process.resourcesPath + path.sep);
+      const unpackedBasePath = path.normalize(path.join(process.resourcesPath, "app.asar.unpacked") + path.sep);
 
       const candidateBases = [appBasePath];
 
       if (app.isPackaged) {
         candidateBases.push(resourceBasePath);
 
-        if (resolvedTarget === "assets" || resolvedTarget.startsWith("assets" + path.sep)) {
-          const resourcesAssetBase = path.normalize(path.join(resourceBasePath, "assets") + path.sep);
-          candidateBases.push(resourcesAssetBase);
+        if (fs.existsSync(unpackedBasePath)) {
+          candidateBases.push(unpackedBasePath);
         }
       }
 
