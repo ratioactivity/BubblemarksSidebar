@@ -5,6 +5,18 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  const musicController =
+    window.musicController || (typeof window.MusicController === "function" ? new window.MusicController() : null);
+
+  if (!musicController) {
+    console.log("✅ script validated");
+    return;
+  }
+
+  if (!window.musicController) {
+    window.musicController = musicController;
+  }
+
   const pastelTracks = [
     {
       title: "Cloud Drift",
@@ -27,9 +39,8 @@ window.addEventListener("DOMContentLoaded", () => {
   ];
 
   let currentTrackIndex = 0;
-  const audio = new Audio();
+  const audio = musicController.audio;
   audio.preload = "metadata";
-  audio.src = pastelTracks[currentTrackIndex].source;
   audio.volume = 0.7;
 
   const formatTime = (value) => {
@@ -57,6 +68,11 @@ window.addEventListener("DOMContentLoaded", () => {
     if (artEl) {
       artEl.style.background = track.accent;
     }
+    musicController.onTrackEnd = null;
+    musicController.setMode("widget");
+    musicController.currentSource = track.source;
+    musicController.currentMetadata = track;
+    audio.loop = false;
     audio.src = track.source;
     audio.currentTime = 0;
     const seek = widgetHost.querySelector(".music-seek");
@@ -107,6 +123,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (playButton) {
       playButton.addEventListener("click", () => {
+        musicController.setMode("widget");
+        musicController.onTrackEnd = null;
         if (audio.paused) {
           audio.play();
         } else {
@@ -119,6 +137,8 @@ window.addEventListener("DOMContentLoaded", () => {
       backButton.addEventListener("click", () => {
         currentTrackIndex = (currentTrackIndex - 1 + pastelTracks.length) % pastelTracks.length;
         applyTrack(currentTrackIndex);
+        musicController.setMode("widget");
+        musicController.onTrackEnd = null;
         audio.play();
       });
     }
@@ -127,6 +147,8 @@ window.addEventListener("DOMContentLoaded", () => {
       forwardButton.addEventListener("click", () => {
         currentTrackIndex = (currentTrackIndex + 1) % pastelTracks.length;
         applyTrack(currentTrackIndex);
+        musicController.setMode("widget");
+        musicController.onTrackEnd = null;
         audio.play();
       });
     }
@@ -155,6 +177,9 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     audio.addEventListener("loadedmetadata", () => {
+      if (musicController.mode !== "widget") {
+        return;
+      }
       if (durationLabel && Number.isFinite(audio.duration)) {
         durationLabel.textContent = formatTime(audio.duration);
       }
@@ -164,6 +189,9 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     audio.addEventListener("timeupdate", () => {
+      if (musicController.mode !== "widget") {
+        return;
+      }
       if (currentTimeLabel) {
         currentTimeLabel.textContent = formatTime(audio.currentTime);
       }
@@ -173,14 +201,23 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     audio.addEventListener("play", () => {
+      if (musicController.mode !== "widget") {
+        return;
+      }
       updatePlayButton(true);
     });
 
     audio.addEventListener("pause", () => {
+      if (musicController.mode !== "widget") {
+        return;
+      }
       updatePlayButton(false);
     });
 
     audio.addEventListener("ended", () => {
+      if (musicController.mode !== "widget") {
+        return;
+      }
       updatePlayButton(false);
     });
 
