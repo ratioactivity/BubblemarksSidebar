@@ -55,8 +55,8 @@ h2,
 body {
   min-height: 100vh;
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
+  justify-content: center;
+  align-items: flex-start;
   padding-block: clamp(2vh, 3vh, 4vh);
   padding-inline: clamp(1.5rem, 4vw, 3rem);
   background: linear-gradient(180deg, #f7f1ff 0%, #fff8fb 100%);
@@ -528,7 +528,7 @@ body.pet-scroll-disabled {
   object-position: center;
   image-rendering: pixelated;
   border-radius: inherit;
-  transform: scale(0.92);
+  transform: scale(0.8);
   z-index: 0;
 }
 
