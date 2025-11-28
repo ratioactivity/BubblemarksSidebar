@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 const { app, BrowserWindow, screen, shell, protocol } = require("electron");
 
@@ -72,11 +73,22 @@ function registerBubblemarksProtocol() {
       const url = new URL(request.url);
       const rawPath = decodeURIComponent(url.pathname);
       const trimmedPath = rawPath.startsWith("/") ? rawPath.slice(1) : rawPath;
-      const resolvedPath = path.normalize(path.join(__dirname, trimmedPath));
+      const normalizedPath = trimmedPath.replace(/\/+$/, "");
+      const resolvedTarget =
+        normalizedPath === "" || normalizedPath === "index"
+          ? "index.html"
+          : normalizedPath;
+
+      const resolvedPath = path.normalize(path.join(__dirname, resolvedTarget));
       const basePath = path.normalize(__dirname + path.sep);
 
       if (!resolvedPath.startsWith(basePath)) {
         return callback({ error: -10 });
+      }
+
+      if (!fs.existsSync(resolvedPath)) {
+        console.error(`[Bubblemarks] Missing file for protocol request: ${resolvedPath}`);
+        return callback({ error: -6 });
       }
 
       callback({ path: resolvedPath });
@@ -120,7 +132,7 @@ function createWindow() {
   });
 
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadURL("bubblemarks://index");
+  mainWindow.loadURL("bubblemarks://index.html");
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
