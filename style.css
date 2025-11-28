@@ -59,9 +59,9 @@ body.notion-embed .app-shell {
   display: flex;
   flex-direction: column;
   gap: clamp(0.55rem, 1.2vw, 1.1rem);
-  flex: 0 0 24%;
-  width: 24%;
-  min-width: 280px;
+  flex: 0 0 clamp(240px, 18vw, 320px);
+  width: clamp(240px, 18vw, 320px);
+  min-width: 240px;
   height: auto;
   min-height: auto;
   padding: clamp(0.85rem, 1.8vw, 1.4rem);
@@ -518,8 +518,8 @@ body.notion-embed .app-shell {
 }
 
 .pet-widget {
-  flex: 0 1 clamp(340px, 28vw, 560px);
-  width: min(100%, clamp(340px, 28vw, 580px));
+  flex: 0 1 clamp(280px, 20vw, 440px);
+  width: min(100%, clamp(280px, 20vw, 460px));
   max-width: 100%;
   background: var(--surface);
   backdrop-filter: blur(28px);
@@ -758,21 +758,7 @@ h6,
 .hero__sparkles::before,
 .hero__sparkles::after {
   content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 18% 32%, color-mix(in srgb, var(--accent) 36%, transparent) 0, transparent 34%),
-    radial-gradient(circle at 74% 22%, color-mix(in srgb, var(--accent-2) 42%, transparent) 0, transparent 36%),
-    radial-gradient(circle at 42% 68%, color-mix(in srgb, var(--accent-3) 30%, transparent) 0, transparent 32%);
-  opacity: 0.42;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  z-index: 0;
-}
-
-.hero__sparkles::after {
-  transform: translate3d(6px, -10px, 0);
-  opacity: 0.32;
+  display: none;
 }
 
 .hero__sparkle,
@@ -801,11 +787,7 @@ h6,
 .hero__sparkle::after,
 .controls__sparkle::after {
   content: "";
-  position: absolute;
-  inset: -6%;
-  border-radius: 50%;
-  background: var(--sparkle-halo);
-  z-index: -1;
+  display: none;
 }
 
 .hero__sparkle img,
@@ -901,7 +883,7 @@ h6,
 
 .axolotl-figure {
   position: relative;
-  width: clamp(140px, 22vw, 240px);
+  width: clamp(160px, 24vw, 260px);
   aspect-ratio: 1.85;
   background-position: center;
   background-size: contain;
