@@ -299,8 +299,9 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     roamMode = true;
     returning = false;
+    clearTimers();
+    hideRoamSpriteInstantly();
     hideUISprite();
-    beginRoamDisplay();
     setRoamControllerState({ active: true, returning: false });
   }
 
