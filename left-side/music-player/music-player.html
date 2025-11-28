@@ -1,0 +1,33 @@
+<div class="music-player-card" role="region" aria-label="Mini music player">
+  <header class="music-player-header">
+    <div class="music-player-header__text">
+      <p class="music-player-heading">Bubblebeats</p>
+      <p class="music-player-subtitle">Papernotes for your pastel focus jams</p>
+    </div>
+    <div class="music-player-badge" aria-hidden="true">✨</div>
+  </header>
+  <div class="music-player-track">
+    <div class="music-player-art" aria-hidden="true"></div>
+    <div class="music-player-meta">
+      <p class="music-player-label">Now Playing</p>
+      <p class="music-player-title">Cloud Drift</p>
+      <p class="music-player-artist">Bubblemarks FM</p>
+    </div>
+  </div>
+  <div class="music-player-controls">
+    <div class="music-player-buttons" role="group" aria-label="Playback controls">
+      <button type="button" class="music-btn music-btn--secondary" data-action="back" aria-label="Previous vibe">⟲</button>
+      <button type="button" class="music-btn" data-action="play" aria-label="Play or pause">▶</button>
+      <button type="button" class="music-btn music-btn--secondary" data-action="forward" aria-label="Next vibe">⟳</button>
+    </div>
+    <div class="music-player-progress" aria-label="Track progress">
+      <span class="music-time" data-time="current">0:00</span>
+      <input type="range" min="0" max="100" value="0" class="music-seek" aria-label="Seek through track" />
+      <span class="music-time" data-time="duration">0:00</span>
+    </div>
+    <label class="music-player-volume">
+      <span class="music-volume-label">Volume</span>
+      <input type="range" min="0" max="1" step="0.01" value="0.7" class="music-volume" aria-label="Adjust volume" />
+    </label>
+  </div>
+</div>
