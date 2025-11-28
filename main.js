@@ -1,10 +1,22 @@
 const path = require("path");
-const { app, BrowserWindow, screen, shell } = require("electron");
+const { app, BrowserWindow, screen, shell, protocol } = require("electron");
 
 const ZENBOOK_WIDTH = 3840;
 const ZENBOOK_HEIGHT = 1110;
 const DIMENSION_TOLERANCE = 20;
 const APP_ID = "com.bubblemarks.sidebar";
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "bubblemarks",
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+    },
+  },
+]);
 
 app.setAppUserModelId(APP_ID);
 
@@ -54,6 +66,14 @@ function resolveTargetDisplay() {
   return secondaryDisplays[0];
 }
 
+function registerBubblemarksProtocol() {
+  protocol.registerFileProtocol("bubblemarks", (request, callback) => {
+    const url = new URL(request.url);
+    const resourcePath = path.normalize(path.join(__dirname, decodeURIComponent(url.pathname)));
+    callback({ path: resourcePath });
+  });
+}
+
 function createWindow() {
   const targetDisplay = resolveTargetDisplay();
   const { bounds, size, scaleFactor } = targetDisplay;
@@ -87,7 +107,7 @@ function createWindow() {
   });
 
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadFile(path.join(__dirname, "index.html"));
+  mainWindow.loadURL("bubblemarks://index.html");
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -96,6 +116,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  registerBubblemarksProtocol();
   createWindow();
 
   app.on("activate", () => {

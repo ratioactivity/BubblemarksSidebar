@@ -24,6 +24,8 @@ npm run package:win
 ```
 The build uses Electron Builder with the existing `appId` (`com.bubblemarks.sidebar`) and assets in `/assets`. The resulting NSIS installer (`BubblemarksSidebar-Setup-<version>.exe`) appears in `dist/`.
 
+Electron registers a `bubblemarks://` file protocol at startup so all local assets resolve correctly from both development and packaged builds (no broken icons from relative file URLs).
+
 ## Display targeting logic
 - Prefers a display matching 3840×1110 (work area or total size) within a 20px tolerance.
 - If no match exists, falls back to the primary monitor.
