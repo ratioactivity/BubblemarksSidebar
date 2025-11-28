@@ -44,7 +44,7 @@ body.notion-embed .app-shell {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
   gap: clamp(1.1rem, 2.6vw, 3rem);
   width: min(100%, 3840px);
@@ -113,8 +113,8 @@ body.notion-embed .app-shell {
 .quicklaunch-bar {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.4rem;
-  padding: 0.08rem 0.12rem;
+  gap: 0.35rem;
+  padding: 0.1rem 0.15rem;
 }
 
 .quicklaunch-button {
@@ -122,8 +122,8 @@ body.notion-embed .app-shell {
   display: grid;
   place-items: center;
   gap: 0.3rem;
-  padding: 0.48rem;
-  min-height: 64px;
+  padding: 0.36rem;
+  min-height: 56px;
   aspect-ratio: 1;
   border: 1px solid rgba(255, 255, 255, 0.85);
   background: rgba(255, 255, 255, 0.95);
@@ -135,8 +135,8 @@ body.notion-embed .app-shell {
 }
 
 .quicklaunch-button__icon {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   object-fit: contain;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
 }
@@ -1083,6 +1083,7 @@ h6,
   position: relative;
   z-index: 1;
   width: min(1320px, 100%);
+  min-height: clamp(640px, 75vh, 980px);
   background: var(--surface);
   backdrop-filter: blur(28px);
   border-radius: calc(var(--soft-radius) * 1.2);
