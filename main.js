@@ -71,27 +71,57 @@ function registerBubblemarksProtocol() {
   protocol.registerFileProtocol("bubblemarks", (request, callback) => {
     try {
       const url = new URL(request.url);
+      const hostSegment = url.hostname ? url.hostname : "";
       const rawPath = decodeURIComponent(url.pathname);
       const trimmedPath = rawPath.startsWith("/") ? rawPath.slice(1) : rawPath;
-      const normalizedPath = trimmedPath.replace(/\/+$/, "");
-      const resolvedTarget =
-        normalizedPath === "" || normalizedPath === "index"
-          ? "index.html"
-          : normalizedPath;
+      const combinedPath = [hostSegment, trimmedPath].filter(Boolean).join("/");
+      const normalizedPath = combinedPath.replace(/\/+$/, "");
 
-      const resolvedPath = path.normalize(path.join(__dirname, resolvedTarget));
-      const basePath = path.normalize(__dirname + path.sep);
+      const resolvedTarget = (() => {
+        if (normalizedPath === "" || normalizedPath === "index") {
+          return "index.html";
+        }
 
-      if (!resolvedPath.startsWith(basePath)) {
-        return callback({ error: -10 });
+        if (normalizedPath === "index.html") {
+          return "index.html";
+        }
+
+        if (normalizedPath.startsWith("index.html/")) {
+          return normalizedPath.slice("index.html/".length);
+        }
+
+        return normalizedPath;
+      })();
+
+      const appBasePath = path.normalize(app.getAppPath() + path.sep);
+      const resourceBasePath = path.normalize(process.resourcesPath + path.sep);
+
+      const candidateBases = [appBasePath];
+
+      if (app.isPackaged) {
+        candidateBases.push(resourceBasePath);
+
+        if (resolvedTarget === "assets" || resolvedTarget.startsWith("assets" + path.sep)) {
+          const resourcesAssetBase = path.normalize(path.join(resourceBasePath, "assets") + path.sep);
+          candidateBases.push(resourcesAssetBase);
+        }
       }
 
-      if (!fs.existsSync(resolvedPath)) {
-        console.error(`[Bubblemarks] Missing file for protocol request: ${resolvedPath}`);
+      const resolvedPath = candidateBases
+        .map((basePath) => {
+          const candidate = path.normalize(path.join(basePath, resolvedTarget));
+          return { basePath, candidate };
+        })
+        .find(({ basePath, candidate }) => candidate.startsWith(basePath) && fs.existsSync(candidate));
+
+      if (!resolvedPath) {
+        console.error(
+          `[Bubblemarks] Missing file for protocol request: ${path.join(appBasePath, resolvedTarget)}`
+        );
         return callback({ error: -6 });
       }
 
-      callback({ path: resolvedPath });
+      callback({ path: resolvedPath.candidate });
     } catch (error) {
       console.error("[Bubblemarks] Failed to resolve bubblemarks:// path", error);
       callback({ error: -324 });
