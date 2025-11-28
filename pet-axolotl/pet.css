@@ -557,14 +557,14 @@ body.pet-scroll-disabled {
 
 
 .stats-container {
-  width: 92%;
+  width: 88%;
   margin-top: 2.2vh;
-  transform: scale(0.9);
+  transform: scale(0.86);
   transform-origin: center top;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .status-bars {
@@ -572,7 +572,7 @@ body.pet-scroll-disabled {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.1rem;
   padding: 0 0.05rem;
 }
 
@@ -590,7 +590,7 @@ body.pet-scroll-disabled {
 
 .stat-bar {
   flex: 1;
-  height: 17px;
+  height: 15px;
   border-radius: 10px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(235, 240, 255, 0.75));
   position: relative;
@@ -653,10 +653,10 @@ body.pet-scroll-disabled {
 
 .pet-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
-  gap: 12px;
-  width: 92%;
-  max-width: 500px;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 10px;
+  width: 86%;
+  max-width: 470px;
   margin-top: 2.2vh; /* was larger before */
   padding-bottom: 0.8vh;
   justify-items: center;
@@ -666,15 +666,15 @@ body.pet-scroll-disabled {
 .pet-actions button {
   font-family: var(--font-heading);
   border: none;
-  border-radius: 20px;
-  padding: 0.95vh 0.2rem;
+  border-radius: 18px;
+  padding: 0.78vh 0.2rem;
   width: 100%;
   background: linear-gradient(180deg, #ffb5d6 0%, #a1d7ff 100%);
   color: #fff;
   font-weight: 700;
-  font-size: clamp(0.9rem, 1.65vw, 1.16rem);
+  font-size: clamp(0.86rem, 1.55vw, 1.06rem);
   letter-spacing: 0.12em;
-  box-shadow: 0 4px 10px rgba(190, 160, 255, 0.25);
+  box-shadow: 0 3px 9px rgba(190, 160, 255, 0.23);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }

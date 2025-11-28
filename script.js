@@ -2335,7 +2335,7 @@ function notifyPetWidgetScroll(scrollDisabled) {
   try {
     const targetWindow = petWidgetFrame?.contentWindow;
     if (targetWindow) {
-      targetWindow.postMessage(payload, window.location.origin || "*");
+      targetWindow.postMessage(payload, "*");
     }
   } catch (error) {
     console.warn("Unable to notify pet widget about scroll mode", error);
