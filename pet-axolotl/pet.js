@@ -199,6 +199,7 @@ function initPetWidget() {
   const achievementCloseButton = document.getElementById("ach-close");
   const achievementListEl = document.getElementById("achievement-list");
   const backgroundListEl = document.getElementById("background-list");
+  const tankWindowEl = document.querySelector(".tank-window");
   const aquariumBgImage = petContainer.querySelector(".aquarium-bg");
 
   const petManager = window.petManager;
@@ -242,6 +243,26 @@ function initPetWidget() {
   const DEFAULT_BACKGROUND = "background.png";
   let selectedBackgroundReward = null;
   let randomMode = false;
+
+  const resolveBackgroundPath = (file) => {
+    const normalizedFile = typeof file === "string" && file.trim() ? file.trim() : DEFAULT_BACKGROUND;
+    if (normalizedFile.startsWith("./")) {
+      return normalizedFile;
+    }
+    return `./assets/${normalizedFile}`;
+  };
+
+  const applyTankBackground = (assetPath) => {
+    if (tankWindowEl) {
+      tankWindowEl.style.backgroundImage = `url(${assetPath})`;
+      tankWindowEl.style.backgroundSize = "cover";
+      tankWindowEl.style.backgroundPosition = "center";
+    }
+
+    if (aquariumBgImage) {
+      aquariumBgImage.src = assetPath;
+    }
+  };
 
   try {
     selectedBackgroundReward = localStorage.getItem("selectedBackgroundReward");
@@ -1164,8 +1185,8 @@ function initPetWidget() {
     }
 
     const targetFile = useDefault ? DEFAULT_BACKGROUND : rewardFile;
-    const src = targetFile.startsWith("./") ? targetFile : `./assets/${targetFile}`;
-    aquariumBgImage.src = src;
+    const resolvedPath = resolveBackgroundPath(targetFile);
+    applyTankBackground(resolvedPath);
 
     selectedBackgroundReward = useDefault ? null : targetFile;
 
@@ -2052,15 +2073,13 @@ runAfterDomReady(() => {
 });
 
 runAfterDomReady(() => {
-  let currentBackground = localStorage.getItem("petBackground") || "background.png";
+  let currentBackground = localStorage.getItem("petBackground") || DEFAULT_BACKGROUND;
 
   const setBackground = (file) => {
-    const backgroundFile = file || "background.png";
+    const backgroundFile = file || DEFAULT_BACKGROUND;
     currentBackground = backgroundFile;
-    const tankWindow = document.querySelector(".tank-window");
-    if (tankWindow) {
-      tankWindow.style.backgroundImage = `url(./assets/${backgroundFile})`;
-    }
+    const resolvedPath = resolveBackgroundPath(backgroundFile);
+    applyTankBackground(resolvedPath);
     try {
       localStorage.setItem("petBackground", backgroundFile);
     } catch {
