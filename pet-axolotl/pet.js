@@ -202,11 +202,29 @@ function initPetWidget() {
   const tankWindowEl = document.querySelector(".tank-window");
   const aquariumBgImage = petContainer.querySelector(".aquarium-bg");
 
+  let musicController = null;
+  let discAudio = null;
+  let rewardAudio = null;
+
   const petManager = window.petManager;
   if (!petManager || typeof petManager.subscribeToAnimationChange !== "function") {
     console.error("[BubblePet] petManager is not available");
     return;
   }
+
+  musicController =
+    window.musicController || (typeof window.MusicController === "function" ? new window.MusicController() : null);
+
+  if (!musicController) {
+    console.error("[BubblePet] musicController is not available");
+    return;
+  }
+
+  if (!window.musicController) {
+    window.musicController = musicController;
+  }
+
+  discAudio = musicController.audio;
 
   const initialPetState =
     typeof petManager.getPetState === "function" ? petManager.getPetState() : null;
@@ -236,8 +254,6 @@ function initPetWidget() {
   let ALL_DISCS = [];
   let petXP = 0;
   let petLevel = lastKnownLevel;
-  let discAudio = null;
-  let rewardAudio = null;
   let LEVEL_DISC_REWARDS = {};
   let GENERIC_DISC_POOL = [];
   const DEFAULT_BACKGROUND = "background.png";
@@ -293,19 +309,30 @@ function initPetWidget() {
 
   const updatePlaybackLoop = () => {
     if (discAudio) {
-      discAudio.loop = !randomMode;
+      discAudio.loop = !randomMode && musicController.mode === "disc";
     }
   };
 
   const handleDiscEnded = () => {
-    if (!randomMode) {
+    if (!randomMode || musicController.mode !== "disc") {
       return;
     }
 
-    const possible = ownedDiscs.filter((disc) => disc !== currentDisc);
-    if (possible.length > 0) {
-      const next = possible[Math.floor(Math.random() * possible.length)];
-      playDisc(next);
+    const playlist = ownedDiscs
+      .map((disc) => ({
+        id: disc,
+        name: disc,
+        source: getDiscSoundPath(disc),
+      }))
+      .filter((entry) => Boolean(entry.source));
+
+    const next = musicController.shuffleDiscs(playlist, {
+      currentId: currentDisc,
+      autoPlay: false,
+    });
+
+    if (next?.id) {
+      playDisc(next.id);
     }
   };
 
@@ -375,9 +402,7 @@ function initPetWidget() {
       petLevel = lastKnownLevel;
     }
 
-    if (!discAudio) {
-      discAudio = new Audio();
-      discAudio.onended = handleDiscEnded;
+    if (discAudio) {
       updatePlaybackLoop();
     }
   };
@@ -1070,14 +1095,15 @@ function initPetWidget() {
   }
 
   function playDisc(name) {
-    if (!discAudio || typeof name !== "string") return;
+    if (!musicController || !discAudio || typeof name !== "string") return;
 
     const discSoundPath = getDiscSoundPath(name);
     if (!discSoundPath) return;
 
-    discAudio.src = discSoundPath;
     currentDisc = name;
 
+    musicController.onTrackEnd = randomMode ? handleDiscEnded : null;
+    musicController.playDisc(discSoundPath, { loop: !randomMode, metadata: { id: name } });
     updatePlaybackLoop();
 
     if (nowPlayingEl) {
@@ -1099,7 +1125,6 @@ function initPetWidget() {
       unlockAchievement("allDiscs");
     }
 
-    discAudio.play().catch(() => {});
   }
 
   function getDiscSoundPath(discName) {
@@ -1117,7 +1142,9 @@ function initPetWidget() {
   }
 
   function stopMusic() {
-    if (discAudio) {
+    if (musicController) {
+      musicController.stop();
+    } else if (discAudio) {
       discAudio.pause();
       discAudio.currentTime = 0;
     }
@@ -1137,6 +1164,10 @@ function initPetWidget() {
       musicPlayerEl.currentTime = 0;
     }
     currentDisc = null;
+
+    if (musicController) {
+      musicController.setMode("idle");
+    }
 
     if (nowPlayingEl) {
       nowPlayingEl.textContent = "Now Playing: None";
@@ -1803,6 +1834,9 @@ function initPetWidget() {
       randomMode = event.target.checked;
       persistRandomMode();
       updatePlaybackLoop();
+      if (musicController && musicController.mode === "disc") {
+        musicController.onTrackEnd = randomMode ? handleDiscEnded : null;
+      }
     });
   };
 
