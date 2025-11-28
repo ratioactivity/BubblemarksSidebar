@@ -68,9 +68,22 @@ function resolveTargetDisplay() {
 
 function registerBubblemarksProtocol() {
   protocol.registerFileProtocol("bubblemarks", (request, callback) => {
-    const url = new URL(request.url);
-    const resourcePath = path.normalize(path.join(__dirname, decodeURIComponent(url.pathname)));
-    callback({ path: resourcePath });
+    try {
+      const url = new URL(request.url);
+      const rawPath = decodeURIComponent(url.pathname);
+      const trimmedPath = rawPath.startsWith("/") ? rawPath.slice(1) : rawPath;
+      const resolvedPath = path.normalize(path.join(__dirname, trimmedPath));
+      const basePath = path.normalize(__dirname + path.sep);
+
+      if (!resolvedPath.startsWith(basePath)) {
+        return callback({ error: -10 });
+      }
+
+      callback({ path: resolvedPath });
+    } catch (error) {
+      console.error("[Bubblemarks] Failed to resolve bubblemarks:// path", error);
+      callback({ error: -324 });
+    }
   });
 }
 
