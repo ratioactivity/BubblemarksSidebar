@@ -221,7 +221,7 @@ const prefersReducedMotion = (() => {
     removeListener: () => {},
   };
 })();
-const AXOLOTL_MANIFEST_URL = "./assets/axolotl/manifest.json";
+const AXOLOTL_MANIFEST_URL = "bubblemarks://assets/axolotl/manifest.json";
 const AXOLOTL_FRAME_EXTENSIONS = [
   "png",
   "webp",
@@ -232,55 +232,55 @@ const AXOLOTL_FRAME_EXTENSIONS = [
 ];
 const AXOLOTL_FRAME_PATTERNS = [
   (index, extension) =>
-    `./assets/axolotl/frame-${String(index).padStart(2, "0")}.${extension}`,
-  (index, extension) => `./assets/axolotl/frame${index}.${extension}`,
+    `bubblemarks://assets/axolotl/frame-${String(index).padStart(2, "0")}.${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/frame${index}.${extension}`,
   (index, extension) =>
-    `./assets/axolotl/frame_${String(index).padStart(2, "0")}.${extension}`,
-  (index, extension) => `./assets/axolotl/frame_${index}.${extension}`,
+    `bubblemarks://assets/axolotl/frame_${String(index).padStart(2, "0")}.${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/frame_${index}.${extension}`,
   (index, extension) =>
-    `./assets/axolotl/axolotl-${String(index).padStart(2, "0")}.${extension}`,
-  (index, extension) => `./assets/axolotl/axolotl${index}.${extension}`,
+    `bubblemarks://assets/axolotl/axolotl-${String(index).padStart(2, "0")}.${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/axolotl${index}.${extension}`,
   (index, extension) =>
-    `./assets/axolotl/axolotl_${String(index).padStart(2, "0")}.${extension}`,
-  (index, extension) => `./assets/axolotl/axolotl_${index}.${extension}`,
+    `bubblemarks://assets/axolotl/axolotl_${String(index).padStart(2, "0")}.${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/axolotl_${index}.${extension}`,
   (index, extension) =>
-    `./assets/axolotl/swim-${String(index).padStart(2, "0")}.${extension}`,
-  (index, extension) => `./assets/axolotl/swim${index}.${extension}`,
+    `bubblemarks://assets/axolotl/swim-${String(index).padStart(2, "0")}.${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/swim${index}.${extension}`,
   (index, extension) =>
-    `./assets/axolotl/swim_${String(index).padStart(2, "0")}.${extension}`,
-  (index, extension) => `./assets/axolotl/swim_${index}.${extension}`,
+    `bubblemarks://assets/axolotl/swim_${String(index).padStart(2, "0")}.${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/swim_${index}.${extension}`,
   (index, extension) =>
-    `./assets/axolotl/idle-${String(index).padStart(2, "0")}.${extension}`,
-  (index, extension) => `./assets/axolotl/idle${index}.${extension}`,
+    `bubblemarks://assets/axolotl/idle-${String(index).padStart(2, "0")}.${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/idle${index}.${extension}`,
   (index, extension) =>
-    `./assets/axolotl/idle_${String(index).padStart(2, "0")}.${extension}`,
-  (index, extension) => `./assets/axolotl/idle_${index}.${extension}`,
+    `bubblemarks://assets/axolotl/idle_${String(index).padStart(2, "0")}.${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/idle_${index}.${extension}`,
   (index, extension) =>
-    `./assets/axolotl/frame-(${String(index).padStart(2, "0")}).${extension}`,
-  (index, extension) => `./assets/axolotl/frame-(${index}).${extension}`,
+    `bubblemarks://assets/axolotl/frame-(${String(index).padStart(2, "0")}).${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/frame-(${index}).${extension}`,
   (index, extension) =>
-    `./assets/axolotl/frame (${String(index).padStart(2, "0")}).${extension}`,
-  (index, extension) => `./assets/axolotl/frame (${index}).${extension}`,
+    `bubblemarks://assets/axolotl/frame (${String(index).padStart(2, "0")}).${extension}`,
+  (index, extension) => `bubblemarks://assets/axolotl/frame (${index}).${extension}`,
 ];
 const AXOLOTL_SINGLE_ASSETS = [
-  "./assets/axolotl/axolotl.gif",
-  "./assets/axolotl/axolotl.png",
-  "./assets/axolotl/axolotl.webp",
-  "./assets/axolotl/swim.gif",
-  "./assets/axolotl/swim.png",
-  "./assets/axolotl/swim.webp",
-  "./assets/axolotl/idle.gif",
-  "./assets/axolotl/idle.png",
-  "./assets/axolotl/idle.webp",
-  "./assets/axolotl/floating.gif",
-  "./assets/axolotl/floating.png",
-  "./assets/axolotl/floating.webp",
-  "./assets/axolotl/resting.gif",
-  "./assets/axolotl/resting.png",
-  "./assets/axolotl/resting.webp",
-  "./assets/axolotl/swimming.gif",
-  "./assets/axolotl/swimming.png",
-  "./assets/axolotl/swimming.webp",
+  "bubblemarks://assets/axolotl/axolotl.gif",
+  "bubblemarks://assets/axolotl/axolotl.png",
+  "bubblemarks://assets/axolotl/axolotl.webp",
+  "bubblemarks://assets/axolotl/swim.gif",
+  "bubblemarks://assets/axolotl/swim.png",
+  "bubblemarks://assets/axolotl/swim.webp",
+  "bubblemarks://assets/axolotl/idle.gif",
+  "bubblemarks://assets/axolotl/idle.png",
+  "bubblemarks://assets/axolotl/idle.webp",
+  "bubblemarks://assets/axolotl/floating.gif",
+  "bubblemarks://assets/axolotl/floating.png",
+  "bubblemarks://assets/axolotl/floating.webp",
+  "bubblemarks://assets/axolotl/resting.gif",
+  "bubblemarks://assets/axolotl/resting.png",
+  "bubblemarks://assets/axolotl/resting.webp",
+  "bubblemarks://assets/axolotl/swimming.gif",
+  "bubblemarks://assets/axolotl/swimming.png",
+  "bubblemarks://assets/axolotl/swimming.webp",
 ];
 const AXOLOTL_FRAME_LIMIT = 90;
 const AXOLOTL_STATE_NAMES = [
@@ -293,54 +293,54 @@ const AXOLOTL_STATE_NAMES = [
 const CARD_SIZE_OPTIONS = ["cozy", "comfy", "roomy"];
 const AXOLOTL_STATE_FRAME_PATTERNS = [
   (state, index, extension) =>
-    `./assets/axolotl/${state}-${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}-${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}_${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}_${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}-${index}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}-${index}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}_${index}.${extension}`,
-  (state, index, extension) => `./assets/axolotl/${state}${index}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}_${index}.${extension}`,
+  (state, index, extension) => `bubblemarks://assets/axolotl/${state}${index}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state}-${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state}-${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state}_${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state}_${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state}${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state}${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state}-${index}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state}-${index}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state}_${index}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state}_${index}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state}${index}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state}${index}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${index}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${index}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/frame-${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/frame-${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/frame_${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/frame_${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/frame${String(index).padStart(2, "0")}.${extension}`,
+    `bubblemarks://assets/axolotl/${state}/frame${String(index).padStart(2, "0")}.${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state}-(${String(index).padStart(2, "0")}).${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state}-(${String(index).padStart(2, "0")}).${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state}-(${index}).${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state}-(${index}).${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state} (${String(index).padStart(2, "0")}).${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state} (${String(index).padStart(2, "0")}).${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}/${state} (${index}).${extension}`,
+    `bubblemarks://assets/axolotl/${state}/${state} (${index}).${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}-(${String(index).padStart(2, "0")}).${extension}`,
+    `bubblemarks://assets/axolotl/${state}-(${String(index).padStart(2, "0")}).${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state}-(${index}).${extension}`,
+    `bubblemarks://assets/axolotl/${state}-(${index}).${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state} (${String(index).padStart(2, "0")}).${extension}`,
+    `bubblemarks://assets/axolotl/${state} (${String(index).padStart(2, "0")}).${extension}`,
   (state, index, extension) =>
-    `./assets/axolotl/${state} (${index}).${extension}`,
+    `bubblemarks://assets/axolotl/${state} (${index}).${extension}`,
 ];
 
 const imageProbeCache = new Map();
@@ -4089,7 +4089,7 @@ function normalizeAxolotlFramePath(entry) {
   if (/^assets\//i.test(sanitized)) {
     return sanitized;
   }
-  return `./assets/axolotl/${sanitized}`;
+  return `bubblemarks://assets/axolotl/${sanitized}`;
 }
 
 function imageExists(source) {
@@ -4921,7 +4921,7 @@ function setupDataTools() {
       }
     };
 
-    const fallbackIconSrc = "./assets/icon128.png";
+    const fallbackIconSrc = "bubblemarks://assets/icon128.png";
 
     widget.querySelectorAll(".quicklaunch-button__icon").forEach((icon) => {
       icon.addEventListener("error", () => {
