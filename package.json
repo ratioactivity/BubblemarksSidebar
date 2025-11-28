@@ -16,7 +16,7 @@
       "!node_modules/.cache"
     ],
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "build-resources"
     },
     "win": {
       "target": [
@@ -28,6 +28,7 @@
         }
       ],
       "artifactName": "BubblemarksSidebar-Setup-${version}.${ext}",
+      "icon": "assets/icon.ico",
       "requestedExecutionLevel": "asInvoker"
     }
   },
