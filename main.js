@@ -93,19 +93,35 @@ function registerBubblemarksProtocol() {
         return normalizedPath;
       })();
 
-      const resolvedPath = path.normalize(path.join(__dirname, resolvedTarget));
-      const basePath = path.normalize(__dirname + path.sep);
+      const appBasePath = path.normalize(app.getAppPath() + path.sep);
+      const resourceBasePath = path.normalize(process.resourcesPath + path.sep);
 
-      if (!resolvedPath.startsWith(basePath)) {
-        return callback({ error: -10 });
+      const candidateBases = [appBasePath];
+
+      if (app.isPackaged) {
+        candidateBases.push(resourceBasePath);
+
+        if (resolvedTarget === "assets" || resolvedTarget.startsWith("assets" + path.sep)) {
+          const resourcesAssetBase = path.normalize(path.join(resourceBasePath, "assets") + path.sep);
+          candidateBases.push(resourcesAssetBase);
+        }
       }
 
-      if (!fs.existsSync(resolvedPath)) {
-        console.error(`[Bubblemarks] Missing file for protocol request: ${resolvedPath}`);
+      const resolvedPath = candidateBases
+        .map((basePath) => {
+          const candidate = path.normalize(path.join(basePath, resolvedTarget));
+          return { basePath, candidate };
+        })
+        .find(({ basePath, candidate }) => candidate.startsWith(basePath) && fs.existsSync(candidate));
+
+      if (!resolvedPath) {
+        console.error(
+          `[Bubblemarks] Missing file for protocol request: ${path.join(appBasePath, resolvedTarget)}`
+        );
         return callback({ error: -6 });
       }
 
-      callback({ path: resolvedPath });
+      callback({ path: resolvedPath.candidate });
     } catch (error) {
       console.error("[Bubblemarks] Failed to resolve bubblemarks:// path", error);
       callback({ error: -324 });
