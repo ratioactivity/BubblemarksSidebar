@@ -2297,6 +2297,20 @@ function applyPetSoundPreference(enabled) {
 
 function applyPetScrollPreference(disabled) {
   const scrollDisabled = disabled === true;
+
+  const petDoc = petWidgetFrame?.contentDocument;
+
+  if (petDoc?.body) {
+    petDoc.body.classList.toggle("pet-scroll-disabled", scrollDisabled);
+  }
+
+  if (petDoc) {
+    const aquariumContainer = petDoc.querySelector(".aquarium-container");
+    if (aquariumContainer) {
+      aquariumContainer.style.overflowY = scrollDisabled ? "hidden" : "auto";
+    }
+  }
+
   notifyPetWidgetScroll(scrollDisabled);
 }
 

@@ -557,9 +557,10 @@ body.pet-scroll-disabled {
 
 
 .stats-container {
-  width: 88%;
-  margin-top: 2.2vh;
-  transform: scale(0.86);
+  width: 86%;
+  max-width: 470px;
+  margin: 2.2vh auto 0;
+  transform: none;
   transform-origin: center top;
   display: flex;
   flex-direction: column;
@@ -569,6 +570,7 @@ body.pet-scroll-disabled {
 
 .status-bars {
   width: 100%;
+  max-width: 470px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;

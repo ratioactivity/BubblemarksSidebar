@@ -157,6 +157,10 @@ function initPetWidget() {
       document.body.classList.toggle("pet-scroll-disabled", shouldDisable);
     }
 
+    if (document.documentElement) {
+      document.documentElement.style.overflowY = shouldDisable ? "hidden" : "auto";
+    }
+
     if (aquariumContainer) {
       aquariumContainer.style.overflowY = shouldDisable ? "hidden" : "auto";
     }
