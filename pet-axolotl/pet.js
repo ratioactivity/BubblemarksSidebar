@@ -159,10 +159,12 @@ function initPetWidget() {
 
     if (document.documentElement) {
       document.documentElement.style.overflowY = shouldDisable ? "hidden" : "auto";
+      document.documentElement.style.overflowX = shouldDisable ? "hidden" : "auto";
     }
 
     if (aquariumContainer) {
       aquariumContainer.style.overflowY = shouldDisable ? "hidden" : "auto";
+      aquariumContainer.style.overflowX = shouldDisable ? "hidden" : "visible";
     }
   };
 

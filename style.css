@@ -135,8 +135,8 @@ body.notion-embed .app-shell {
 }
 
 .quicklaunch-button__icon {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
 }
@@ -1083,12 +1083,13 @@ h6,
   position: relative;
   z-index: 1;
   width: min(1320px, 100%);
-  min-height: clamp(900px, 85vh, 1240px);
+  min-height: clamp(1020px, 92vh, 1340px);
   background: var(--surface);
   backdrop-filter: blur(28px);
   border-radius: calc(var(--soft-radius) * 1.2);
   box-shadow: var(--shadow-soft);
-  padding: clamp(1.5rem, 3vw, 3.5rem);
+  padding: clamp(1rem, 2.5vw, 2.6rem) clamp(1.5rem, 3vw, 3.5rem)
+    clamp(2.6rem, 5vw, 3.8rem);
   border: 2px solid rgba(255, 255, 255, 0.6);
   overflow-x: hidden;
 }
