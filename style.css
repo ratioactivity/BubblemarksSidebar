@@ -59,9 +59,9 @@ body.notion-embed .app-shell {
   display: flex;
   flex-direction: column;
   gap: clamp(0.55rem, 1.2vw, 1.1rem);
-  flex: 0 0 26%;
-  width: 26%;
-  min-width: 300px;
+  flex: 0 0 24%;
+  width: 24%;
+  min-width: 280px;
   height: auto;
   min-height: auto;
   padding: clamp(0.85rem, 1.8vw, 1.4rem);
@@ -514,12 +514,12 @@ body.notion-embed .app-shell {
 }
 
 .screenpad-layout .app-shell {
-  flex: 1 1 960px;
+  flex: 1 1 1040px;
 }
 
 .pet-widget {
-  flex: 0 1 clamp(360px, 32vw, 640px);
-  width: min(100%, clamp(360px, 32vw, 660px));
+  flex: 0 1 clamp(340px, 28vw, 560px);
+  width: min(100%, clamp(340px, 28vw, 580px));
   max-width: 100%;
   background: var(--surface);
   backdrop-filter: blur(28px);
