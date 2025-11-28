@@ -1,9 +1,26 @@
 const path = require("path");
-const { app, BrowserWindow, screen, shell } = require("electron");
+const { app, BrowserWindow, screen, shell, protocol } = require("electron");
 
 const ZENBOOK_WIDTH = 3840;
 const ZENBOOK_HEIGHT = 1110;
 const DIMENSION_TOLERANCE = 20;
+const APP_ID = "com.bubblemarks.sidebar";
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "bubblemarks",
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+    },
+  },
+]);
+
+app.setAppUserModelId(APP_ID);
+
+console.log("✅ script validated");
 
 function displayMatchesZenbook(display) {
   const sizesToCheck = [display.size, display.workAreaSize];
@@ -49,9 +66,36 @@ function resolveTargetDisplay() {
   return secondaryDisplays[0];
 }
 
+function registerBubblemarksProtocol() {
+  protocol.registerFileProtocol("bubblemarks", (request, callback) => {
+    try {
+      const url = new URL(request.url);
+      const rawPath = decodeURIComponent(url.pathname);
+      const trimmedPath = rawPath.startsWith("/") ? rawPath.slice(1) : rawPath;
+      const resolvedPath = path.normalize(path.join(__dirname, trimmedPath));
+      const basePath = path.normalize(__dirname + path.sep);
+
+      if (!resolvedPath.startsWith(basePath)) {
+        return callback({ error: -10 });
+      }
+
+      callback({ path: resolvedPath });
+    } catch (error) {
+      console.error("[Bubblemarks] Failed to resolve bubblemarks:// path", error);
+      callback({ error: -324 });
+    }
+  });
+}
+
 function createWindow() {
   const targetDisplay = resolveTargetDisplay();
-  const { bounds } = targetDisplay;
+  const { bounds, size, scaleFactor } = targetDisplay;
+  const targetSize = size || bounds;
+  const { width, height } = targetSize;
+
+  console.log(
+    `[Bubblemarks] targeting display ${targetDisplay.id} (${width}x${height}@${scaleFactor}x)`
+  );
 
   const mainWindow = new BrowserWindow({
     x: bounds.x,
@@ -76,7 +120,7 @@ function createWindow() {
   });
 
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadFile(path.join(__dirname, "index.html"));
+  mainWindow.loadURL("bubblemarks://index.html");
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -85,6 +129,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  registerBubblemarksProtocol();
   createWindow();
 
   app.on("activate", () => {
