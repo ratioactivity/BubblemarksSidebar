@@ -615,7 +615,7 @@ body.pet-scroll-disabled {
 
 .stat-bar {
   flex: 1;
-  height: 14px;
+  height: 12px;
   border-radius: 10px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(235, 240, 255, 0.75));
   position: relative;
