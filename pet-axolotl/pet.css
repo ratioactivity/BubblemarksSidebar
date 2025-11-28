@@ -379,6 +379,8 @@ body.pet-scroll-disabled {
   z-index: 4;
   image-rendering: pixelated;
   transition: opacity 0.15s ease;
+  display: none;
+  pointer-events: none;
 }
 
 .achievement-icon:hover {
