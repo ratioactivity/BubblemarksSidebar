@@ -71,9 +71,11 @@ function registerBubblemarksProtocol() {
   protocol.registerFileProtocol("bubblemarks", (request, callback) => {
     try {
       const url = new URL(request.url);
+      const hostSegment = url.hostname ? url.hostname : "";
       const rawPath = decodeURIComponent(url.pathname);
       const trimmedPath = rawPath.startsWith("/") ? rawPath.slice(1) : rawPath;
-      const normalizedPath = trimmedPath.replace(/\/+$/, "");
+      const combinedPath = [hostSegment, trimmedPath].filter(Boolean).join("/");
+      const normalizedPath = combinedPath.replace(/\/+$/, "");
       const resolvedTarget =
         normalizedPath === "" || normalizedPath === "index"
           ? "index.html"
