@@ -1,33 +1,62 @@
-<div class="music-player-card" role="region" aria-label="Mini music player">
-  <header class="music-player-header">
-    <div class="music-player-header__text">
-      <p class="music-player-heading">Bubblebeats</p>
-      <p class="music-player-subtitle">Papernotes for your pastel focus jams</p>
-    </div>
-    <div class="music-player-badge" aria-hidden="true">✨</div>
-  </header>
-  <div class="music-player-track">
-    <div class="music-player-art" aria-hidden="true"></div>
-    <div class="music-player-meta">
-      <p class="music-player-label">Now Playing</p>
-      <p class="music-player-title">Cloud Drift</p>
-      <p class="music-player-artist">Bubblemarks FM</p>
-    </div>
+<div id="music-player">
+  <div class="music-player-tabs" role="tablist" aria-label="Music player sections">
+    <button type="button" class="music-tab active" data-tab="main" role="tab" aria-selected="true">Main</button>
+    <button type="button" class="music-tab" data-tab="discs" role="tab" aria-selected="false">Discs</button>
+    <button type="button" class="music-tab" data-tab="spotify" role="tab" aria-selected="false">Spotify</button>
+    <button type="button" class="music-tab" data-tab="orca" role="tab" aria-selected="false">Orca</button>
   </div>
-  <div class="music-player-controls">
-    <div class="music-player-buttons" role="group" aria-label="Playback controls">
-      <button type="button" class="music-btn music-btn--secondary" data-action="back" aria-label="Previous vibe">⟲</button>
-      <button type="button" class="music-btn" data-action="play" aria-label="Play or pause">▶</button>
-      <button type="button" class="music-btn music-btn--secondary" data-action="forward" aria-label="Next vibe">⟳</button>
+
+  <section class="music-player-panel active" data-panel="main" role="tabpanel" aria-label="Main player">
+    <div class="music-player-card" role="region" aria-label="Mini music player">
+      <header class="music-player-header">
+        <div class="music-player-header__text">
+          <p class="music-player-heading">Bubblebeats</p>
+          <p class="music-player-subtitle">Papernotes for your pastel focus jams</p>
+        </div>
+        <div class="music-player-badge" aria-hidden="true">✨</div>
+      </header>
+      <div class="music-player-track">
+        <div class="music-player-art" aria-hidden="true"></div>
+        <div class="music-player-meta">
+          <p class="music-player-label">Now Playing</p>
+          <p class="music-player-title">Cloud Drift</p>
+          <p class="music-player-artist">Bubblemarks FM</p>
+        </div>
+      </div>
+      <div class="music-player-controls">
+        <div class="music-player-buttons" role="group" aria-label="Playback controls">
+          <button type="button" class="music-btn music-btn--secondary" data-action="back" aria-label="Previous vibe">⟲</button>
+          <button type="button" class="music-btn" data-action="play" aria-label="Play or pause">▶</button>
+          <button type="button" class="music-btn music-btn--secondary" data-action="forward" aria-label="Next vibe">⟳</button>
+        </div>
+        <div class="music-player-progress" aria-label="Track progress">
+          <span class="music-time" data-time="current">0:00</span>
+          <input type="range" min="0" max="100" value="0" class="music-seek" aria-label="Seek through track" />
+          <span class="music-time" data-time="duration">0:00</span>
+        </div>
+        <label class="music-player-volume">
+          <span class="music-volume-label">Volume</span>
+          <input type="range" min="0" max="1" step="0.01" value="0.7" class="music-volume" aria-label="Adjust volume" />
+        </label>
+      </div>
     </div>
-    <div class="music-player-progress" aria-label="Track progress">
-      <span class="music-time" data-time="current">0:00</span>
-      <input type="range" min="0" max="100" value="0" class="music-seek" aria-label="Seek through track" />
-      <span class="music-time" data-time="duration">0:00</span>
+  </section>
+
+  <section class="music-player-panel" data-panel="discs" role="tabpanel" aria-label="Discs">
+    <div class="music-player-card" aria-hidden="true">
+      <p class="music-player-note">Twirl through your disc stack soon ✨</p>
     </div>
-    <label class="music-player-volume">
-      <span class="music-volume-label">Volume</span>
-      <input type="range" min="0" max="1" step="0.01" value="0.7" class="music-volume" aria-label="Adjust volume" />
-    </label>
-  </div>
+  </section>
+
+  <section class="music-player-panel" data-panel="spotify" role="tabpanel" aria-label="Spotify">
+    <div class="music-player-card" aria-hidden="true">
+      <p class="music-player-note">Spotify shelf coming with more jams</p>
+    </div>
+  </section>
+
+  <section class="music-player-panel" data-panel="orca" role="tabpanel" aria-label="Orca">
+    <div class="music-player-card" aria-hidden="true">
+      <p class="music-player-note">Orca signal waiting for a glow-up</p>
+    </div>
+  </section>
 </div>
