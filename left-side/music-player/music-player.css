@@ -1,0 +1,222 @@
+#music-player-widget {
+  width: 100%;
+  max-width: 520px;
+}
+
+.music-player-card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  background: linear-gradient(145deg, rgba(255, 250, 255, 0.92), rgba(225, 242, 255, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: calc(var(--soft-radius, 16px) * 0.95);
+  box-shadow: 0 14px 30px rgba(146, 169, 255, 0.17), 0 10px 20px rgba(255, 160, 200, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #4b3d55;
+}
+
+.music-player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.music-player-header__text {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.music-player-heading {
+  margin: 0;
+  font-family: var(--font-heading, "Bigbesty", "Papernotes", cursive);
+  font-size: 1.4rem;
+  color: #ff80c8;
+  letter-spacing: 0.5px;
+}
+
+.music-player-subtitle {
+  margin: 0;
+  font-family: "Papernotes", "Comic Sans MS", "Segoe UI", sans-serif;
+  color: rgba(75, 61, 85, 0.8);
+  font-size: 0.96rem;
+}
+
+.music-player-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 200, 230, 0.95), rgba(180, 210, 255, 0.9));
+  color: #ff7ac7;
+  font-size: 1.3rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 6px 16px rgba(255, 160, 200, 0.3);
+}
+
+.music-player-track {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  border-radius: calc(var(--soft-radius, 16px) * 0.7);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.92), rgba(210, 235, 255, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.music-player-art {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: conic-gradient(from 120deg, rgba(255, 203, 229, 0.9), rgba(189, 214, 255, 0.85), rgba(255, 236, 255, 0.95));
+  box-shadow: 0 10px 20px rgba(146, 169, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.music-player-meta {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.music-player-label {
+  margin: 0;
+  font-family: "Papernotes", "Comic Sans MS", "Segoe UI", sans-serif;
+  color: rgba(75, 61, 85, 0.7);
+  font-size: 0.88rem;
+}
+
+.music-player-title {
+  margin: 0;
+  font-family: var(--font-heading, "Bigbesty", "Papernotes", cursive);
+  font-size: 1.3rem;
+  color: #7a6af7;
+  letter-spacing: 0.4px;
+}
+
+.music-player-artist {
+  margin: 0;
+  font-family: "Papernotes", "Comic Sans MS", "Segoe UI", sans-serif;
+  color: rgba(75, 61, 85, 0.8);
+  font-size: 0.95rem;
+}
+
+.music-player-controls {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.music-player-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.music-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  background: linear-gradient(160deg, rgba(255, 212, 238, 0.95), rgba(184, 209, 255, 0.95));
+  color: #5e4f80;
+  font-family: var(--font-heading, "Bigbesty", "Papernotes", cursive);
+  font-size: 1.35rem;
+  cursor: pointer;
+  box-shadow: 0 10px 18px rgba(255, 194, 220, 0.26), 0 10px 16px rgba(146, 169, 255, 0.18);
+  transition: transform 0.14s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.music-btn--secondary {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(210, 235, 255, 0.92));
+  color: rgba(75, 61, 85, 0.8);
+}
+
+.music-btn:focus-visible {
+  outline: 2px solid rgba(122, 106, 247, 0.6);
+  outline-offset: 2px;
+}
+
+.music-btn:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 12px 20px rgba(255, 194, 220, 0.32), 0 12px 18px rgba(146, 169, 255, 0.2);
+}
+
+.music-btn:active {
+  transform: translateY(0);
+}
+
+.music-player-progress {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.music-time {
+  min-width: 42px;
+  text-align: center;
+  font-family: "Papernotes", "Comic Sans MS", "Segoe UI", sans-serif;
+  color: rgba(75, 61, 85, 0.75);
+  font-size: 0.9rem;
+}
+
+.music-seek,
+.music-volume {
+  accent-color: #7a6af7;
+}
+
+.music-seek {
+  width: 100%;
+}
+
+.music-player-volume {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.65rem;
+  border-radius: calc(var(--soft-radius, 16px) * 0.65);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(230, 241, 255, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.music-volume-label {
+  font-family: var(--font-heading, "Bigbesty", "Papernotes", cursive);
+  color: #ff80c8;
+  font-size: 1.05rem;
+}
+
+.music-volume {
+  width: 100%;
+}
+
+@media (max-width: 540px) {
+  .music-player-card {
+    padding: 0.9rem;
+  }
+
+  .music-player-heading {
+    font-size: 1.2rem;
+  }
+
+  .music-btn {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+.music-player-fallback {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  font-family: "Papernotes", "Comic Sans MS", "Segoe UI", sans-serif;
+  color: rgba(75, 61, 85, 0.8);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px dashed rgba(146, 169, 255, 0.5);
+  border-radius: calc(var(--soft-radius, 16px) * 0.7);
+}
