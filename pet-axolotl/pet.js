@@ -199,6 +199,7 @@ function initPetWidget() {
   const achievementCloseButton = document.getElementById("ach-close");
   const achievementListEl = document.getElementById("achievement-list");
   const backgroundListEl = document.getElementById("background-list");
+  const tankWindowEl = document.querySelector(".tank-window");
   const aquariumBgImage = petContainer.querySelector(".aquarium-bg");
 
   const petManager = window.petManager;
@@ -240,8 +241,32 @@ function initPetWidget() {
   let LEVEL_DISC_REWARDS = {};
   let GENERIC_DISC_POOL = [];
   const DEFAULT_BACKGROUND = "background.png";
+  const PET_ASSET_BASE = "bubblemarks://pet-axolotl/assets/";
   let selectedBackgroundReward = null;
   let randomMode = false;
+
+  const resolveBackgroundPath = (file) => {
+    const normalizedFile = typeof file === "string" && file.trim() ? file.trim() : DEFAULT_BACKGROUND;
+
+    if (normalizedFile.startsWith("bubblemarks://")) {
+      return normalizedFile;
+    }
+
+    const fileName = normalizedFile.replace(/^\.\/assets\//, "").replace(/^bubblemarks:\/\/pet-axolotl\/assets\//, "");
+    return `${PET_ASSET_BASE}${fileName || DEFAULT_BACKGROUND}`;
+  };
+
+  const applyTankBackground = (assetPath) => {
+    if (tankWindowEl) {
+      tankWindowEl.style.backgroundImage = `url(${assetPath})`;
+      tankWindowEl.style.backgroundSize = "cover";
+      tankWindowEl.style.backgroundPosition = "center";
+    }
+
+    if (aquariumBgImage) {
+      aquariumBgImage.src = assetPath;
+    }
+  };
 
   try {
     selectedBackgroundReward = localStorage.getItem("selectedBackgroundReward");
@@ -1153,7 +1178,11 @@ function initPetWidget() {
     }
 
     const normalizedReward =
-      typeof rewardFile === "string" ? rewardFile.replace(/^\.\/assets\//, "") : "";
+      typeof rewardFile === "string"
+        ? rewardFile
+            .replace(/^\.\/assets\//, "")
+            .replace(/^bubblemarks:\/\/pet-axolotl\/assets\//, "")
+        : "";
     const useDefault = !rewardFile || normalizedReward === DEFAULT_BACKGROUND;
 
     if (!useDefault) {
@@ -1164,8 +1193,8 @@ function initPetWidget() {
     }
 
     const targetFile = useDefault ? DEFAULT_BACKGROUND : rewardFile;
-    const src = targetFile.startsWith("./") ? targetFile : `./assets/${targetFile}`;
-    aquariumBgImage.src = src;
+    const resolvedPath = resolveBackgroundPath(targetFile);
+    applyTankBackground(resolvedPath);
 
     selectedBackgroundReward = useDefault ? null : targetFile;
 
@@ -1193,7 +1222,7 @@ function initPetWidget() {
     Object.entries(achievements).forEach(([key, meta]) => {
       const rewardFile = meta.reward;
       const thumb = document.createElement("img");
-      thumb.src = rewardFile.startsWith("./") ? rewardFile : `./assets/${rewardFile}`;
+      thumb.src = resolveBackgroundPath(rewardFile);
       thumb.alt = `${meta.label} background reward`;
       thumb.className = "background-thumb";
       thumb.dataset.key = key;
@@ -2052,15 +2081,13 @@ runAfterDomReady(() => {
 });
 
 runAfterDomReady(() => {
-  let currentBackground = localStorage.getItem("petBackground") || "background.png";
+  let currentBackground = localStorage.getItem("petBackground") || DEFAULT_BACKGROUND;
 
   const setBackground = (file) => {
-    const backgroundFile = file || "background.png";
+    const backgroundFile = file || DEFAULT_BACKGROUND;
     currentBackground = backgroundFile;
-    const tankWindow = document.querySelector(".tank-window");
-    if (tankWindow) {
-      tankWindow.style.backgroundImage = `url(./assets/${backgroundFile})`;
-    }
+    const resolvedPath = resolveBackgroundPath(backgroundFile);
+    applyTankBackground(resolvedPath);
     try {
       localStorage.setItem("petBackground", backgroundFile);
     } catch {

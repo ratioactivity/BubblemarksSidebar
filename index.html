@@ -43,15 +43,6 @@
           <div class="clock-calendar" id="clock-calendar"></div>
         </div>
       </div>
-      <div id="notes-widget" class="notes-card">
-        <div class="notes-card__header">
-          <button id="notes-add" type="button" class="notes-card__add" aria-label="Add a new note">Add Note</button>
-        </div>
-        <div class="notes-card__body" role="region" aria-label="Saved notes">
-          <p id="notes-empty" class="notes-empty" aria-live="polite">No notes yet—start a fresh bubble!</p>
-          <div id="notes-list" class="notes-list" role="list"></div>
-        </div>
-      </div>
       <div id="quicklaunch-widget" class="quicklaunch-card" aria-label="Quick launch bar">
         <div class="quicklaunch-card__header">
           <span class="quicklaunch-card__title">Quick Launch</span>
@@ -76,7 +67,7 @@
             class="quicklaunch-button"
             type="button"
             data-quicklaunch-label="Notepad"
-            data-quicklaunch-url="notepad:"
+            data-quicklaunch-url="file:///C:/Users/User/Desktop/Notepad.lnk"
           >
             <img
               src="bubblemarks://assets/notepad-icon.png"
@@ -90,7 +81,7 @@
             class="quicklaunch-button"
             type="button"
             data-quicklaunch-label="Opera"
-            data-quicklaunch-url="opera:"
+            data-quicklaunch-url="file:///C:/Users/User/Desktop/Opera%20GX%20Browser.lnk"
           >
             <img
               src="bubblemarks://assets/opera-icon.png"
@@ -114,6 +105,15 @@
             />
             <span class="quicklaunch-button__label">Spotify</span>
           </button>
+        </div>
+      </div>
+      <div id="notes-widget" class="notes-card">
+        <div class="notes-card__header">
+          <button id="notes-add" type="button" class="notes-card__add" aria-label="Add a new note">Add Note</button>
+        </div>
+        <div class="notes-card__body" role="region" aria-label="Saved notes">
+          <p id="notes-empty" class="notes-empty" aria-live="polite">No notes yet—start a fresh bubble!</p>
+          <div id="notes-list" class="notes-list" role="list"></div>
         </div>
       </div>
     </aside>

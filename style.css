@@ -46,7 +46,7 @@ body.notion-embed .app-shell {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: clamp(0.85rem, 2vw, 2.4rem);
+  gap: clamp(0.6rem, 1.4vw, 1.6rem);
   width: min(100%, 3840px);
   margin: 0 auto;
   overflow-x: hidden;
@@ -59,9 +59,9 @@ body.notion-embed .app-shell {
   display: flex;
   flex-direction: column;
   gap: clamp(0.55rem, 1.2vw, 1.1rem);
-  flex: 0 0 clamp(260px, 20vw, 340px);
-  width: clamp(260px, 20vw, 340px);
-  min-width: 260px;
+  flex: 0 0 clamp(280px, 22vw, 380px);
+  width: clamp(280px, 22vw, 380px);
+  min-width: 280px;
   height: auto;
   min-height: auto;
   padding: clamp(0.85rem, 1.8vw, 1.4rem);
