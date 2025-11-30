@@ -38,10 +38,32 @@ window.addEventListener("DOMContentLoaded", () => {
     },
   ];
 
+  const hydrophoneCoverMap = new Map([
+    ["andrewsbay", "assets/cover-andrewsbay.png"],
+    ["beachcamp", "assets/cover-beachcamp.png"],
+    ["bushpoint", "assets/cover-bushpoint.png"],
+    ["mastcenter", "assets/cover-mastcenter.png"],
+    ["orcasoundlab", "assets/cover-orcasoundlab.png"],
+    ["porttownsend", "assets/cover-porttownsend.png"],
+  ]);
+
+  const defaultCoverArt = "assets/cover-orcasoundlab.png";
+  const defaultAccent = "linear-gradient(150deg, rgba(255, 212, 238, 0.95), rgba(184, 209, 255, 0.95))";
+
   let currentTrackIndex = 0;
   const audio = musicController.audio;
   audio.preload = "metadata";
   audio.volume = 0.7;
+
+  let mpTitle;
+  let mpArtist;
+  let mpMode;
+  let mpCover;
+  let mpMain;
+  let mpPlayButton;
+  let mpStopButton;
+  let widgetPlayButton;
+  let nowPlayingSignature = "";
 
   const formatTime = (value) => {
     if (!Number.isFinite(value)) {
@@ -87,14 +109,134 @@ window.addEventListener("DOMContentLoaded", () => {
     if (durationLabel) {
       durationLabel.textContent = "0:00";
     }
+
+    refreshNowPlaying(true);
   };
 
-  const updatePlayButton = (isPlaying) => {
-    const playButton = widgetHost.querySelector('[data-action="play"]');
-    if (playButton) {
-      playButton.textContent = isPlaying ? "❚❚" : "▶";
-      playButton.setAttribute("aria-label", isPlaying ? "Pause" : "Play");
+  const updatePlayButtons = (isPlaying) => {
+    const label = isPlaying ? "Pause" : "Play";
+    const symbol = isPlaying ? "❚❚" : "▶";
+
+    if (widgetPlayButton) {
+      widgetPlayButton.textContent = symbol;
+      widgetPlayButton.setAttribute("aria-label", label);
     }
+
+    if (mpPlayButton) {
+      mpPlayButton.textContent = symbol;
+      mpPlayButton.setAttribute("aria-label", label);
+    }
+  };
+
+  const formatSourceName = (source) => {
+    if (!source || typeof source !== "string") {
+      return "";
+    }
+    const parts = source.split("/");
+    const filename = parts[parts.length - 1] || source;
+    const basename = filename.replace(/\.[^/.]+$/, "");
+    return basename.replace(/[-_]+/g, " ");
+  };
+
+  const normalizeKey = (value) => {
+    return typeof value === "string" ? value.toLowerCase().replace(/\s+/g, "") : "";
+  };
+
+  const resolveCoverArt = (mode, metadata, source) => {
+    if (metadata && typeof metadata.cover === "string" && metadata.cover.trim()) {
+      return metadata.cover;
+    }
+
+    if (mode === "widget" && metadata && typeof metadata.accent === "string") {
+      return metadata.accent;
+    }
+
+    if (mode === "hydrophone") {
+      const identifier =
+        normalizeKey(metadata?.name) || normalizeKey(metadata?.id) || normalizeKey(metadata?.title);
+      const fromSource = normalizeKey(formatSourceName(source));
+      return hydrophoneCoverMap.get(identifier) || hydrophoneCoverMap.get(fromSource) || defaultCoverArt;
+    }
+
+    return defaultCoverArt;
+  };
+
+  const applyMainCover = (value) => {
+    if (!mpCover) {
+      return;
+    }
+    const hasGradient = typeof value === "string" && value.includes("gradient");
+    if (!value) {
+      mpCover.style.background = defaultAccent;
+      mpCover.style.backgroundImage = "";
+      return;
+    }
+    if (hasGradient) {
+      mpCover.style.background = value;
+      mpCover.style.backgroundImage = "";
+      return;
+    }
+    mpCover.style.background = defaultAccent;
+    mpCover.style.backgroundImage = `url(${value})`;
+    mpCover.style.backgroundSize = "cover";
+    mpCover.style.backgroundPosition = "center";
+  };
+
+  const refreshNowPlaying = (force = false) => {
+    if (!mpMain) {
+      return;
+    }
+
+    const mode = typeof musicController.mode === "string" ? musicController.mode : "idle";
+    const metadata = musicController.currentMetadata || {};
+    const source = musicController.currentSource || "";
+    const paused = audio.paused;
+
+    let title = "Nothing playing";
+    let artist = "Press play to start";
+    let label = "Idle";
+
+    if (mode === "widget") {
+      label = "Bubblebeats";
+      title = metadata?.title || "Bubblebeats";
+      artist = metadata?.artist || "Bubblemarks FM";
+    } else if (mode === "disc") {
+      label = "Disc";
+      title = metadata?.id || metadata?.title || formatSourceName(source) || "Disc spin";
+      artist = metadata?.artist || "Axolotl Deck";
+    } else if (mode === "spotify") {
+      label = "Spotify";
+      title = metadata?.title || "Spotify stream";
+      artist = metadata?.artist || "Spotify";
+    } else if (mode === "hydrophone") {
+      label = "Hydrophone";
+      const hydroName = metadata?.name || metadata?.title || metadata?.id || formatSourceName(source);
+      title = hydroName || "Hydrophone stream";
+      artist = metadata?.artist || "Orcasound live";
+    } else if (mode !== "idle") {
+      label = "Now playing";
+      title = metadata?.title || formatSourceName(source) || "Now playing";
+      artist = metadata?.artist || "Bubblemarks Audio";
+    }
+
+    const cover = resolveCoverArt(mode, metadata, source);
+    const signature = JSON.stringify({ mode, source, paused, title, artist, cover });
+    if (!force && signature === nowPlayingSignature) {
+      return;
+    }
+    nowPlayingSignature = signature;
+
+    if (mpTitle) {
+      mpTitle.textContent = title;
+    }
+    if (mpArtist) {
+      mpArtist.textContent = artist;
+    }
+    if (mpMode) {
+      mpMode.textContent = label;
+    }
+    applyMainCover(cover);
+    updatePlayButtons(!paused);
   };
 
   const attachWidget = async () => {
@@ -111,18 +253,26 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const playButton = widgetHost.querySelector('[data-action="play"]');
+    widgetPlayButton = widgetHost.querySelector('[data-action="play"]');
     const backButton = widgetHost.querySelector('[data-action="back"]');
     const forwardButton = widgetHost.querySelector('[data-action="forward"]');
     const seek = widgetHost.querySelector(".music-seek");
     const volume = widgetHost.querySelector(".music-volume");
     const currentTimeLabel = widgetHost.querySelector('[data-time="current"]');
     const durationLabel = widgetHost.querySelector('[data-time="duration"]');
+    mpMain = widgetHost.querySelector("#mp-main");
+    mpTitle = widgetHost.querySelector("[data-mp-title]");
+    mpArtist = widgetHost.querySelector("[data-mp-artist]");
+    mpMode = widgetHost.querySelector("[data-mp-mode]");
+    mpCover = widgetHost.querySelector("[data-mp-cover]");
+    mpPlayButton = widgetHost.querySelector('[data-mp-action="play"]');
+    mpStopButton = widgetHost.querySelector('[data-mp-action="stop"]');
 
     applyTrack(currentTrackIndex);
+    refreshNowPlaying(true);
 
-    if (playButton) {
-      playButton.addEventListener("click", () => {
+    if (widgetPlayButton) {
+      widgetPlayButton.addEventListener("click", () => {
         musicController.setMode("widget");
         musicController.onTrackEnd = null;
         if (audio.paused) {
@@ -140,6 +290,28 @@ window.addEventListener("DOMContentLoaded", () => {
         musicController.setMode("widget");
         musicController.onTrackEnd = null;
         audio.play();
+      });
+    }
+
+    if (mpPlayButton) {
+      mpPlayButton.addEventListener("click", () => {
+        if (!musicController.currentSource) {
+          applyTrack(currentTrackIndex);
+          musicController.setMode("widget");
+        }
+        if (audio.paused) {
+          audio.play();
+        } else {
+          audio.pause();
+        }
+      });
+    }
+
+    if (mpStopButton) {
+      mpStopButton.addEventListener("click", () => {
+        musicController.stop();
+        refreshNowPlaying(true);
+        updatePlayButtons(false);
       });
     }
 
@@ -201,25 +373,28 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     audio.addEventListener("play", () => {
-      if (musicController.mode !== "widget") {
-        return;
+      if (musicController.mode === "widget") {
+        updatePlayButtons(true);
+      } else {
+        updatePlayButtons(!audio.paused);
       }
-      updatePlayButton(true);
+      refreshNowPlaying(true);
     });
 
     audio.addEventListener("pause", () => {
-      if (musicController.mode !== "widget") {
-        return;
-      }
-      updatePlayButton(false);
+      updatePlayButtons(false);
+      refreshNowPlaying(true);
     });
 
     audio.addEventListener("ended", () => {
-      if (musicController.mode !== "widget") {
-        return;
-      }
-      updatePlayButton(false);
+      updatePlayButtons(false);
+      refreshNowPlaying(true);
     });
+
+    window.setInterval(() => {
+      const forceUpdate = musicController.mode === "spotify" || musicController.mode === "hydrophone";
+      refreshNowPlaying(forceUpdate);
+    }, 1000);
 
     console.log("✅ script validated");
   };
