@@ -7,6 +7,19 @@
   </div>
 
   <section class="music-player-panel active" data-panel="main" role="tabpanel" aria-label="Main player">
+    <div id="mp-main" class="mp-main" role="region" aria-label="Now playing overview">
+      <div class="mp-main__cover" data-mp-cover aria-hidden="true"></div>
+      <div class="mp-main__meta">
+        <p class="mp-main__label" data-mp-mode>Idle</p>
+        <p class="mp-main__title" data-mp-title>Nothing playing</p>
+        <p class="mp-main__artist" data-mp-artist>Select a track to begin</p>
+      </div>
+      <div class="mp-main__controls" role="group" aria-label="Playback controls">
+        <button type="button" class="mp-main__btn" data-mp-action="play" aria-label="Play or pause">▶</button>
+        <button type="button" class="mp-main__btn mp-main__btn--stop" data-mp-action="stop" aria-label="Stop playback">■</button>
+      </div>
+    </div>
+
     <div class="music-player-card" role="region" aria-label="Mini music player">
       <header class="music-player-header">
         <div class="music-player-header__text">
